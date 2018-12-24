@@ -46,6 +46,7 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="TopologicalSort.fs" />
     <Compile Include="Program.fs" />
     <None Include="Excercises.fsx" />
     <None Include="App.config" />

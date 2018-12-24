@@ -1,4 +1,6 @@
-﻿open System
+﻿#load "TopologicalSort.fs"
+
+open System
 open System.IO
 open System.Text
 open System.Collections.Generic
@@ -10,9 +12,26 @@ Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 let readInput file = File.ReadAllLines("input/" + file)
 let (|>>) x f = f x ; x
 
+let print<'a> (toString : 'a -> string) (grid : 'a[,]) =
+  let height = grid.GetLength(0)
+  let width = grid.GetLength(1)
+  let sb = new StringBuilder((width + 2) * height + 2)
+  let _ = sb.AppendLine()
+  for y = 0 to height - 1 do
+    for x = 0 to width - 1 do
+      ignore <| sb.Append(toString grid.[y, x])
+    ignore <| sb.AppendLine()
+  sb.ToString()
+
 module Seq =
   let print (s : seq<_>) =
     s |> Seq.iter(printfn "%A")
+
+module Tuple =
+  let max tuple1 tuple2 =
+    let (x1, y1) = tuple1
+    let (x2, y2) = tuple2
+    max x1 x2, max y1 y2
 
 module Day1 =
   let changes = readInput "day1.txt" |> Array.map int
@@ -91,7 +110,6 @@ module Day2 =
   "fzvstwblgqkhpuixdrnevmaycd" = "fivstwblgqkhpuixdrnevmaycd"
 
 module Day3 =
-
   type Claim =
     { Id : int
       Left : int
@@ -126,19 +144,8 @@ module Day3 =
         fabric.[y, x] <- fabric.[y, x] + 1
     fabric
 
-  let print<'a> (fabric : 'a[,]) =
-    let height = fabric.GetLength(0)
-    let width = fabric.GetLength(1)
-    let sb = new StringBuilder((width + 2) * height + 2)
-    let _ = sb.AppendLine()
-    for y = 0 to height - 1 do
-      for x = 0 to width - 1 do
-        ignore <| sb.Append(fabric.[y, x])
-      ignore <| sb.AppendLine()
-    sb.ToString()
-
-  fsi.AddPrinter print<int>
-  fsi.AddPrinter print<char>
+  fsi.AddPrinter <| print<int> string
+  fsi.AddPrinter <| print<char> string
 
   let input = readInput "day3.txt" |> Array.map Claim.Parse
 
@@ -341,12 +348,185 @@ module Day6 =
   let sep = [|','|]
   let parse(s : string) =
     match s.Split(sep, StringSplitOptions.RemoveEmptyEntries) with
-    | [|x; y|] -> int x, int y
+    | [| x; y |] -> int x, int y
     | _ -> failwith <| "Bad input: " + s
+
+  module Array2D =
+    let toSeq (array2D : 'a[,]) = seq {
+      let en = array2D.GetEnumerator()
+      while en.MoveNext() do
+        yield en.Current :?> 'a
+    }
+
+  fsi.AddPrinter <| print<char*int> (fun (ch, _) -> ch.ToString())
       
   let input = readInput "day6.txt" |> Array.map parse
   let testInput = [| "1, 1" ; "1, 6" ; "8, 3" ; "3, 4" ; "5, 5" ; "8, 9" |] |> Array.map parse
 
-  let tupleMax (a,b) (c,d) = max a c, max b d
+  let input' = input
 
-  testInput |> Array.fold tupleMax (0,0)
+  let width, height = input' |> Array.fold Tuple.max (0,0)
+
+  let grid = Array2D.create (height + 1) (width + 1) ('.', -1)
+  let input'' = input' |> Array.zip ([| 'A' .. 'z' |] |> Array.take input'.Length)
+
+  let fillWithDistance input (grid : _[,]) =
+    for x = 0 to grid.GetLength(1) - 1 do
+      for y = 0 to grid.GetLength(0) - 1 do
+        let (d, coords) =
+          input
+          |> Array.groupBy(fun (_, (x', y')) -> abs(x-x') + abs(y-y'))
+          |> Array.minBy fst
+        grid.[y, x] <-
+          match coords with
+          | [| ch, _ |] -> ch, d
+          | _ -> '.', d
+
+  let fillWithDistance2 input (grid : _[,]) min =
+    for x = 0 to grid.GetLength(1) - 1 do
+      for y = 0 to grid.GetLength(0) - 1 do
+        let coords =
+          input
+          |> Array.sumBy(fun (_, (x', y')) -> abs(x-x') + abs(y-y'))
+        if coords < min then
+          grid.[y, x] <- ('#', 0)
+
+  fillWithDistance input'' grid
+  fillWithDistance2 input'' grid 10000
+
+  grid |> Array2D.toSeq |> Seq.countBy fst
+
+  let borderElements (grid : _[,]) =
+    let set = new HashSet<_>()
+    let width = grid.GetLength(1) - 1
+    let height = grid.GetLength(0) - 1
+    for x = 0 to width do
+      set.Add(fst grid.[0, x]) |> ignore
+      set.Add(fst grid.[height, x]) |> ignore
+    for y = 0 to height do
+      set.Add(fst grid.[y, 0]) |> ignore
+      set.Add(fst grid.[y, width]) |> ignore
+    set
+
+  let border = borderElements grid
+  let areas =
+    grid
+    |> Array2D.toSeq
+    |> Seq.countBy fst
+    |> Seq.filter(fun (ch, _) -> not <| border.Contains ch)
+    |> Seq.maxBy snd
+
+module  Day7 =
+  type Step =
+    { Name : char
+      DependsOn : char []}
+    static member Parse(s:string) =
+      let name = s.[36]
+      { Name = name ; DependsOn = [| s.[5] |] }
+
+  let addFreeSteps input = 
+    input
+    |> Array.collect(fun x -> x.DependsOn)
+    |> Array.except (input |> Array.map(fun x -> x.Name))
+    |> Array.map(fun x -> { Name = x ; DependsOn = [||] } )
+    |> fun free -> Array.concat [| input ; free |]
+
+  let input =
+    readInput "day7.txt"
+    |> Array.map Step.Parse
+    |> addFreeSteps
+
+  let testInput =
+    [|
+      "Step C must be finished before step A can begin."
+      "Step C must be finished before step F can begin."
+      "Step A must be finished before step B can begin."
+      "Step A must be finished before step D can begin."
+      "Step B must be finished before step E can begin."
+      "Step D must be finished before step E can begin."
+      "Step F must be finished before step E can begin."
+    |]
+    |> Array.map Step.Parse
+    |> addFreeSteps
+
+  let getExecutionOrder input =
+    input
+    |> Array.groupBy(fun x -> x.Name)
+    |> Array.map(fun (name, grp) -> { Name = name ; DependsOn = grp |> Array.collect(fun y -> y.DependsOn)})
+    |> Array.sortBy(fun x -> x.Name)
+    |> TopologicalSort.getTopologicalSortOrderWith(fun x -> x.Name.ToString()) (fun x -> x.DependsOn |> Array.map string)
+    |> Array.rev
+
+  let testOrder = getExecutionOrder testInput
+  testOrder |> Array.map(fun x -> x.Name) |> String.Concat
+  getExecutionOrder input |> Array.map(fun x -> x.Name) |> String.Concat
+
+  type WorkItem =
+    { Step : Step
+      Time : int
+      IsReady : bool }
+    static member OfStep step =
+      { Step = step
+        Time = int step.Name - int 'A' + 1
+        IsReady = step.DependsOn |> Array.isEmpty }
+
+  let toDo = testOrder |> Array.map WorkItem.OfStep
+
+module Day8 =
+  let input = readInput "day8.txt" |> Array.exactlyOne |> fun s -> s.Split(' ') |> Array.map int |> List.ofArray
+  let testInput = [2;3;0;3;10;11;12;1;1;0;1;99;2;1;1;2]
+
+  type Node = Node of int * meta : int list * children : Node list
+
+  let rec print node =
+    let b = new StringBuilder()
+    let rec loop indent (Node(name, meta, children)) =
+      let pre = String(' ', indent)
+      Printf.bprintf b "%s- Id: %i\r\n%s  Meta: %A\r\n" pre name pre meta
+      match children with
+      | [] -> Printf.bprintf b "%s  Children: None\r\n" pre
+      | _ ->
+        Printf.bprintf b "%s  Children:\r\n" pre
+        for child in children do
+          loop (indent + 2) child
+    loop 0 node
+    b.ToString()
+
+  fsi.AddPrinter print
+
+  let rec parse items =
+    let rec loop id items =
+      match items with
+      | [] -> failwith "Input must not be empty"
+      | childCount :: metaCount :: tail ->
+        let mutable tail' = tail
+        let mutable id' = id
+        let children =
+          List.init childCount <| fun _ ->
+            let children, tail'', id'' = loop (id' + 1) tail'
+            tail' <- tail''
+            id' <- id''
+            children
+        let meta, tail' = tail' |> List.splitAt metaCount
+        Node(id, meta, children), tail', id'
+      | _ -> failwith "Not enough elements"
+    let (node, _, _) = loop 0 items
+    node
+  
+  let rec addMeta (Node(_, meta, children)) =
+    (+) (List.sum meta) (List.sumBy addMeta children)
+
+  let rec getNodeValue (Node(_, meta, children)) =
+    match children with
+    | [] -> List.sum meta
+    | _ ->
+      meta
+      |> List.sumBy(fun idx ->
+        children
+        |> List.tryItem(idx - 1)
+        |> Option.map getNodeValue
+        |> Option.defaultValue 0)
+
+  let node = parse testInput
+  addMeta node
+  getNodeValue node
