@@ -24,14 +24,24 @@ let print<'a> (toString : 'a -> string) (grid : 'a[,]) =
   sb.ToString()
 
 module Seq =
-  let print (s : seq<_>) =
-    s |> Seq.iter(printfn "%A")
+  let print (s : seq<_>) = s |> Seq.iter(printfn "%A")
+  let printS (s : seq<_>) = s |> Seq.iter(printfn "%s")
 
 module Tuple =
   let max tuple1 tuple2 =
     let (x1, y1) = tuple1
     let (x2, y2) = tuple2
     max x1 x2, max y1 y2
+
+  let min tuple1 tuple2 =
+    let (x1, y1) = tuple1
+    let (x2, y2) = tuple2
+    min x1 x2, min y1 y2
+
+  let ofFive array =
+    match array with
+    | [|a;b;c;d;e|] -> a,b,c,d,e
+    | _ -> invalidArg "array" "Must contain five elements"
 
 module Day1 =
   let changes = readInput "day1.txt" |> Array.map int
@@ -416,7 +426,7 @@ module Day6 =
     |> Seq.filter(fun (ch, _) -> not <| border.Contains ch)
     |> Seq.maxBy snd
 
-module  Day7 =
+module Day7 =
   type Step =
     { Name : char
       DependsOn : char []}
@@ -530,3 +540,174 @@ module Day8 =
   let node = parse testInput
   addMeta node
   getNodeValue node
+
+module Day9 =
+  let input = readInput "day9.txt" |> Array.exactlyOne
+
+  fsi.AddPrinter <| fun (marbles : ResizeArray<int>, current : int) ->
+    marbles
+    |> Seq.mapi(fun i value ->
+      if i = current then "(" + value.ToString() + ")"
+      else " " + value.ToString() + " ")
+    |> fun s -> String.Join("", s)
+
+  let marbles = new ResizeArray<int>()
+  let mutable c = 0
+
+module Day10 =
+  let input = readInput "day10.txt"
+
+  let testInput = [|
+    "position=< 9,  1> velocity=< 0,  2>"
+    "position=< 7,  0> velocity=<-1,  0>"
+    "position=< 3, -2> velocity=<-1,  1>"
+    "position=< 6, 10> velocity=<-2, -1>"
+    "position=< 2, -4> velocity=< 2,  2>"
+    "position=<-6, 10> velocity=< 2, -2>"
+    "position=< 1,  8> velocity=< 1, -1>"
+    "position=< 1,  7> velocity=< 1,  0>"
+    "position=<-3, 11> velocity=< 1, -2>"
+    "position=< 7,  6> velocity=<-1, -1>"
+    "position=<-2,  3> velocity=< 1,  0>"
+    "position=<-4,  3> velocity=< 2,  0>"
+    "position=<10, -3> velocity=<-1,  1>"
+    "position=< 5, 11> velocity=< 1, -2>"
+    "position=< 4,  7> velocity=< 0, -1>"
+    "position=< 8, -2> velocity=< 0,  1>"
+    "position=<15,  0> velocity=<-2,  0>"
+    "position=< 1,  6> velocity=< 1,  0>"
+    "position=< 8,  9> velocity=< 0, -1>"
+    "position=< 3,  3> velocity=<-1,  1>"
+    "position=< 0,  5> velocity=< 0, -1>"
+    "position=<-2,  2> velocity=< 2,  0>"
+    "position=< 5, -2> velocity=< 1,  2>"
+    "position=< 1,  4> velocity=< 2,  1>"
+    "position=<-2,  7> velocity=< 2, -2>"
+    "position=< 3,  6> velocity=<-1, -1>"
+    "position=< 5,  0> velocity=< 1,  0>"
+    "position=<-6,  0> velocity=< 2,  0>"
+    "position=< 5,  9> velocity=< 1, -2>"
+    "position=<14,  7> velocity=<-2,  0>"
+    "position=<-3,  6> velocity=< 2, -1>"
+    |]
+
+  type Point =
+    { X : int
+      Y : int
+      VX : int
+      VY : int}
+    static member Parse(s : string) =
+      let s =s.Split([|'<';',';'>'|], StringSplitOptions.RemoveEmptyEntries)
+      { X = int s.[1]
+        Y = int s.[2]
+        VX = int s.[4]
+        VY = int s.[5] }
+
+  type Grid =
+    { Width : int
+      Height : int
+      Points : Point[] }
+    static member OfPoints points =
+      let (width, height) = points |> Array.fold(fun tpl p -> Tuple.max tpl (p.X, p.Y)) (0,0)
+      let (left, top) = points |> Array.fold(fun tpl p -> Tuple.min tpl (p.X, p.Y)) (0,0)
+      { Width = width - left + 1
+        Height = height - top + 1
+        Points = points |> Array.map(fun p -> { p with X = p.X - left ; Y = p.Y - top })}
+
+  fsi.AddPrintTransformer <| fun (map : Grid) ->
+    let grid = Array2D.create map.Height map.Width '.'
+    for p in map.Points do grid.[p.Y, p.X] <- '#'
+    box grid
+
+  let advance (map : Grid) =
+    { map with Points = map.Points |> Array.map(fun p -> { p with X = p.X + p.VX ; Y = p.Y + p.VY })}
+
+  let map = input |> Array.map Point.Parse |> Grid.OfPoints
+  map.Width
+
+module Day12 =
+  let input = readInput "day12.txt"
+  let initial = input.[0].Substring(15)
+  let rules =
+    input
+    |> Array.skip 2
+    |> Array.map(fun s -> s.Substring(0, 5).ToCharArray() |> Tuple.ofFive, s.[9])
+    |> Map.ofArray
+
+  let testRules =
+    [|
+      "...## => #"
+      "..#.. => #"
+      ".#... => #"
+      ".#.#. => #"
+      ".#.## => #"
+      ".##.. => #"
+      ".#### => #"
+      "#.#.# => #"
+      "#.### => #"
+      "##.#. => #"
+      "##.## => #"
+      "###.. => #"
+      "###.# => #"
+      "####. => #"
+    |]
+    |> Array.map(fun s -> s.Substring(0, 5).ToCharArray() |> Tuple.ofFive, s.[9])
+    |> Map.ofArray
+
+  let testInitial = "#..#.#..##......###...###"
+
+  type AutoArray<'T>(defaultValue) =
+    let ensureSize (arr : ResizeArray<_>) idx =
+      if idx >= arr.Count then
+        for _i = arr.Count to idx do
+          arr.Add(defaultValue)
+      arr
+
+    let positive = ResizeArray<'T>()
+    let negative = ResizeArray<'T>()
+
+    let get idx =
+      if idx >= 0
+      then (ensureSize positive idx).[idx]
+      else (ensureSize negative -idx).[-idx]
+
+    let set idx value =
+      if idx >= 0
+      then (ensureSize positive idx).[idx] <- value
+      else (ensureSize negative -idx).[-idx] <- value
+
+    member val Positive = positive
+    member val Negative = negative
+    member __.Item
+      with get(idx) = get idx
+      and set(idx) value = set idx value
+
+    member __.Add item = positive.Add item
+    member __.Min = -negative.Count
+    member __.Max = positive.Count
+
+  module AutoArray =
+    let ofSeq defaultValue seq =
+      let a = AutoArray(defaultValue)
+      for item in seq do a.Add item
+      a
+
+  let apply rules (state : string) =
+    let s =
+      Array.init(state.Length - 5) (fun i ->
+        rules |> Map.tryFind (state.Substring(i, 5)) |> Option.defaultValue '.')
+      |> String
+    if s.StartsWith("....") && s.EndsWith("....") then s
+    elif s.StartsWith("....") then s + "...."
+    elif s.EndsWith("....") then "...." + s
+    else "...." + s + "...."
+
+  let rec applyN n rules state =
+    if n > 0 then applyN (n-1) rules (apply rules state) else state
+
+  let state = AutoArray.ofSeq '.' testInitial
+  Array.init(state.Max - state.Min) (fun i ->
+    let j = i + state.Min
+    let key = state.[j-2], state.[j-1], state.[j], state.[j+1], state.[j+2]
+    testRules |> Map.tryFind key |> Option.defaultValue '.') |> String
+  
