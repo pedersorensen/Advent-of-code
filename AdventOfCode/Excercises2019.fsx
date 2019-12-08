@@ -1,4 +1,4 @@
-﻿open System
+open System
 open System.IO
 
 Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
@@ -77,3 +77,127 @@ module Day2 =
       if res.[0] = 19690720 then
         printfn "Noun: %i, verb: %i, total: %i" noun verb (100 * noun + verb)
 
+module Day3 =
+  open System.Reflection
+
+  /// WARNING: This call mutates the first parameter.
+  let setTail (list1 : 'a list) (list2 : 'a list) =
+    let rec inner (list : 'a list) =
+      match list with
+      | [] -> ()
+      | [ _ ] ->
+        typeof<'a list>
+          .GetField("tail", BindingFlags.Instance ||| BindingFlags.NonPublic)
+          .SetValue(list, list2)
+      | _ :: tail -> inner tail
+    match list2 with
+    | [] -> list1
+    | _ ->
+      inner list1
+      list1
+
+  let l1 : int list = [1;2;3]
+  let l2 : int list = [3;2;1]
+  setTail l1 l2
+
+  let buildWire (parts : string) =
+    let rec inner (wire : (int*int) list) (parts : string list) =
+      match parts with
+      | [] -> wire
+      | part :: tail ->
+        let (x, y) = wire |> List.head
+        let d = part.[0]
+        let l = int(string(part.Substring(1)))
+        let wire' =
+          let wire' =
+            match d with
+            | 'U' -> List.init l (fun l -> x, y + l + 1)
+            | 'D' -> List.init l (fun l -> x, y - l - 1)
+            | 'L' -> List.init l (fun l -> x - l - 1, y)
+            | 'R' -> List.init l (fun l -> x + l + 1, y)
+            | _ -> failwith "Invalid direction"
+          setTail (wire' |> List.rev) wire
+        inner wire' tail
+    parts.Split(',') |> List.ofArray
+    |> inner [0,0]
+    |> List.rev
+
+  let checkWire (wire : string) =
+    ((0,0), wire.Split(','))
+    ||> Array.fold(fun (x,y) d ->
+      let l = int(string(d.Substring(1)))
+      match d.[0] with
+      | 'U' -> (x, y + l)
+      | 'D' -> (x, y - l)
+      | 'L' -> (x - l, y)
+      | 'R' -> (x + l, y)
+      | _ -> failwith "Invalid direction")
+
+  buildWire "R8,U5,L5,D3" |> List.last
+  checkWire "R8,U5,L5,D3" 
+
+  buildWire "U7,R6,D4,L4" |> List.last
+  checkWire "U7,R6,D4,L4" 
+
+  buildWire "R75,D30,R83,U83,L12,D49,R71,U7,L72" |> List.last
+  checkWire "R75,D30,R83,U83,L12,D49,R71,U7,L72" 
+
+  buildWire "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51" |> List.last
+  checkWire "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51" 
+
+  let getClosestInsersection w1 w2 =
+    let wire1 = buildWire w1
+    let wire2 = buildWire w2
+    let points1 = wire1 |> Set.ofList
+    let points2 = wire2 |> Set.ofList
+
+    (points1, points2)
+    ||> Set.intersect
+    |> Set.remove (0,0)
+    |> Seq.minBy(fun (x, y) -> abs x + abs y)
+
+  getClosestInsersection "R8,U5,L5,D3" "U7,R6,D4,L4" 
+  getClosestInsersection 
+    "R75,D30,R83,U83,L12,D49,R71,U7,L72"
+    "U62,R66,U55,R34,D71,R55,D58,R83" // distance 159
+  getClosestInsersection 
+    "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"
+    "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7" // distance 135
+
+  // Part 1
+  let (input1, input2) =
+    match readInput "day3" with
+    | [|input1 ; input2 |] -> input1, input2
+    | _ -> failwith "Invalid input"
+
+  let (x, y) = getClosestInsersection input1 input2
+  let d = x + y
+
+  // Part 2
+  let getShortestIntersection w1 w2 =
+    let wire1 = buildWire w1
+    let wire2 = buildWire w2
+    let points1 = wire1 |> Set.ofList
+    let points2 = wire2 |> Set.ofList
+
+    let intersections =
+      (points1, points2)
+      ||> Set.intersect
+      |> Set.remove (0,0)
+      |> Set.toList
+
+    intersections
+    |> List.map(fun p ->
+      let d1 = wire1 |> List.findIndex((=) p)
+      let d2 = wire2 |> List.findIndex((=) p)
+      d1 + d2)
+    |> List.min
+
+  getShortestIntersection "R8,U5,L5,D3" "U7,R6,D4,L4" // distance 30
+  getShortestIntersection 
+    "R75,D30,R83,U83,L12,D49,R71,U7,L72"
+    "U62,R66,U55,R34,D71,R55,D58,R83" // distance 610
+  getShortestIntersection 
+    "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"
+    "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7" // distance 410
+  getShortestIntersection input1 input2
