@@ -201,3 +201,63 @@ module Day3 =
     "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"
     "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7" // distance 410
   getShortestIntersection input1 input2
+
+module Day4 =
+
+  let hasPair (a:int) b c d e f =
+    a = b || b = c || c = d || d = e || e = f
+
+  let isDecreasing (a:int) b c d e f =
+    a > b || b > c || c > d || d > e || e > f
+
+  let inline digits i =
+    let (i, f) = Math.DivRem(i, 10)
+    let (i, e) = Math.DivRem(i, 10)
+    let (i, d) = Math.DivRem(i, 10)
+    let (i, c) = Math.DivRem(i, 10)
+    let (i, b) = Math.DivRem(i, 10)
+    let (i, a) = Math.DivRem(i, 10)
+    if i > 0 then failwith "More than 6 digits"
+    a, b, c, d, e, f
+
+  let isValid i =
+    let (a, b, c, d, e, f) = digits i
+    hasPair a b c d e f && not (isDecreasing a b c d e f)
+
+  let from, to' = 147981, 691423 
+
+  isValid 111111
+  isValid 111123
+  isValid 135679
+  isValid 122345
+  isValid 223450
+  isValid 123789
+  digits 123456
+
+  // Part 1
+  let validPasswords =
+    {from .. to'}
+    |> Seq.countBy isValid
+    |> Seq.find fst
+    |> snd
+
+  // Part 2
+  let hasPairNoTriple a b c d e f =
+    (a = b && b <> c) ||
+    (a <> b && b = c && c <> d) ||
+    (b <> c && c = d && d <> e) ||
+    (c <> d && d = e && e <> f) ||
+    (d <> e && e = f)
+
+  let isValid' i =
+    let (a, b, c, d, e, f) = digits i
+    hasPairNoTriple a b c d e f && not (isDecreasing a b c d e f)
+
+  isValid' 688889
+  isValid' 122345
+
+  let validPasswords' =
+    {from .. to'}
+    |> Seq.countBy isValid'
+    |> Seq.find fst
+    |> snd
