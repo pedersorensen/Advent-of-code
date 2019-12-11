@@ -1,3 +1,6 @@
+#r @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\FSharp\FSharp.Compiler.Interactive.Settings.dll"
+#load "TopologicalSort.fs"
+
 open System
 open System.IO
 
@@ -340,3 +343,78 @@ module Day5 =
 
   run 9 [|3;21;1008;21;8;20;1005;20;22;107;8;21;20;1006;20;31;1106;0;36;98;0;0;1002;21;125;20;4;20;1105;1;46;104;999;1105;1;46;1101;1000;1;20;4;20;1105;1;46;98;99|]
   run 5 input
+
+module Day6 =
+
+  type Tree<'T> = Node of 'T * Tree<'T> list
+
+  let printTree (tree : Tree<string>) =
+    let rec helper depth (Node(value, nodes)) =
+      match nodes with
+      | [] -> sprintf "%*s" depth value
+      | nodes ->
+        nodes
+        |> List.map(helper (depth + 2))
+        |> String.concat "\r\n"
+        |> sprintf "%*s:\r\n%s" depth value
+    helper 0 tree
+  fsi.AddPrinter printTree
+
+  let input = readInput "day6"
+  let example = [| "COM)B" ; "B)C" ; "C)D" ; "D)E" ; "E)F" ; "B)G" ; "G)H" ; "D)I" ; "E)J" ; "J)K" ; "K)L" |]
+
+  let buildMap (input : string[]) =
+    input
+    |> Array.map(fun s -> match s.Split(')') with [|a;b|] -> a, b | _ -> failwith "Expected two entries")
+    |> Array.groupBy fst
+    |> Array.map(fun (k, v) -> k, v |> Array.map snd |> List.ofArray)
+    |> Map.ofArray
+
+  let buildTree (input : string[]) =
+    let map = buildMap input
+
+    let rec helper key =
+      match map |> Map.tryFind key with
+      | Some v -> Node(key, v |> List.map helper)
+      | None -> Node(key, [])
+
+    helper "COM"
+
+  // Part 1
+  let root1 = buildTree example
+  let root2 = buildTree input
+  let rec count depth (Node(_, nodes)) =
+    depth + List.sumBy(count (depth + 1)) nodes
+
+  count 0 root1
+  count 0 root2
+
+  // Part 2
+
+  let buildMap2 (input : string[]) =
+    input
+    |> Array.map(fun s -> match s.Split(')') with [|a;b|] -> b, a | _ -> failwith "Expected two entries")
+    |> Map.ofArray
+
+  let findRoute map key =
+    let rec helper key =
+      match map |> Map.tryFind key with
+      | Some value -> value :: helper value
+      | None -> []
+    helper key |> List.rev
+
+  let findEarliestAncester l1 l2 =
+    let rec helper l1 l2 =
+      match l1, l2 with
+      | x1 :: t1, x2 :: t2 when x1 = x2 ->
+        if x1 = x2 then helper t1 t2
+        else (t1, t2)
+      | _ -> (l1, l2)
+    helper l1 l2
+
+  let example2 = [| "COM)B"; "B)C"; "C)D"; "D)E"; "E)F"; "B)G"; "G)H"; "D)I"; "E)J"; "J)K"; "K)L"; "K)YOU"; "I)SAN"|]
+  let map2 = buildMap2 input
+  let route1 = findRoute map2 "YOU"
+  let route2 = findRoute map2 "SAN"
+  let (r1, r2) = findEarliestAncester route1 route2
+  r1.Length + r2.Length
