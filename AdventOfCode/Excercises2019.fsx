@@ -5,6 +5,26 @@ Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
 let readInput file = File.ReadAllLines("input2019/" + file + ".txt")
 
+module List =
+
+  open System.Reflection
+
+  /// Append the second list to the end of the first.
+  /// WARNING: This mutates the first parameter when it is non-empty.
+  let setTail (list1 : 'a list) (list2 : 'a list) =
+    let rec helper (list : 'a list) =
+      match list with
+      | [] -> list2
+      | [ _ ] ->
+        let fi = typeof<'a list>.GetField("tail", BindingFlags.Instance ||| BindingFlags.NonPublic)
+        if isNull fi then failwith "Could not find private 'tail' field on list."
+        fi.SetValue(list, list2)
+        list
+      | _ :: tail -> helper tail
+    match list2 with
+    | [] -> list1
+    | _ -> helper list1
+
 module Day1 =
   // Part 1
   let getFuel mass = max 0 (mass / 3 - 2)
@@ -78,27 +98,6 @@ module Day2 =
         printfn "Noun: %i, verb: %i, total: %i" noun verb (100 * noun + verb)
 
 module Day3 =
-  open System.Reflection
-
-  /// WARNING: This call mutates the first parameter.
-  let setTail (list1 : 'a list) (list2 : 'a list) =
-    let rec inner (list : 'a list) =
-      match list with
-      | [] -> ()
-      | [ _ ] ->
-        typeof<'a list>
-          .GetField("tail", BindingFlags.Instance ||| BindingFlags.NonPublic)
-          .SetValue(list, list2)
-      | _ :: tail -> inner tail
-    match list2 with
-    | [] -> list1
-    | _ ->
-      inner list1
-      list1
-
-  let l1 : int list = [1;2;3]
-  let l2 : int list = [3;2;1]
-  setTail l1 l2
 
   let buildWire (parts : string) =
     let rec inner (wire : (int*int) list) (parts : string list) =
@@ -116,7 +115,7 @@ module Day3 =
             | 'L' -> List.init l (fun l -> x - l - 1, y)
             | 'R' -> List.init l (fun l -> x + l + 1, y)
             | _ -> failwith "Invalid direction"
-          setTail (wire' |> List.rev) wire
+          List.setTail (wire' |> List.rev) wire
         inner wire' tail
     parts.Split(',') |> List.ofArray
     |> inner [0,0]
