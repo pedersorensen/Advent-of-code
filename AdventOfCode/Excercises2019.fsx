@@ -418,3 +418,6 @@ module Day6 =
   let route2 = findRoute map2 "SAN"
   let (r1, r2) = findEarliestAncester route1 route2
   r1.Length + r2.Length
+
+module Day7 =
+  let input = (readInput "day7" |> Array.exactlyOne).Split(',') |> Array.map int
