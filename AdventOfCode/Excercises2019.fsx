@@ -22,7 +22,7 @@ module List =
         let fi = typeof<'a list>.GetField("tail", BindingFlags.Instance ||| BindingFlags.NonPublic)
         if isNull fi then failwith "Could not find private 'tail' field on list."
         fi.SetValue(list, list2)
-        list
+        list1
       | _ :: tail -> helper tail
     match list2 with
     | [] -> list1
