@@ -28,6 +28,71 @@ module List =
     | [] -> list1
     | _ -> helper list1
 
+module Intcode =
+  module private OpCodes =
+    let [<Literal>] Add = 1
+    let [<Literal>] Mult = 2
+    let [<Literal>] Input = 3
+    let [<Literal>] Output = 4
+    let [<Literal>] JumpIfTrue = 5
+    let [<Literal>] JumpIfFalse = 6
+    let [<Literal>] LessThan = 7
+    let [<Literal>] Equals = 8
+    let [<Literal>] Stop = 99
+
+  let private codeAndModes code =
+    let (code, opCode) = Math.DivRem(code, 100)
+    let (code, m1) = Math.DivRem(code, 10)
+    let (code, m2) = Math.DivRem(code, 10)
+    let (code, m3) = Math.DivRem(code, 10)
+    if code <> 0 then failwith "Too many digits in code"
+    opCode, m1, m2, m3
+
+  let run (input : seq<int>) (program : int []) =
+    use en = input.GetEnumerator()
+    let program = program |> Array.copy
+    let rec inner i = seq {
+      let code = program.[i]
+      let code, m1, m2, m3 = codeAndModes code
+      let val1 = lazy  if m1 = 1 then program.[i+1] else program.[program.[i+1]]
+      let val2 = lazy  if m2 = 1 then program.[i+2] else program.[program.[i+2]]
+      match code with
+      | OpCodes.Stop -> ()
+      | OpCodes.Add ->
+        let pos3 = program.[i+3]
+        if m3 <> 0 then failwith "Should have been position mode for Add"
+        program.[pos3] <- val1.Value + val2.Value
+        yield! inner (i+4)
+      | OpCodes.Mult ->
+        let pos3 = program.[i+3]
+        if m3 <> 0 then failwith "Should have been position mode for Mult"
+        program.[pos3] <- val1.Value * val2.Value
+        yield! inner (i+4)
+      | OpCodes.Input ->
+        let pos1 = program.[i+1]
+        if m1 <> 0 then failwith "Should have been position mode for Input"
+        if not <| en.MoveNext() then failwith "No input"
+        program.[pos1] <- en.Current
+        yield! inner (i+2)
+      | OpCodes.Output ->
+        yield val1.Value
+        yield! inner (i+2)
+      | OpCodes.JumpIfTrue  -> yield! inner(if val1.Value <> 0 then val2.Value else i + 3)
+      | OpCodes.JumpIfFalse -> yield! inner(if val1.Value = 0 then val2.Value else i + 3)
+      | OpCodes.LessThan ->
+        let pos3 = program.[i+3]
+        if m3 <> 0 then failwith "Should have been position mode for LessThan"
+        program.[pos3] <- if val1.Value < val2.Value then 1 else 0
+        yield! inner (i + 4)
+      | OpCodes.Equals ->
+        let pos3 = program.[i+3]
+        if m3 <> 0 then failwith "Should have been position mode for LessThan"
+        program.[pos3] <- if val1.Value = val2.Value then 1 else 0
+        yield! inner (i + 4)
+      | code -> failwithf "Invalid opcode: %i" code
+    }
+    inner 0 |> Seq.toArray, program
+
 module Day1 =
   // Part 1
   let getFuel mass = max 0 (mass / 3 - 2)
@@ -57,48 +122,30 @@ module Day1 =
     |> Array.sumBy(int >> getFuel')
 
 module Day2 =
-  module OpCodes =
-    let [<Literal>] Add = 1
-    let [<Literal>] Mult = 2
-    let [<Literal>] Stop = 99
-
-  let run (program : int []) =
-    let program = program |> Array.copy
-    let rec inner i =
-      let code = program.[i]
-      if code = OpCodes.Stop then program else
-      let pos1 = program.[i+1]
-      let pos2 = program.[i+2]
-      let pos3 = program.[i+3]
-      program.[pos3] <- 
-        if   code = OpCodes.Add  then program.[pos1] + program.[pos2]
-        elif code = OpCodes.Mult then program.[pos1] * program.[pos2]
-        else failwith ""
-      inner (i+4)
-    inner 0
+  open Intcode
 
   let example = "1,9,10,3,2,3,11,0,99,30,40,50".Split(',') |> Array.map int
-  run example
+  run [] example
 
-  run [|1;0;0;0;99|] //becomes 2,0,0,0,99 (1 + 1 = 2).
-  run [|2;3;0;3;99|] //becomes 2,3,0,6,99 (3 * 2 = 6).
-  run [|2;4;4;5;99;0|] //becomes 2,4,4,5,99,9801 (99 * 99 = 9801).
-  run [|1;1;1;4;99;5;6;0;99|] //becomes 30,1,1,4,2,5,6,0,99.
+  run [] [|1;0;0;0;99|] //becomes 2,0,0,0,99 (1 + 1 = 2).
+  run [] [|2;3;0;3;99|] //becomes 2,3,0,6,99 (3 * 2 = 6).
+  run [] [|2;4;4;5;99;0|] //becomes 2,4,4,5,99,9801 (99 * 99 = 9801).
+  run [] [|1;1;1;4;99;5;6;0;99|] //becomes 30,1,1,4,2,5,6,0,99.
 
   // Part 1
   let input = (readInput "day2" |> Array.exactlyOne).Split(',') |> Array.map int
   input.[1] <- 12
   input.[2] <- 2
-  run input
+  run [] input |> snd |> Array.item 0 // 3562624
 
   // Part 2
   for noun in { 0 .. 99 } do
     for verb in {0 .. 99 } do
       input.[1] <- noun
       input.[2] <- verb
-      let res = run input
+      let res = run [] input |> snd
       if res.[0] = 19690720 then
-        printfn "Noun: %i, verb: %i, total: %i" noun verb (100 * noun + verb)
+        printfn "Noun: %i, verb: %i, total: %i" noun verb (100 * noun + verb) // 8298
 
 module Day3 =
   open System.Collections.Generic
@@ -257,84 +304,25 @@ module Day4 =
     |> snd
 
 module Day5 =
-  module OpCodes =
-    let [<Literal>] Add = 1
-    let [<Literal>] Mult = 2
-    let [<Literal>] Input = 3
-    let [<Literal>] Output = 4
-    let [<Literal>] JumpIfTrue = 5
-    let [<Literal>] JumpIfFalse = 6
-    let [<Literal>] LessThan = 7
-    let [<Literal>] Equals = 8
-    let [<Literal>] Stop = 99
+  open Intcode
 
-  let codeAndModes code =
-    let (code, opCode) = Math.DivRem(code, 100)
-    let (code, m1) = Math.DivRem(code, 10)
-    let (code, m2) = Math.DivRem(code, 10)
-    let (code, m3) = Math.DivRem(code, 10)
-    if code <> 0 then failwith "Too many digits in code"
-    opCode, m1, m2, m3
-
-  let run input (program : int []) =
-    let program = program |> Array.copy
-    let rec inner i =
-      let code = program.[i]
-      let code, m1, m2, m3 = codeAndModes code
-      let val1 = lazy  if m1 = 1 then program.[i+1] else program.[program.[i+1]]
-      let val2 = lazy  if m2 = 1 then program.[i+2] else program.[program.[i+2]]
-      match code with
-      | OpCodes.Stop -> program
-      | OpCodes.Add ->
-        let pos3 = program.[i+3]
-        if m3 <> 0 then failwith "Should have been position mode for Add"
-        program.[pos3] <- val1.Value + val2.Value
-        inner (i+4)
-      | OpCodes.Mult ->
-        let pos3 = program.[i+3]
-        if m3 <> 0 then failwith "Should have been position mode for Mult"
-        program.[pos3] <- val1.Value * val2.Value
-        inner (i+4)
-      | OpCodes.Input ->
-        let pos1 = program.[i+1]
-        if m1 <> 0 then failwith "Should have been position mode for Input"
-        program.[pos1] <- input
-        inner (i+2)
-      | OpCodes.Output ->
-        printfn "Output: %i" val1.Value
-        inner (i+2)
-      | OpCodes.JumpIfTrue  -> inner(if val1.Value <> 0 then val2.Value else i + 3)
-      | OpCodes.JumpIfFalse -> inner(if val1.Value = 0 then val2.Value else i + 3)
-      | OpCodes.LessThan ->
-        let pos3 = program.[i+3]
-        if m3 <> 0 then failwith "Should have been position mode for LessThan"
-        program.[pos3] <- if val1.Value < val2.Value then 1 else 0
-        inner (i + 4)
-      | OpCodes.Equals ->
-        let pos3 = program.[i+3]
-        if m3 <> 0 then failwith "Should have been position mode for LessThan"
-        program.[pos3] <- if val1.Value = val2.Value then 1 else 0
-        inner (i + 4)
-      | code -> failwithf "Invalid opcode: %i" code
-    inner 0
-
-  run 0 [|1002;4;3;4;33|]
-  run 0 [|1101;100;-1;4;0|]
+  run [0] [|1002;4;3;4;33|]
+  run [0] [|1101;100;-1;4;0|]
   let input = (readInput "day5" |> Array.exactlyOne).Split(',') |> Array.map int
-  run 1 input
+  run [1] input |> fst |> Array.last // 2845163
   // Part 2
-  run 9 [|3;9;8;9;10;9;4;9;99;-1;8|] // - Using position mode; consider whether the input is equal to 8; output 1 (if it is) or 0 (if it is not).
-  run 1 [|3;9;7;9;10;9;4;9;99;-1;8|] // - Using position mode; consider whether the input is less than 8; output 1 (if it is) or 0 (if it is not).
-  run 1 [|3;3;1108;-1;8;3;4;3;99|] // - Using immediate mode; consider whether the input is equal to 8; output 1 (if it is) or 0 (if it is not).
-  run 8 [|3;3;1107;-1;8;3;4;3;99|] // - Using immediate mode; consider whether the input is less than 8; output 1 (if it is) or 0 (if it is not).
+  fst <| run [9] [|3;9;8;9;10;9;4;9;99;-1;8|] // - Using position mode; consider whether the input is equal to 8; output 1 (if it is) or 0 (if it is not).
+  fst <| run [1] [|3;9;7;9;10;9;4;9;99;-1;8|] // - Using position mode; consider whether the input is less than 8; output 1 (if it is) or 0 (if it is not).
+  fst <| run [1] [|3;3;1108;-1;8;3;4;3;99|] // - Using immediate mode; consider whether the input is equal to 8; output 1 (if it is) or 0 (if it is not).
+  fst <| run [8] [|3;3;1107;-1;8;3;4;3;99|] // - Using immediate mode; consider whether the input is less than 8; output 1 (if it is) or 0 (if it is not).
 
   //Here are some jump tests that take an input, then output 0 if the input was
   //zero or 1 if the input was non-zero:
-  run -10 [|3;12;6;12;15;1;13;14;13;4;13;99;-1;0;1;9|] // (using position mode)
-  run -10 [|3;3;1105;-1;9;1101;0;0;12;4;12;99;1|] // (using immediate mode)
+  fst <| run [-10] [|3;12;6;12;15;1;13;14;13;4;13;99;-1;0;1;9|] // (using position mode)
+  fst <| run [-10] [|3;3;1105;-1;9;1101;0;0;12;4;12;99;1|] // (using immediate mode)
 
-  run 9 [|3;21;1008;21;8;20;1005;20;22;107;8;21;20;1006;20;31;1106;0;36;98;0;0;1002;21;125;20;4;20;1105;1;46;104;999;1105;1;46;1101;1000;1;20;4;20;1105;1;46;98;99|]
-  run 5 input
+  fst <| run [9] [|3;21;1008;21;8;20;1005;20;22;107;8;21;20;1006;20;31;1106;0;36;98;0;0;1002;21;125;20;4;20;1105;1;46;104;999;1105;1;46;1101;1000;1;20;4;20;1105;1;46;98;99|]
+  fst <| run [5] input // 9436229
 
 module Day6 =
 
