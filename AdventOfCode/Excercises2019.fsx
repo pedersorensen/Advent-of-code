@@ -101,6 +101,7 @@ module Day2 =
         printfn "Noun: %i, verb: %i, total: %i" noun verb (100 * noun + verb)
 
 module Day3 =
+  open System.Collections.Generic
 
   let buildWire (parts : string) =
     let rec inner (wire : (int*int) list) (parts : string list) =
@@ -148,15 +149,11 @@ module Day3 =
   checkWire "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51" 
 
   let getClosestInsersection w1 w2 =
-    let wire1 = buildWire w1
-    let wire2 = buildWire w2
-    let points1 = wire1 |> Set.ofList
-    let points2 = wire2 |> Set.ofList
-
-    (points1, points2)
-    ||> Set.intersect
-    |> Set.remove (0,0)
-    |> Seq.minBy(fun (x, y) -> abs x + abs y)
+    let points1 = buildWire w1 |> HashSet
+    let points2 = buildWire w2
+    points1.IntersectWith(points2)
+    let _ = points1.Remove(0,0)
+    points1 |> Seq.minBy(fun (x, y) -> abs x + abs y)
 
   getClosestInsersection "R8,U5,L5,D3" "U7,R6,D4,L4" 
   getClosestInsersection 
@@ -173,27 +170,23 @@ module Day3 =
     | _ -> failwith "Invalid input"
 
   let (x, y) = getClosestInsersection input1 input2
-  let d = x + y
+  let d = x + y // 1983
 
   // Part 2
   let getShortestIntersection w1 w2 =
     let wire1 = buildWire w1
     let wire2 = buildWire w2
-    let points1 = wire1 |> Set.ofList
-    let points2 = wire2 |> Set.ofList
+    let points1 = HashSet wire1
 
-    let intersections =
-      (points1, points2)
-      ||> Set.intersect
-      |> Set.remove (0,0)
-      |> Set.toList
+    points1.IntersectWith(wire2)
+    points1.Remove(0, 0) |> ignore
 
-    intersections
-    |> List.map(fun p ->
+    points1
+    |> Seq.map(fun p ->
       let d1 = wire1 |> List.findIndex((=) p)
       let d2 = wire2 |> List.findIndex((=) p)
       d1 + d2)
-    |> List.min
+    |> Seq.min
 
   getShortestIntersection "R8,U5,L5,D3" "U7,R6,D4,L4" // distance 30
   getShortestIntersection 
@@ -202,7 +195,7 @@ module Day3 =
   getShortestIntersection 
     "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"
     "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7" // distance 410
-  getShortestIntersection input1 input2
+  getShortestIntersection input1 input2 // 107754
 
 module Day4 =
 
