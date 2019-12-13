@@ -102,7 +102,6 @@ module Day2 =
 
 module Day3 =
   open System.Collections.Generic
-
   let buildWire (parts : string) =
     let rec inner (wire : (int*int) list) (parts : string list) =
       match parts with
@@ -114,12 +113,12 @@ module Day3 =
         let wire' =
           let wire' =
             match d with
-            | 'U' -> List.init l (fun l -> x, y + l + 1)
-            | 'D' -> List.init l (fun l -> x, y - l - 1)
-            | 'L' -> List.init l (fun l -> x - l - 1, y)
-            | 'R' -> List.init l (fun l -> x + l + 1, y)
+            | 'U' -> List.init l (fun i -> x, y - i + l)
+            | 'D' -> List.init l (fun i -> x, y + i - l)
+            | 'L' -> List.init l (fun i -> x + i - l, y)
+            | 'R' -> List.init l (fun i -> x - i + l, y)
             | _ -> failwith "Invalid direction"
-          List.setTail (wire' |> List.rev) wire
+          List.setTail wire' wire
         inner wire' tail
     parts.Split(',') |> List.ofArray
     |> inner [0,0]
