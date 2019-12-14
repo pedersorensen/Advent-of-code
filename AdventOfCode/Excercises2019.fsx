@@ -50,12 +50,12 @@ module Intcode =
 
   let run (input : seq<int>) (program : int []) =
     use en = input.GetEnumerator()
-    let program = program |> Array.copy
+    let program = Array.copy program
     let rec inner i = seq {
       let code = program.[i]
       let code, m1, m2, m3 = codeAndModes code
-      let val1 = lazy  if m1 = 1 then program.[i+1] else program.[program.[i+1]]
-      let val2 = lazy  if m2 = 1 then program.[i+2] else program.[program.[i+2]]
+      let val1 = lazy if m1 = 1 then program.[i+1] else program.[program.[i+1]]
+      let val2 = lazy if m2 = 1 then program.[i+2] else program.[program.[i+2]]
       match code with
       | OpCodes.Stop -> ()
       | OpCodes.Add ->
@@ -72,13 +72,19 @@ module Intcode =
         let pos1 = program.[i+1]
         if m1 <> 0 then failwith "Should have been position mode for Input"
         if not <| en.MoveNext() then failwith "No input"
+        printfn "Read input: %i" en.Current
         program.[pos1] <- en.Current
         yield! inner (i+2)
       | OpCodes.Output ->
+        printfn "yielding output: %i" val1.Value
         yield val1.Value
         yield! inner (i+2)
-      | OpCodes.JumpIfTrue  -> yield! inner(if val1.Value <> 0 then val2.Value else i + 3)
-      | OpCodes.JumpIfFalse -> yield! inner(if val1.Value = 0 then val2.Value else i + 3)
+      | OpCodes.JumpIfTrue  ->
+        let i = if val1.Value <> 0 then val2.Value else i + 3
+        yield! inner i
+      | OpCodes.JumpIfFalse ->
+        let i = if val1.Value = 0 then val2.Value else i + 3
+        yield! inner i
       | OpCodes.LessThan ->
         let pos3 = program.[i+3]
         if m3 <> 0 then failwith "Should have been position mode for LessThan"
@@ -400,4 +406,26 @@ module Day6 =
   r1.Length + r2.Length
 
 module Day7 =
+
   let input = (readInput "day7" |> Array.exactlyOne).Split(',') |> Array.map int
+
+  //let example = "3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0".Split(',') |> Array.map int
+  //let example = "3,23,3,24,1002,24,10,24,1002,23,-1,23,101,5,23,23,1,24,23,23,4,23,99,0,0".Split(',') |> Array.map int
+  let example = "3,31,3,32,1002,32,10,32,1001,31,-2,31,1007,31,0,33,1002,33,7,33,1,33,31,31,1,32,31,31,4,31,99,0,0,0".Split(',') |> Array.map int
+  let run input code = Intcode.run input code |> fst |> Array.exactlyOne
+  let a, b, c, d, e = 1,0,4,3,2
+  let mutable output = 0
+  for a in { 0 .. 4 } do
+    for b in { 0 .. 4 } do
+      for c in { 0 .. 4 } do
+        for d in { 0 .. 4 } do
+          for e in { 0 .. 4 } do
+            let ampA = run [a;0] example
+            let ampB = run [b;ampA] example
+            let ampC = run [c;ampB] example
+            let ampD = run [d;ampC] example
+            let ampE = run [e;ampD] example
+            if ampE > output then
+              output <- ampE
+              printfn "%A, Amp: %i" (a, b, c, d, e) ampE
+  output
