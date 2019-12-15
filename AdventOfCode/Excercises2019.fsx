@@ -1,12 +1,12 @@
 #r @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\FSharp\FSharp.Compiler.Interactive.Settings.dll"
-#load "TopologicalSort.fs"
 
 open System
 open System.IO
 
 Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
-let readInput file = File.ReadAllLines("input2019/" + file + ".txt")
+let readInput day = File.ReadAllLines("input2019/" + day + ".txt")
+let readsInts day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int
 
 module List =
 
@@ -139,7 +139,7 @@ module Day2 =
   run [] [|1;1;1;4;99;5;6;0;99|] //becomes 30,1,1,4,2,5,6,0,99.
 
   // Part 1
-  let input = (readInput "day2" |> Array.exactlyOne).Split(',') |> Array.map int
+  let input = readsInts "day2"
   input.[1] <- 12
   input.[2] <- 2
   run [] input |> snd |> Array.item 0 // 3562624
@@ -314,7 +314,7 @@ module Day5 =
 
   run [0] [|1002;4;3;4;33|]
   run [0] [|1101;100;-1;4;0|]
-  let input = (readInput "day5" |> Array.exactlyOne).Split(',') |> Array.map int
+  let input = readsInts "day5"
   run [1] input |> fst |> Array.last // 2845163
   // Part 2
   fst <| run [9] [|3;9;8;9;10;9;4;9;99;-1;8|] // - Using position mode; consider whether the input is equal to 8; output 1 (if it is) or 0 (if it is not).
@@ -407,7 +407,7 @@ module Day6 =
 
 module Day7 =
 
-  let input = (readInput "day7" |> Array.exactlyOne).Split(',') |> Array.map int
+  let input = readsInts "day7"
 
   //let example = "3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0".Split(',') |> Array.map int
   //let example = "3,23,3,24,1002,24,10,24,1002,23,-1,23,101,5,23,23,1,24,23,23,4,23,99,0,0".Split(',') |> Array.map int
