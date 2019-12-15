@@ -429,3 +429,23 @@ module Day7 =
               output <- ampE
               printfn "%A, Amp: %i" (a, b, c, d, e) ampE
   output
+
+module Day8 =
+  let input, w, h = readInput "day8" |> Array.exactlyOne, 25, 6
+  // Part 1
+  let result =
+    input
+    |> Seq.chunkBySize(w*h)
+    |> Seq.map(Seq.countBy id >> Map.ofSeq)
+    |> Seq.minBy(Map.find '0')
+    |> fun m -> m.['1'] * m.['2'] // 1950
+
+  // Part 2
+  input
+  |> Seq.chunkBySize(w*h)
+  |> Seq.reduce(Array.map2(fun c1 c2 -> if c1 = '2' then c2 else c1))
+  |> Seq.chunkBySize w
+  |> Seq.map String
+  |> String.concat "\r\n"
+  |> fun s -> s.Replace('0', ' ').Replace('1', '█')
+  |> printfn "%s" // FKAHL
