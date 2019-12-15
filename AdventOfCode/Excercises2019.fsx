@@ -38,6 +38,7 @@ module Intcode =
     let [<Literal>] JumpIfFalse = 6
     let [<Literal>] LessThan = 7
     let [<Literal>] Equals = 8
+    let [<Literal>] AdjustRelativeBase = 9
     let [<Literal>] Stop = 99
 
   let private codeAndModes code =
@@ -95,6 +96,8 @@ module Intcode =
         if m3 <> 0 then failwith "Should have been position mode for LessThan"
         program.[pos3] <- if val1.Value = val2.Value then 1 else 0
         yield! inner (i + 4)
+      | OpCodes.AdjustRelativeBase ->
+        yield! inner (i + 2)
       | code -> failwithf "Invalid opcode: %i" code
     }
     inner 0 |> Seq.toArray, program
@@ -449,3 +452,6 @@ module Day8 =
   |> String.concat "\r\n"
   |> fun s -> s.Replace('0', ' ').Replace('1', '█')
   |> printfn "%s" // FKAHL
+
+module Day9 =
+  let input = readsInts "day9"
