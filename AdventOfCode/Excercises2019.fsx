@@ -7,6 +7,7 @@ Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
 let readInput day = File.ReadAllLines("input2019/" + day + ".txt")
 let readsInts day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int
+let readsInt64s day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int64
 
 module List =
 
@@ -599,3 +600,6 @@ module Day10 =
   let v1 = getVaporizationOrder f p1
   v1 |> Array.iteri(fun i (p, _) -> printfn "%i: %A" (i+1) p)
   v1.[199] // 502
+
+module Day11 =
+  let input = readsInt64s "day11"
