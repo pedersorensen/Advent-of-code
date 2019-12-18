@@ -455,3 +455,147 @@ module Day8 =
 
 module Day9 =
   let input = readsInts "day9"
+
+module Day10 =
+  open System.Collections.Generic
+
+  let printField (chars:string[]) = "\r\n" + (chars |> String.concat "\r\n" )
+  fsi.AddPrinter printField
+
+  [<StructuredFormatDisplay("({X}, {Y})")>]
+  type Pos = { X : int ; Y : int}
+  with
+    static member (-)(p : Pos, q : Pos) = p.X - q.X, p.Y - q.Y
+
+  let getAsteroids (chars:string[]) =
+    chars
+    |> Array.mapi(fun y row ->
+      row.ToCharArray()
+      |> Array.mapi(fun x c -> y, x, c))
+    |> Array.collect(Array.choose(fun (y, x, c) -> if c = '#' then Some { X = x ; Y =  y } else None))
+
+  let rec gcd a b = if b = 0 then a else gcd b (a % b)
+  let reduce(a, b) =
+    let g = gcd a b
+    if g = 0 then (0,0) elif g < 0 then -a/g, -b/g else a/g, b/g
+
+  let fields =
+    [|
+      [|
+        ".#..#"
+        "....."
+        "#####"
+        "....#"
+        "...##"
+      |]
+      [|
+        "......#.#."
+        "#..#.#...."
+        "..#######."
+        ".#.#.###.."
+        ".#..#....."
+        "..#....#.#"
+        "#..#....#."
+        ".##.#..###"
+        "##...#..#."
+        ".#....####"
+      |]
+      [|
+        "#.#...#.#."
+        ".###....#."
+        ".#....#..."
+        "##.#.#.#.#"
+        "....#.#.#."
+        ".##..###.#"
+        "..#...##.."
+        "..##....##"
+        "......#..."
+        ".####.###."
+      |]
+      [|
+        ".#..#..###"
+        "####.###.#"
+        "....###.#."
+        "..###.##.#"
+        "##.##.#.#."
+        "....###..#"
+        "..#.#..#.#"
+        "#..#.#.###"
+        ".##...##.#"
+        ".....#.#.."
+      |]
+      [|
+        ".#..##.###...#######"
+        "##.############..##."
+        ".#.######.########.#"
+        ".###.#######.####.#."
+        "#####.##.#.##.###.##"
+        "..#####..#.#########"
+        "####################"
+        "#.####....###.#.#.##"
+        "##.#################"
+        "#####.##.###..####.."
+        "..######..##.#######"
+        "####.##.####...##..#"
+        ".#####..#.######.###"
+        "##...#.##########..."
+        "#.##########.#######"
+        ".####.#.###.###.#.##"
+        "....##.##.###..#####"
+        ".#.#.###########.###"
+        "#.#.#.#####.####.###"
+        "###.##.####.##.#..##"
+      |]
+      readInput "day10"
+    |]
+    |> Array.map getAsteroids
+
+  let getMaxVisible(asteroids : Pos[]) =
+    asteroids
+    |> Array.map(fun p1 ->
+      let counts =
+        asteroids |> Array.distinctBy(fun p2 -> p2 - p1 |> reduce)
+      p1, counts.Length - 1
+    )
+    |> Array.maxBy snd
+
+  // Part 1
+  fields
+  |> Array.map getMaxVisible
+  |> Array.iter(fun (pos, count) -> printfn "%A: %i" pos count) // 214
+
+  // Part 2
+  let field = 
+    [|
+      ".#....#####...#.."
+      "##...##.#####..##"
+      "##...#...#.#####."
+      "..#.....X...###.."
+      "..#.#.....#....##"
+    |]
+
+  let getVaporizationOrder (asteroids:Pos[]) p1 =
+    let seen = new Dictionary<(int * int), int>()
+    asteroids
+    |> Array.filter(fun p2 -> p2 <> p1)
+    |> Array.sortBy(fun p2 ->
+      let (dx, dy) = p1 - p2
+      dx * dx + dy * dy)
+    |> Array.map(fun p2 ->
+      let (dx, dy) = p1 - p2
+      let angle = Math.Atan2(float dy, float dx) - Math.PI / 2.
+      let angle = if angle < 0. then angle + 2. * Math.PI else angle
+      let direction = reduce(dx, dy)
+      let count =
+        match seen.TryGetValue(direction) with
+        | true, count -> count + 2
+        | false, _ -> 0
+      seen.[direction] <- count
+      p2, angle + float count * Math.PI)
+    |> Array.sortBy snd
+
+  let f = fields.[5]
+  let p1 = getMaxVisible f |> fst
+  let v1 = getVaporizationOrder f p1
+  v1 |> Array.iteri(fun i (p, _) -> printfn "%i: %A" (i+1) p)
+  v1.[199] // 502
