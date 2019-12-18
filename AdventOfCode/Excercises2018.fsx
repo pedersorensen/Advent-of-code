@@ -1,4 +1,5 @@
-﻿#load "TopologicalSort.fs"
+﻿#r @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\FSharp\FSharp.Compiler.Interactive.Settings.dll"
+#load "TopologicalSort.fs"
 
 open System
 open System.IO
