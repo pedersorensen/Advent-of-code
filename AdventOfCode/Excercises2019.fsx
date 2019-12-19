@@ -9,6 +9,15 @@ let readInput day = File.ReadAllLines("input2019/" + day + ".txt")
 let readsInts day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int
 let readsInt64s day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int64
 
+[<AutoOpen>]
+module Utils =
+  /// Greatest Common Divisor
+  let rec gcd a b = if b = 0 then a else gcd b (a % b)
+  /// Greatest Common Divisor
+  let rec gcd64 a b = if b = 0L then a else gcd64 b (a % b)
+  /// Lowest Common Multiple
+  let lcm64 a b = a * b / gcd64 a b
+
 module List =
 
   open System.Reflection
@@ -475,7 +484,6 @@ module Day10 =
       |> Array.mapi(fun x c -> y, x, c))
     |> Array.collect(Array.choose(fun (y, x, c) -> if c = '#' then Some { X = x ; Y =  y } else None))
 
-  let rec gcd a b = if b = 0 then a else gcd b (a % b)
   let reduce(a, b) =
     let g = gcd a b
     if g = 0 then (0,0) elif g < 0 then -a/g, -b/g else a/g, b/g
@@ -603,3 +611,104 @@ module Day10 =
 
 module Day11 =
   let input = readsInt64s "day11"
+
+module Day12 =
+  [<StructuredFormatDisplay("<x={X},y={Y},z={Z}>")>]
+  type Vec3D =
+    { X : int
+      Y : int
+      Z : int }
+    static member Zero = { X = 0 ; Y = 0 ; Z = 0 }
+    static member (+)(v1 : Vec3D, v2 : Vec3D) =
+      { X = v1.X + v2.X
+        Y = v1.Y + v2.Y
+        Z = v1.Z + v2.Z }
+    static member (-)(v1 : Vec3D, v2 : Vec3D) =
+      { X = v1.X - v2.X
+        Y = v1.Y - v2.Y
+        Z = v1.Z - v2.Z }
+    static member (~-)(v2 : Vec3D) =
+      { X = -v2.X
+        Y = -v2.Y
+        Z = -v2.Z }
+
+  type Moon =
+    { Pos : Vec3D
+      Vel : Vec3D }
+    override this.ToString() =
+      sprintf "pos=%A, vel=%A" this.Pos this.Vel
+
+  let parsePositions values =
+    values
+    |> Array.map(fun (s : string) ->
+      match s.Split("<>, =".ToCharArray(), StringSplitOptions.RemoveEmptyEntries) with
+      | [|_;x;_;y;_;z|] -> { Pos = { X = int x ; Y = int y ; Z = int z } ; Vel = Vec3D.Zero }
+      | _ -> failwith "Invalid input")
+
+  let acc (p1:Moon) (p2:Moon) = {
+    X = p1.Pos.X - p2.Pos.X |> sign
+    Y = p1.Pos.Y - p2.Pos.Y |> sign
+    Z = p1.Pos.Z - p2.Pos.Z |> sign
+  }
+
+  let advance positions =
+    positions
+    |> Array.map(fun moon ->
+      let dv = positions |> Array.sumBy(fun moon' -> acc moon' moon)
+      let v = moon.Vel + dv
+      { moon with Pos = moon.Pos + v ; Vel = v}
+    )
+
+  let advance' positions =
+    positions
+    |> Array.map(fun (x:int, v) ->
+      let dv = positions |> Array.sumBy(fun (x', _) -> sign(x'- x))
+      let v = v + dv
+      x + v, v)
+
+  let totalEnergy (moon:Moon) =
+    let pos = moon.Pos
+    let pot = abs pos.X + abs pos.Y + abs pos.Z
+    let vel = moon.Vel
+    let kin = abs vel.X + abs vel.Y + abs vel.Z
+    pot * kin
+
+  let rec apply count f x = 
+    if count = 0 then x else apply (count - 1) f (f x)
+
+  let loop x f =
+    let rec inner count x' =
+      if x = x' then count else inner (count+1) (f x')
+    inner 1 (f x)
+
+  let positions1 =
+    [| "<x=-1, y=0, z=2>"
+       "<x=2, y=-10, z=-7>"
+       "<x=4, y=-8, z=8>"
+       "<x=3, y=5, z=-1>" |]
+    |> parsePositions
+
+  let positions2 =
+    [| "<x=-8, y=-10, z=0>"
+       "<x=5, y=5, z=10>"
+       "<x=2, y=-7, z=3>"
+       "<x=9, y=-8, z=-3>"|]
+    |> parsePositions
+  let positions = readInput "day12" |> parsePositions
+
+  positions1
+  |> apply 1000 advance
+  |> Array.sumBy totalEnergy // 7179
+  //|> clip
+
+  // Part 2
+  let xs, ys, zs =
+    positions
+    |> Array.map(fun m -> (m.Pos.X, m.Vel.X), (m.Pos.Y, m.Vel.Y), (m.Pos.Z, m.Vel.Z))
+    |> Array.unzip3
+
+  let c1 = loop xs advance' |> int64
+  let c2 = loop ys advance' |> int64
+  let c3 = loop zs advance' |> int64
+
+  let answer = lcm64(lcm64 c1 c2) c3 // 428576638953552L
