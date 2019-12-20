@@ -712,3 +712,6 @@ module Day12 =
   let c3 = loop zs advance' |> int64
 
   let answer = lcm64(lcm64 c1 c2) c3 // 428576638953552L
+
+module Day13 =
+  let input = readInput "day13"
