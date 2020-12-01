@@ -1,5 +1,4 @@
-﻿#r @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\FSharp\FSharp.Compiler.Interactive.Settings.dll"
-#load "TopologicalSort.fs"
+﻿#load "TopologicalSort.fs"
 
 open System
 open System.IO
@@ -197,7 +196,7 @@ module Day3 =
   let res1 = findCovered 8 8 testInput
   let res2 = findCovered 1000 1000 input
 
-  let overlaps = 
+  let overlaps =
     input
     |> Array.filter(fun claim ->
       input
@@ -370,7 +369,7 @@ module Day6 =
     }
 
   fsi.AddPrinter <| print<char*int> (fun (ch, _) -> ch.ToString())
-      
+
   let input = readInput "day6.txt" |> Array.map parse
   let testInput = [| "1, 1" ; "1, 6" ; "8, 3" ; "3, 4" ; "5, 5" ; "8, 9" |] |> Array.map parse
 
@@ -435,7 +434,7 @@ module Day7 =
       let name = s.[36]
       { Name = name ; DependsOn = [| s.[5] |] }
 
-  let addFreeSteps input = 
+  let addFreeSteps input =
     input
     |> Array.collect(fun x -> x.DependsOn)
     |> Array.except (input |> Array.map(fun x -> x.Name))
@@ -523,7 +522,7 @@ module Day8 =
       | _ -> failwith "Not enough elements"
     let (node, _, _) = loop 0 items
     node
-  
+
   let rec addMeta (Node(_, meta, children)) =
     (+) (List.sum meta) (List.sumBy addMeta children)
 
@@ -711,4 +710,3 @@ module Day12 =
     let j = i + state.Min
     let key = state.[j-2], state.[j-1], state.[j], state.[j+1], state.[j+2]
     testRules |> Map.tryFind key |> Option.defaultValue '.') |> String
-  
