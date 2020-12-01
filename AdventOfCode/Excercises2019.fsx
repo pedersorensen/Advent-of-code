@@ -1,5 +1,3 @@
-#r @"C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\CommonExtensions\Microsoft\FSharp\FSharp.Compiler.Interactive.Settings.dll"
-
 open System
 open System.IO
 
@@ -202,16 +200,16 @@ module Day3 =
       | _ -> failwith "Invalid direction")
 
   buildWire "R8,U5,L5,D3" |> List.last
-  checkWire "R8,U5,L5,D3" 
+  checkWire "R8,U5,L5,D3"
 
   buildWire "U7,R6,D4,L4" |> List.last
-  checkWire "U7,R6,D4,L4" 
+  checkWire "U7,R6,D4,L4"
 
   buildWire "R75,D30,R83,U83,L12,D49,R71,U7,L72" |> List.last
-  checkWire "R75,D30,R83,U83,L12,D49,R71,U7,L72" 
+  checkWire "R75,D30,R83,U83,L12,D49,R71,U7,L72"
 
   buildWire "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51" |> List.last
-  checkWire "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51" 
+  checkWire "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"
 
   let getClosestInsersection w1 w2 =
     let points1 = buildWire w1 |> HashSet
@@ -220,11 +218,11 @@ module Day3 =
     let _ = points1.Remove(0,0)
     points1 |> Seq.minBy(fun (x, y) -> abs x + abs y)
 
-  getClosestInsersection "R8,U5,L5,D3" "U7,R6,D4,L4" 
-  getClosestInsersection 
+  getClosestInsersection "R8,U5,L5,D3" "U7,R6,D4,L4"
+  getClosestInsersection
     "R75,D30,R83,U83,L12,D49,R71,U7,L72"
     "U62,R66,U55,R34,D71,R55,D58,R83" // distance 159
-  getClosestInsersection 
+  getClosestInsersection
     "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"
     "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7" // distance 135
 
@@ -254,10 +252,10 @@ module Day3 =
     |> Seq.min
 
   getShortestIntersection "R8,U5,L5,D3" "U7,R6,D4,L4" // distance 30
-  getShortestIntersection 
+  getShortestIntersection
     "R75,D30,R83,U83,L12,D49,R71,U7,L72"
     "U62,R66,U55,R34,D71,R55,D58,R83" // distance 610
-  getShortestIntersection 
+  getShortestIntersection
     "R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51"
     "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7" // distance 410
   getShortestIntersection input1 input2 // 107754
@@ -284,7 +282,7 @@ module Day4 =
     let (a, b, c, d, e, f) = digits i
     hasPair a b c d e f && not (isDecreasing a b c d e f)
 
-  let from, to' = 147981, 691423 
+  let from, to' = 147981, 691423
 
   isValid 111111
   isValid 111123
@@ -574,7 +572,7 @@ module Day10 =
   |> Array.iter(fun (pos, count) -> printfn "%A: %i" pos count) // 214
 
   // Part 2
-  let field = 
+  let field =
     [|
       ".#....#####...#.."
       "##...##.#####..##"
@@ -673,7 +671,7 @@ module Day12 =
     let kin = abs vel.X + abs vel.Y + abs vel.Z
     pot * kin
 
-  let rec apply count f x = 
+  let rec apply count f x =
     if count = 0 then x else apply (count - 1) f (f x)
 
   let loop x f =
@@ -715,3 +713,127 @@ module Day12 =
 
 module Day13 =
   let input = readInput "day13"
+
+module Day14 =
+  open System.Collections.Generic
+
+  type Reaction =
+    { Input : (string * int)[]
+      Output : string * int }
+    static member Parse(s : string) =
+      let arr =
+        s.Split(" ,=>".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
+        |> Array.chunkBySize 2
+        |> Array.map(function [|a;b|] -> b, int a | _ -> failwith "Array must have two entries")
+      { Input = arr |> Array.take(arr.Length - 1)
+        Output = Array.last arr }
+
+  let print (r : Reaction) =
+      let (a, b) = r.Output
+      r.Input |> Array.map(fun (p, q) -> sprintf "%i %s" q p)
+      |> String.concat ", "
+      |> fun s -> sprintf "%s => %i %s" s b a
+
+  fsi.AddPrinter print
+  fsi.AddPrinter<Reaction[]>(Array.map print >> String.concat "\r\n")
+
+  let reactions =
+    [|
+      [|
+        "10 ORE => 10 A"
+        "1 ORE => 1 B"
+        "7 A, 1 B => 1 C"
+        "7 A, 1 C => 1 D"
+        "7 A, 1 D => 1 E"
+        "7 A, 1 E => 1 FUEL"
+      |]
+      [|
+        "9 ORE => 2 A"
+        "8 ORE => 3 B"
+        "7 ORE => 5 C"
+        "3 A, 4 B => 1 AB"
+        "5 B, 7 C => 1 BC"
+        "4 C, 1 A => 1 CA"
+        "2 AB, 3 BC, 4 CA => 1 FUEL"
+      |]
+      [|
+        "157 ORE => 5 NZVS"
+        "165 ORE => 6 DCFZ"
+        "44 XJWVT, 5 KHKGT, 1 QDVJ, 29 NZVS, 9 GPVTF, 48 HKGWZ => 1 FUEL"
+        "12 HKGWZ, 1 GPVTF, 8 PSHF => 9 QDVJ"
+        "179 ORE => 7 PSHF"
+        "177 ORE => 5 HKGWZ"
+        "7 DCFZ, 7 PSHF => 2 XJWVT"
+        "165 ORE => 2 GPVTF"
+        "3 DCFZ, 7 NZVS, 5 HKGWZ, 10 PSHF => 8 KHKGT"
+      |]
+      [|
+        "2 VPVL, 7 FWMGM, 2 CXFTF, 11 MNCFX => 1 STKFG"
+        "17 NVRVD, 3 JNWZP => 8 VPVL"
+        "53 STKFG, 6 MNCFX, 46 VJHF, 81 HVMC, 68 CXFTF, 25 GNMV => 1 FUEL"
+        "22 VJHF, 37 MNCFX => 5 FWMGM"
+        "139 ORE => 4 NVRVD"
+        "144 ORE => 7 JNWZP"
+        "5 MNCFX, 7 RFSQX, 2 FWMGM, 2 VPVL, 19 CXFTF => 3 HVMC"
+        "5 VJHF, 7 MNCFX, 9 VPVL, 37 CXFTF => 6 GNMV"
+        "145 ORE => 6 MNCFX"
+        "1 NVRVD => 8 CXFTF"
+        "1 VJHF, 6 MNCFX => 4 RFSQX"
+        "176 ORE => 6 VJHF"
+      |]
+      [|
+        "171 ORE => 8 CNZTR"
+        "7 ZLQW, 3 BMBT, 9 XCVML, 26 XMNCP, 1 WPTQ, 2 MZWV, 1 RJRHP => 4 PLWSL"
+        "114 ORE => 4 BHXH"
+        "14 VRPVC => 6 BMBT"
+        "6 BHXH, 18 KTJDG, 12 WPTQ, 7 PLWSL, 31 FHTLT, 37 ZDVW => 1 FUEL"
+        "6 WPTQ, 2 BMBT, 8 ZLQW, 18 KTJDG, 1 XMNCP, 6 MZWV, 1 RJRHP => 6 FHTLT"
+        "15 XDBXC, 2 LTCX, 1 VRPVC => 6 ZLQW"
+        "13 WPTQ, 10 LTCX, 3 RJRHP, 14 XMNCP, 2 MZWV, 1 ZLQW => 1 ZDVW"
+        "5 BMBT => 4 WPTQ"
+        "189 ORE => 9 KTJDG"
+        "1 MZWV, 17 XDBXC, 3 XCVML => 2 XMNCP"
+        "12 VRPVC, 27 CNZTR => 2 XDBXC"
+        "15 KTJDG, 12 BHXH => 5 XCVML"
+        "3 BHXH, 2 VRPVC => 7 MZWV"
+        "121 ORE => 7 VRPVC"
+        "7 XCVML => 6 RJRHP"
+        "5 BHXH, 4 VRPVC => 5 LTCX"
+      |]
+      readInput "day14"
+    |]
+    |> Array.map(Array.map Reaction.Parse)
+
+  type IDictionary<'TKey, 'TValue> with
+    member this.GetOrAdd(key, defaultValue) =
+      match this.TryGetValue key with
+      | true, value -> value
+      | false, _ ->
+        this.[key] <- defaultValue
+        defaultValue
+
+  let inline (+=) (q:'T ref) (qty : 'T) =
+    q := !q + qty
+
+  let inline (-=) (q:'T ref) (qty : 'T) =
+    if qty > !q then failwith "Result must not become negative."
+    q := !q - qty
+
+  // TODO
+  // - Check for existing quantity.
+  // - If non-zero subtract required quantity from existing.
+  // - Reduce existing quantity.
+  // - Create remaining quantity as required.
+
+  let reactantsMap =
+    reactions.[0]
+    |> Array.map(fun r -> fst r.Output, (snd r.Output, r.Input))
+    |> Map.ofArray
+
+  let make (product:string) (qty:int) =
+    let (minQty, reactants) = reactantsMap.[product]
+    minQty, reactants
+
+  let qty = 1
+  let product ="FUEL"
+  make product qty
