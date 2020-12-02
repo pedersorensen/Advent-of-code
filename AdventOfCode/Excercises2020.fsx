@@ -59,3 +59,72 @@ module Day2 =
       let b2 = pw.[p2 - 1] = char
       if b1 <> b2 then 1 else 0
     )
+
+//module Day3 =
+//  let input = readInput 3
+
+//module Day4 =
+//  let input = readInput 4
+
+//module Day5 =
+//  let input = readInput 5
+
+//module Day6 =
+//  let input = readInput 6
+
+//module Day7 =
+//  let input = readInput 7
+
+//module Day8 =
+//  let input = readInput 8
+
+//module Day9 =
+//  let input = readInput 9
+
+//module Day10 =
+//  let input = readInput 10
+
+//module Day11 =
+//  let input = readInput 11
+
+//module Day12 =
+//  let input = readInput 12
+
+//module Day13 =
+//  let input = readInput 13
+
+//module Day14 =
+//  let input = readInput 14
+
+//module Day15 =
+//  let input = readInput 15
+
+//module Day16 =
+//  let input = readInput 16
+
+//module Day17 =
+//  let input = readInput 17
+
+//module Day18 =
+//  let input = readInput 18
+
+//module Day19 =
+//  let input = readInput 19
+
+//module Day20 =
+//  let input = readInput 20
+
+//module Day21 =
+//  let input = readInput 21
+
+//module Day22 =
+//  let input = readInput 22
+
+//module Day23 =
+//  let input = readInput 23
+
+//module Day24 =
+//  let input = readInput 24
+
+//module Day25 =
+//  let input = readInput 25
