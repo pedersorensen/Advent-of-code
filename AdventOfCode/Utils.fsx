@@ -1,9 +1,27 @@
-﻿open System
+﻿#r "nuget: FSharp.Data"
+
+open System
 open System.IO
+open FSharp.Data
+
+Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
 let mutable Year = 0
 
-let readInput (day: string) = File.ReadAllLines($"input{Year}/{day}.txt")
+let cookies = [|
+  "session", File.ReadAllText("cookie.txt")
+|]
+
+let readInput (day: int) =
+  let path = $"input{Year}/day{day}.txt"
+  if File.Exists path |> not then
+    Directory.CreateDirectory($"input{Year}") |> ignore
+    printfn $"Input for day {day} does not exists, downloading file {path}."
+    let url = $"https://adventofcode.com/{Year}/day/{day}/input"
+    let response = Http.RequestString(url, cookies = cookies)
+    File.WriteAllText(path, response)
+  File.ReadAllLines path
+
 let readsInts day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int
 let readsInt64s day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int64
 

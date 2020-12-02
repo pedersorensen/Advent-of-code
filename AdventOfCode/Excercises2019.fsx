@@ -4,7 +4,6 @@ open Utils
 open System
 
 Year <- 2019
-Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
 module List =
 
@@ -109,7 +108,7 @@ module Day1 =
   getFuel 100756
 
   let totalFuel =
-    readInput "day1"
+    readInput 1
     |> Array.sumBy(int >> getFuel)
 
   // Part 2
@@ -125,7 +124,7 @@ module Day1 =
   getFuel' 100756
 
   let totalFuel' =
-    readInput "day1"
+    readInput 1
     |> Array.sumBy(int >> getFuel')
 
 module Day2 =
@@ -140,7 +139,7 @@ module Day2 =
   run [] [|1;1;1;4;99;5;6;0;99|] //becomes 30,1,1,4,2,5,6,0,99.
 
   // Part 1
-  let input = readsInts "day2"
+  let input = readsInts 2
   input.[1] <- 12
   input.[2] <- 2
   run [] input |> snd |> Array.item 0 // 3562624
@@ -218,7 +217,7 @@ module Day3 =
 
   // Part 1
   let (input1, input2) =
-    match readInput "day3" with
+    match readInput 3 with
     | [|input1 ; input2 |] -> input1, input2
     | _ -> failwith "Invalid input"
 
@@ -315,7 +314,7 @@ module Day5 =
 
   run [0] [|1002;4;3;4;33|]
   run [0] [|1101;100;-1;4;0|]
-  let input = readsInts "day5"
+  let input = readsInts 5
   run [1] input |> fst |> Array.last // 2845163
   // Part 2
   fst <| run [9] [|3;9;8;9;10;9;4;9;99;-1;8|] // - Using position mode; consider whether the input is equal to 8; output 1 (if it is) or 0 (if it is not).
@@ -347,7 +346,7 @@ module Day6 =
     helper 0 tree
   fsi.AddPrinter printTree
 
-  let input = readInput "day6"
+  let input = readInput 6
   let example = [| "COM)B" ; "B)C" ; "C)D" ; "D)E" ; "E)F" ; "B)G" ; "G)H" ; "D)I" ; "E)J" ; "J)K" ; "K)L" |]
 
   let buildMap (input : string[]) =
@@ -408,7 +407,7 @@ module Day6 =
 
 module Day7 =
 
-  let input = readsInts "day7"
+  let input = readsInts 7
 
   //let example = "3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0".Split(',') |> Array.map int
   //let example = "3,23,3,24,1002,24,10,24,1002,23,-1,23,101,5,23,23,1,24,23,23,4,23,99,0,0".Split(',') |> Array.map int
@@ -432,7 +431,7 @@ module Day7 =
   output
 
 module Day8 =
-  let input, w, h = readInput "day8" |> Array.exactlyOne, 25, 6
+  let input, w, h = readInput 8 |> Array.exactlyOne, 25, 6
   // Part 1
   let result =
     input
@@ -452,7 +451,7 @@ module Day8 =
   |> printfn "%s" // FKAHL
 
 module Day9 =
-  let input = readsInts "day9"
+  let input = readsInts 9
 
 module Day10 =
   open System.Collections.Generic
@@ -543,7 +542,7 @@ module Day10 =
         "#.#.#.#####.####.###"
         "###.##.####.##.#..##"
       |]
-      readInput "day10"
+      readInput 10
     |]
     |> Array.map getAsteroids
 
@@ -598,7 +597,7 @@ module Day10 =
   v1.[199] // 502
 
 module Day11 =
-  let input = readsInt64s "day11"
+  let input = readsInt64s 11
 
 module Day12 =
   [<StructuredFormatDisplay("<x={X},y={Y},z={Z}>")>]
@@ -682,7 +681,7 @@ module Day12 =
        "<x=2, y=-7, z=3>"
        "<x=9, y=-8, z=-3>"|]
     |> parsePositions
-  let positions = readInput "day12" |> parsePositions
+  let positions = readInput 12 |> parsePositions
 
   positions1
   |> apply 1000 advance
@@ -702,7 +701,7 @@ module Day12 =
   let answer = lcm64(lcm64 c1 c2) c3 // 428576638953552L
 
 module Day13 =
-  let input = readInput "day13"
+  let input = readInput 13
 
 module Day14 =
   open System.Collections.Generic
@@ -790,7 +789,7 @@ module Day14 =
         "7 XCVML => 6 RJRHP"
         "5 BHXH, 4 VRPVC => 5 LTCX"
       |]
-      readInput "day14"
+      readInput 14
     |]
     |> Array.map(Array.map Reaction.Parse)
 

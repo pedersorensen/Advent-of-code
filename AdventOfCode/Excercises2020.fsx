@@ -4,10 +4,9 @@ open Utils
 open System
 
 Year <- 2020
-Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
 module Day1 =
-  let input = readInput "day1" |> Array.map int |> set
+  let input = readInput 1 |> Array.map int |> set
 
   let tryFindMatch sum s1 =
     let s2 = s1 |> Set.map(fun i -> sum - i)
@@ -20,7 +19,8 @@ module Day1 =
   // 691771
   let part1() =
     tryFindMatch 2020 input
-    |> Option.iter(fun (a, b) -> printfn "Product: %i * %i : %i" a b (a * b))
+    |> Option.iter(fun (a, b) ->
+      printfn "Product: %i * %i : %i" a b (a * b))
 
   // 232508760
   let part2() =
@@ -32,7 +32,8 @@ module Day1 =
         printfn "Product: %i * %i * %i : %i" i a b (i * a * b))
 
 module Day2 =
-  let input = readInput "day2"
+  let input = readInput 2
+
   let parsed =
     input
     |> Array.map(fun s ->
