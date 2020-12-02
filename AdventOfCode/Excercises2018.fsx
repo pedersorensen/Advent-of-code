@@ -1,16 +1,15 @@
-﻿#load "TopologicalSort.fs"
+﻿#load "Utils.fsx"
+#load "TopologicalSort.fs"
 
+open Utils
 open System
-open System.IO
 open System.Text
 open System.Collections.Generic
 
-//https://adventofcode.com/2018
-
+Year <- 2018
 Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
-let readInput file = File.ReadAllLines("input/" + file)
-let (|>>) x f = f x ; x
+//https://adventofcode.com/2018
 
 let print<'a> (toString : 'a -> string) (grid : 'a[,]) =
   let height = grid.GetLength(0)
@@ -23,28 +22,14 @@ let print<'a> (toString : 'a -> string) (grid : 'a[,]) =
     ignore <| sb.AppendLine()
   sb.ToString()
 
-module Seq =
-  let print (s : seq<_>) = s |> Seq.iter(printfn "%A")
-  let printS (s : seq<_>) = s |> Seq.iter(printfn "%s")
-
 module Tuple =
-  let max tuple1 tuple2 =
-    let (x1, y1) = tuple1
-    let (x2, y2) = tuple2
-    max x1 x2, max y1 y2
-
-  let min tuple1 tuple2 =
-    let (x1, y1) = tuple1
-    let (x2, y2) = tuple2
-    min x1 x2, min y1 y2
-
   let ofFive array =
     match array with
     | [|a;b;c;d;e|] -> a,b,c,d,e
     | _ -> invalidArg "array" "Must contain five elements"
 
 module Day1 =
-  let changes = readInput "day1.txt" |> Array.map int
+  let changes = readInput "day1" |> Array.map int
 
   let repeatedValues seed (changes : int []) =
     let frequencies = new HashSet<_>()
@@ -89,7 +74,7 @@ module Day2 =
     "ababab" // contains three a and three b, but it only counts once.
   |]
 
-  let input = readInput "day2.txt"
+  let input = readInput "day2"
 
   checkSum testInput
   checkSum input
@@ -157,7 +142,7 @@ module Day3 =
   fsi.AddPrinter <| print<int> string
   fsi.AddPrinter <| print<char> string
 
-  let input = readInput "day3.txt" |> Array.map Claim.Parse
+  let input = readInput "day3" |> Array.map Claim.Parse
 
   let testInput =
     [|
@@ -241,7 +226,7 @@ module Day4 =
     |> Array.map parse
     |> List.ofArray
 
-  let input = readInput "day4.txt" |> Array.map parse |> Array.sortBy fst |> List.ofArray
+  let input = readInput "day4" |> Array.map parse |> Array.sortBy fst |> List.ofArray
 
   let groupWhen predicate list =
     match list with
@@ -328,7 +313,7 @@ module Day4 =
   |> fun (a, b, _) -> (a.Substring(1) |> int) * b
 
 module Day5 =
-  let input = readInput "day5.txt" |> Array.exactlyOne
+  let input = readInput "day5" |> Array.exactlyOne
   let testInput = "dabAcCaCBAcCcaDA"
 
   let upper ch = Char.ToUpper ch
@@ -370,7 +355,7 @@ module Day6 =
 
   fsi.AddPrinter <| print<char*int> (fun (ch, _) -> ch.ToString())
 
-  let input = readInput "day6.txt" |> Array.map parse
+  let input = readInput "day6" |> Array.map parse
   let testInput = [| "1, 1" ; "1, 6" ; "8, 3" ; "3, 4" ; "5, 5" ; "8, 9" |] |> Array.map parse
 
   let input' = input
@@ -442,7 +427,7 @@ module Day7 =
     |> fun free -> Array.concat [| input ; free |]
 
   let input =
-    readInput "day7.txt"
+    readInput "day7"
     |> Array.map Step.Parse
     |> addFreeSteps
 
@@ -483,7 +468,7 @@ module Day7 =
   let toDo = testOrder |> Array.map WorkItem.OfStep
 
 module Day8 =
-  let input = readInput "day8.txt" |> Array.exactlyOne |> fun s -> s.Split(' ') |> Array.map int |> List.ofArray
+  let input = readInput "day8" |> Array.exactlyOne |> fun s -> s.Split(' ') |> Array.map int |> List.ofArray
   let testInput = [2;3;0;3;10;11;12;1;1;0;1;99;2;1;1;2]
 
   type Node = Node of int * meta : int list * children : Node list
@@ -542,7 +527,7 @@ module Day8 =
   getNodeValue node
 
 module Day9 =
-  let input = readInput "day9.txt" |> Array.exactlyOne
+  let input = readInput "day9" |> Array.exactlyOne
 
   fsi.AddPrinter <| fun (marbles : ResizeArray<int>, current : int) ->
     marbles
@@ -555,7 +540,7 @@ module Day9 =
   let mutable c = 0
 
 module Day10 =
-  let input = readInput "day10.txt"
+  let input = readInput "day10"
 
   let testInput = [|
     "position=< 9,  1> velocity=< 0,  2>"
@@ -626,7 +611,7 @@ module Day10 =
   map.Width
 
 module Day12 =
-  let input = readInput "day12.txt"
+  let input = readInput "day12"
   let initial = input.[0].Substring(15)
   let rules =
     input

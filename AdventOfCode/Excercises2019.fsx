@@ -1,20 +1,10 @@
+#load "Utils.fsx"
+
+open Utils
 open System
-open System.IO
 
+Year <- 2019
 Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
-
-let readInput day = File.ReadAllLines("input2019/" + day + ".txt")
-let readsInts day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int
-let readsInt64s day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int64
-
-[<AutoOpen>]
-module Utils =
-  /// Greatest Common Divisor
-  let rec gcd a b = if b = 0 then a else gcd b (a % b)
-  /// Greatest Common Divisor
-  let rec gcd64 a b = if b = 0L then a else gcd64 b (a % b)
-  /// Lowest Common Multiple
-  let lcm64 a b = a * b / gcd64 a b
 
 module List =
 

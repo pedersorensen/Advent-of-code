@@ -1,14 +1,13 @@
-﻿open System
-open System.IO
+﻿#load "Utils.fsx"
 
+open Utils
+open System
+
+Year <- 2020
 Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
-let readInput day = File.ReadAllLines("input2020/" + day + ".txt")
-let readsInts day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int
-let readsInt64s day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int64
-
 module Day1 =
-  let input = readInput "day1" |> Array.map int |> Set.ofArray
+  let input = readInput "day1" |> Array.map int |> set
 
   let tryFindMatch sum s1 =
     let s2 = s1 |> Set.map(fun i -> sum - i)

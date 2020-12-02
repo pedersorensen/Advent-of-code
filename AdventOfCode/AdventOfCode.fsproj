@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <Compile Include="TopologicalSort.fs" />
+    <None Include="Utils.fsx" />
     <None Include="Excercises2018.fsx" />
     <None Include="Excercises2019.fsx" />
     <None Include="Excercises2020.fsx" />
