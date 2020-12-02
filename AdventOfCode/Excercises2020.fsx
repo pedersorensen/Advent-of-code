@@ -31,3 +31,31 @@ module Day1 =
       |> tryFindMatch (2020 - i)
       |> Option.iter(fun (a, b) ->
         printfn "Product: %i * %i * %i : %i" i a b (i * a * b))
+
+module Day2 =
+  let input = readInput "day2"
+  let parsed =
+    input
+    |> Array.map(fun s ->
+      match s.Split([|' ' ; ':' ; '-'|], StringSplitOptions.RemoveEmptyEntries) with
+      | [|min ; max ; ch ; pw|] ->
+        int min, int max, char ch, pw
+      | _ -> failwith "Incorrect input"
+    )
+
+  // 628
+  let part1() =
+    parsed
+    |> Array.sumBy(fun (min, max, char, pw) ->
+      let count = pw |> Seq.sumBy(fun c -> if c = char then 1 else 0)
+      if min <= count && count <= max then 1 else 0
+    )
+
+  // 705
+  let part2() =
+    parsed
+    |> Array.sumBy(fun (p1, p2, char, pw) ->
+      let b1 = pw.[p1 - 1] = char
+      let b2 = pw.[p2 - 1] = char
+      if b1 <> b2 then 1 else 0
+    )
