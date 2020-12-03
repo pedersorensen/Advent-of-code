@@ -8,13 +8,10 @@ Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
 let mutable Year = 0
 
-let cookies = [|
-  "session", File.ReadAllText("cookie.txt")
-|]
-
 let readInput (day: int) =
   let path = $"input{Year}/day{day}.txt"
   if File.Exists path |> not then
+    let cookies = [| "session", File.ReadAllText("cookie.txt") |]
     Directory.CreateDirectory($"input{Year}") |> ignore
     printfn $"Input for day {day} does not exists, downloading file {path}."
     let url = $"https://adventofcode.com/{Year}/day/{day}/input"
