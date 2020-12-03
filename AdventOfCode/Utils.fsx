@@ -34,12 +34,9 @@ module Seq =
   let printS (s : seq<_>) = s |> Seq.iter(printfn "%s")
 
 module Tuple =
-  let max tuple1 tuple2 =
-    let (x1, y1) = tuple1
-    let (x2, y2) = tuple2
-    max x1 x2, max y1 y2
 
-  let min tuple1 tuple2 =
-    let (x1, y1) = tuple1
-    let (x2, y2) = tuple2
-    min x1 x2, min y1 y2
+  let inline add (x1, y1) (x2, y2) = x1 + x2, y1 + y2
+
+  let max (x1, y1) (x2, y2) = max x1 x2, max y1 y2
+
+  let min (x1, y1) (x2, y2) = min x1 x2, min y1 y2

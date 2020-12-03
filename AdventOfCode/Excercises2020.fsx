@@ -60,8 +60,67 @@ module Day2 =
       if b1 <> b2 then 1 else 0
     )
 
-//module Day3 =
-//  let input = readInput 3
+module Day3 =
+
+  let [<Literal>] TreeMarker = '#'
+
+  let countTrees (input: string[]) slope =
+    let mutable p = (0,0)
+    let w = input.[0].Length
+    let mutable count = 0L
+    while snd p < input.Length do
+      let (x, y) = p
+      if input.[y].[x % w] = TreeMarker then count <- count + 1L
+      p <- Tuple.add p slope
+    count
+
+  let countTrees2 (input: string[]) slope =
+    let w = input.[0].Length
+    (0,0)
+    |> Seq.unfold(fun p ->
+      if snd p >= input.Length then None else
+      Some(p, Tuple.add slope p))
+    |> Seq.sumBy(fun (x, y) -> if input.[y].[x % w] = TreeMarker then 1L else 0L)
+
+  let input = readInput 3
+
+  let sample = [|
+    "..##......."
+    "#...#...#.."
+    ".#....#..#."
+    "..#.#...#.#"
+    ".#...##..#."
+    "..#.##....."
+    ".#.#.#....#"
+    ".#........#"
+    "#.##...#..."
+    "#...##....#"
+    ".#..#...#.#"
+  |]
+
+  // 216
+  let part1() =
+    let slope = (3, 1)
+    let s1 = countTrees sample slope
+    let s2 = countTrees2 sample slope
+    let c1 = countTrees input slope
+    let c2 = countTrees2 input slope
+    c2
+
+  // 6708199680
+  let part2() =
+    let slopes = [|
+      1, 1
+      3, 1
+      5, 1
+      7, 1
+      1, 2
+    |]
+    let s1 = slopes |> Array.map(countTrees2 sample) |> Array.reduce (*)
+    let p1 = slopes |> Array.map(countTrees2 input) |> Array.reduce (*)
+    let p2 = (1L, slopes) ||> Array.fold(fun p slope -> countTrees2 input slope * p)
+    let p3 = (slopes, 1L) ||> Array.foldBack(countTrees2 input >> (*))
+    p3
 
 //module Day4 =
 //  let input = readInput 4
