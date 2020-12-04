@@ -123,8 +123,106 @@ module Day3 =
     let p3 = (slopes, 1L) ||> Array.foldBack(countTrees2 input >> (*))
     p3
 
-//module Day4 =
-//  let input = readInput 4
+module Day4 =
+  open System.Text.RegularExpressions
+
+  let parse input = seq {
+    let mutable d = ResizeArray();
+    for line in input do
+      if String.IsNullOrWhiteSpace line then
+        yield Map.ofSeq d
+        d <- ResizeArray()
+      else
+        for s in line.Split(' ') do
+          let i = s.IndexOf(':')
+          d.Add(s.Substring(0, i), s.Substring(i + 1))
+    yield Map.ofSeq d
+  }
+
+  let isNumberInRange min max s =
+    match Int32.TryParse(s) with
+    | true, n when min <= n && n <= max -> true
+    | _ -> false
+
+  let isMatch pattern value = Regex.IsMatch(value, pattern)
+
+  let isHeight value =
+    let m = Regex.Match(value, "([0-9]+)(cm|in)")
+    if not m.Success then false else
+    let h = Int32.Parse m.Groups.[1].Value
+    match m.Groups.[2].Value with
+    | "cm" when 150 <= h && h <= 193 -> true
+    | "in" when  59 <= h && h <=  76 -> true
+    | _ -> false
+
+  let requiredFields = [|
+    "byr", isNumberInRange 1920 2002
+    "iyr", isNumberInRange 2010 2020
+    "eyr", isNumberInRange 2020 2030
+    "hgt", isHeight
+    "hcl", isMatch "^#[0-9a-f]{6}$"
+    "ecl", isMatch "^(amb|blu|brn|gry|grn|hzl|oth)$"
+    "pid", isMatch "^[0-9]{9}$"
+    //"cid", fun _ -> true
+  |]
+
+  let input = readInput 4 |> parse
+
+  // 242
+  let part1() =
+    input
+    |> Seq.countTrue(fun d ->
+      requiredFields |> Array.forall(fst >> d.ContainsKey)
+    )
+
+  let validate passport =
+    requiredFields
+    |> Array.forall(fun (field, validator) ->
+      passport
+      |> Map.tryFind field
+      |> Option.map validator
+      |> Option.defaultValue false
+    )
+
+  let countValid passports =
+    passports |> Seq.countTrue validate
+
+  let invalid = parse [|
+    "eyr:1972 cid:100"
+    "hcl:#18171d ecl:amb hgt:170 pid:186cm iyr:2018 byr:1926"
+    ""
+    "iyr:2019"
+    "hcl:#602927 eyr:1967 hgt:170cm"
+    "ecl:grn pid:012533040 byr:1946"
+    ""
+    "hcl:dab227 iyr:2012"
+    "ecl:brn hgt:182cm pid:021572410 eyr:2020 byr:1992 cid:277"
+    ""
+    "hgt:59cm ecl:zzz"
+    "eyr:2038 hcl:74454a iyr:2023"
+    "pid:3556412378 byr:2007"
+  |]
+
+  let valid = parse [|
+    "pid:087499704 hgt:74in ecl:grn iyr:2012 eyr:2030 byr:1980"
+    "hcl:#623a2f"
+    ""
+    "eyr:2029 ecl:blu cid:129 byr:1989"
+    "iyr:2014 pid:896056539 hcl:#a97842 hgt:165cm"
+    ""
+    "hcl:#888785"
+    "hgt:164cm byr:2001 iyr:2015 cid:88"
+    "pid:545766238 ecl:hzl"
+    "eyr:2022"
+    ""
+    "iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719"
+  |]
+
+  // 186
+  let part2() =
+    let validCount = countValid valid // 4
+    let invalidCount = countValid invalid // 0
+    countValid input
 
 //module Day5 =
 //  let input = readInput 5

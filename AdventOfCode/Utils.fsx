@@ -8,7 +8,7 @@ Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
 let mutable Year = 0
 
-let readInput (day: int) =
+let ensureExists (day: int) =
   let path = $"input{Year}/day{day}.txt"
   if File.Exists path |> not then
     let cookies = [| "session", File.ReadAllText("cookie.txt") |]
@@ -17,7 +17,9 @@ let readInput (day: int) =
     let url = $"https://adventofcode.com/{Year}/day/{day}/input"
     let response = Http.RequestString(url, cookies = cookies)
     File.WriteAllText(path, response)
-  File.ReadAllLines path
+  path
+
+let readInput (day: int) = File.ReadAllLines(ensureExists day)
 
 let readsInts day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int
 let readsInt64s day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int64
@@ -41,6 +43,7 @@ module Array =
 
   let countTrue predicate source =
     source |> Array.sumBy(fun x -> if predicate x then 1 else 0)
+
 module Tuple =
 
   let inline add (x1, y1) (x2, y2) = x1 + x2, y1 + y2
