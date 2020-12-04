@@ -46,18 +46,18 @@ module Day2 =
   // 628
   let part1() =
     parsed
-    |> Array.sumBy(fun (min, max, char, pw) ->
-      let count = pw |> Seq.sumBy(fun c -> if c = char then 1 else 0)
-      if min <= count && count <= max then 1 else 0
+    |> Array.countTrue(fun (min, max, char, pw) ->
+      let count = pw |> Seq.countTrue((=) char)
+      min <= count && count <= max
     )
 
   // 705
   let part2() =
     parsed
-    |> Array.sumBy(fun (p1, p2, char, pw) ->
+    |> Array.countTrue(fun (p1, p2, char, pw) ->
       let b1 = pw.[p1 - 1] = char
       let b2 = pw.[p2 - 1] = char
-      if b1 <> b2 then 1 else 0
+      b1 <> b2
     )
 
 module Day3 =
@@ -67,12 +67,12 @@ module Day3 =
   let countTrees (input: string[]) slope =
     let mutable p = (0,0)
     let w = input.[0].Length
-    let mutable count = 0L
+    let mutable count = 0
     while snd p < input.Length do
       let (x, y) = p
-      if input.[y].[x % w] = TreeMarker then count <- count + 1L
+      if input.[y].[x % w] = TreeMarker then count <- count + 1
       p <- Tuple.add p slope
-    count
+    int64 count
 
   let countTrees2 (input: string[]) slope =
     let w = input.[0].Length
@@ -80,7 +80,8 @@ module Day3 =
     |> Seq.unfold(fun p ->
       if snd p >= input.Length then None else
       Some(p, Tuple.add slope p))
-    |> Seq.sumBy(fun (x, y) -> if input.[y].[x % w] = TreeMarker then 1L else 0L)
+    |> Seq.countTrue(fun (x, y) -> input.[y].[x % w] = TreeMarker)
+    |> int64
 
   let input = readInput 3
 
