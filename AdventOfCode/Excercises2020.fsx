@@ -252,6 +252,12 @@ module Day5 =
   // of the seat id, row * 8 + column
   let getSeatId2 seat = find 0 1023 seat
 
+  // Even simpler, interpret the seat specification as a binary number
+  let getSeatId3 seat =
+    seat
+    |> Seq.mapi(fun i ch -> if ch = 'F' || ch = 'L' then 0 else 512 >>> i )
+    |> Seq.sum
+
   let seats = input |> Array.map getSeat
 
   // 838
@@ -259,7 +265,7 @@ module Day5 =
     seats |> Array.map getSeatId |> Array.max
 
   let part1'() =
-    input |> Array.map getSeatId2 |> Array.max
+    input |> Array.map getSeatId3 |> Array.max
 
   // 714
   let part2() =
@@ -279,7 +285,7 @@ module Day5 =
     // Since all the seats are taken, all seat ids will be present except the
     // missing seat (hours), find the first non-contiguous entry
     input
-    |> Array.map getSeatId2
+    |> Array.map getSeatId3
     |> Array.sort
     |> Array.pairwise
     |> Array.find(fun (a, b) -> a + 1 <> b)
