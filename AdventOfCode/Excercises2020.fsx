@@ -248,11 +248,18 @@ module Day5 =
 
   let getSeatId (row, column) = 8 * row + column
 
+  // Splitting the seat string in two is not necessary due to the constuction
+  // of the seat id, row * 8 + column
+  let getSeatId2 seat = find 0 1023 seat
+
   let seats = input |> Array.map getSeat
 
   // 838
   let part1() =
     seats |> Array.map getSeatId |> Array.max
+
+  let part1'() =
+    input |> Array.map getSeatId2 |> Array.max
 
   // 714
   let part2() =
@@ -267,6 +274,17 @@ module Day5 =
     let taken = seats |> Array.map snd |> set
     let column = set [| 0 .. 7 |] - taken |> Seq.exactlyOne
     getSeatId(row, column)
+
+  let part2'() =
+    // Since all the seats are taken, all seat ids will be present except the
+    // missing seat (hours), find the first non-contiguous entry
+    input
+    |> Array.map getSeatId2
+    |> Array.sort
+    |> Array.pairwise
+    |> Array.find(fun (a, b) -> a + 1 <> b)
+    |> fst
+    |> (+) 1
 
 //module Day6 =
 //  let input = readInput 6
