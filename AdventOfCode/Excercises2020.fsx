@@ -224,8 +224,49 @@ module Day4 =
     let invalidCount = countValid invalid // 0
     countValid input
 
-//module Day5 =
-//  let input = readInput 5
+module Day5 =
+  let input = readInput 5
+
+  let find low high input =
+    ((low, high), input)
+    ||> Seq.fold(fun (low, high) ch ->
+      let mid = (high + low) / 2
+      match ch with
+      | 'F' | 'L' -> low, mid
+      | 'B' | 'R' -> mid + 1, high
+      | _ ->
+        invalidArg (nameof input) "Input must be 'F', 'B', 'L' or 'R'."
+    )
+    |> fst
+
+  let getSeat (seat: string) =
+    if seat.Length <> 10 then
+      invalidArg (nameof seat) "String must be of length 10."
+    let row = seat.Substring(0, 7) |> find 0 127
+    let column = seat.Substring(7) |> find 0 7
+    row, column
+
+  let getSeatId (row, column) = 8 * row + column
+
+  let seats = input |> Array.map getSeat
+
+  // 838
+  let part1() =
+    seats |> Array.map getSeatId |> Array.max
+
+  // 714
+  let part2() =
+    let minRow = seats |> Array.minBy fst |> fst
+    let maxRow = seats |> Array.maxBy fst |> fst
+    let (row, seats) =
+      seats
+      |> Array.groupBy fst
+      |> Array.filter(fun (row, group) ->
+        group.Length <> 8 && row <> minRow && row <> maxRow)
+      |> Array.exactlyOne
+    let taken = seats |> Array.map snd |> set
+    let column = set [| 0 .. 7 |] - taken |> Seq.exactlyOne
+    getSeatId(row, column)
 
 //module Day6 =
 //  let input = readInput 6
