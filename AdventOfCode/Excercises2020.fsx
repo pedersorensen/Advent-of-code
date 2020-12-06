@@ -296,9 +296,19 @@ module Day6 =
 
   let input = (readAllInput 6).Split([|"\n\n"|], StringSplitOptions.RemoveEmptyEntries)
 
+  let input' = readInput 6
+
   // 6549
   let part1() =
     input |> Array.sumBy(set >> Set.remove '\n' >> Set.count)
+
+  let part1'() =
+    ((Set.empty, 0), input')
+    ||> Array.fold(fun (set, count) line ->
+      if String.IsNullOrWhiteSpace line
+      then Set.empty, set.Count + count
+      else set + Set line, count)
+    |> fun (set, count) -> set.Count + count
 
   // 3466
   let part2() =
@@ -309,6 +319,14 @@ module Day6 =
       |> Set.intersectMany
       |> Set.count
     )
+
+  let part2'() =
+    (([], 0), input')
+    ||> Array.fold(fun (sets, count) line ->
+      if String.IsNullOrWhiteSpace line
+      then [], (Set.intersectMany sets).Count + count
+      else Set line :: sets, count)
+    |> fun (sets, count) -> (Set.intersectMany sets).Count + count
 
 //module Day7 =
 //  let input = readInput 7
