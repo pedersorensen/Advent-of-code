@@ -20,6 +20,7 @@ let ensureExists (day: int) =
   path
 
 let readInput (day: int) = File.ReadAllLines(ensureExists day)
+let readAllInput (day: int) = File.ReadAllText(ensureExists day)
 
 let readsInts day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int
 let readsInt64s day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int64

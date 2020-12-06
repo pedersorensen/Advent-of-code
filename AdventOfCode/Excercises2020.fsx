@@ -292,8 +292,23 @@ module Day5 =
     |> fst
     |> (+) 1
 
-//module Day6 =
-//  let input = readInput 6
+module Day6 =
+
+  let input = (readAllInput 6).Split([|"\n\n"|], StringSplitOptions.RemoveEmptyEntries)
+
+  // 6549
+  let part1() =
+    input |> Array.sumBy(set >> Set.remove '\n' >> Set.count)
+
+  // 3466
+  let part2() =
+    input
+    |> Array.sumBy(fun s ->
+      s.Split([|'\n'|], StringSplitOptions.RemoveEmptyEntries)
+      |> Array.map set
+      |> Set.intersectMany
+      |> Set.count
+    )
 
 //module Day7 =
 //  let input = readInput 7
