@@ -5,6 +5,30 @@ open System
 
 Year <- 2020
 
+module Seq =
+
+  let batchOnNewline combiner accumulator init array =
+    (init, array)
+    ||> Seq.fold(fun (state, acc) line ->
+      if String.IsNullOrWhiteSpace line
+      then fst init, accumulator state acc
+      else combiner line state, acc)
+    |> fun (set, count) -> accumulator set count
+
+let cons head tail = head :: tail
+
+module String =
+
+  let splitAt (char: char) (s: string) = s.Split(char)
+
+  let cutAt (char: char) (s: string) =
+    let i = s.IndexOf(char)
+    s.Substring(0, i), s.Substring(i + 1)
+
+module Map =
+  let addTuple (key, value) map =
+    Map.add key value map
+
 module Day1 =
   let input = readInput 1 |> Array.map int |> set
 
@@ -139,6 +163,11 @@ module Day4 =
     yield Map.ofSeq d
   }
 
+  let parse2 input =
+    ((Map.empty, []), input)
+    ||> Seq.batchOnNewline
+      (String.splitAt ' ' >> Array.foldBack(String.cutAt ':' >> Map.addTuple)) cons
+
   let isNumberInRange min max s =
     match Int32.TryParse(s) with
     | true, n when min <= n && n <= max -> true
@@ -166,11 +195,12 @@ module Day4 =
     //"cid", fun _ -> true
   |]
 
-  let input = readInput 4 |> parse
+  let input = readInput 4 |> parse |> Seq.toList
+  let input2 = readInput 4 |> parse2
 
   // 242
   let part1() =
-    input
+    input2
     |> Seq.countTrue(fun d ->
       requiredFields |> Array.forall(fst >> d.ContainsKey)
     )
@@ -310,6 +340,9 @@ module Day6 =
       else set + Set line, count)
     |> fun (set, count) -> set.Count + count
 
+  let part1''() =
+    ((Set.empty, 0), input') ||> Seq.batchOnNewline (Set >> (+)) (Set.count >> (+))
+
   // 3466
   let part2() =
     input
@@ -327,6 +360,9 @@ module Day6 =
       then [], (Set.intersectMany sets).Count + count
       else Set line :: sets, count)
     |> fun (sets, count) -> (Set.intersectMany sets).Count + count
+
+  let part2''() =
+    (([], 0), input') ||> Seq.batchOnNewline (Set >> cons) (Set.intersectMany >> Set.count >> (+))
 
 //module Day7 =
 //  let input = readInput 7
