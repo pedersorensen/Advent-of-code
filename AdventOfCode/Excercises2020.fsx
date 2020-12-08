@@ -364,8 +364,85 @@ module Day6 =
   let part2''() =
     (([], 0), input') ||> Seq.batchOnNewline (Set >> cons) (Set.intersectMany >> Set.count >> (+))
 
-//module Day7 =
-//  let input = readInput 7
+module Day7 =
+  open System.Collections.Generic
+
+  let input = readInput 7
+
+  let parse input =
+    input
+    |> Array.map(fun (l: string) ->
+      l
+        .Replace(" bags contain ", ",")
+        .Replace(" bag.", "")
+        .Replace(" bags.", "")
+        .Replace(" bag, ", ",")
+        .Replace(" bags, ", ",")
+        .Replace(",no other", "")
+        .Split(',')
+    )
+
+  let sample = [|
+    "light red bags contain 1 bright white bag, 2 muted yellow bags."
+    "dark orange bags contain 3 bright white bags, 4 muted yellow bags."
+    "bright white bags contain 1 shiny gold bag."
+    "muted yellow bags contain 2 shiny gold bags, 9 faded blue bags."
+    "shiny gold bags contain 1 dark olive bag, 2 vibrant plum bags."
+    "dark olive bags contain 3 faded blue bags, 4 dotted black bags."
+    "vibrant plum bags contain 5 faded blue bags, 6 dotted black bags."
+    "faded blue bags contain no other bags."
+    "dotted black bags contain no other bags."
+  |]
+
+  let sample2 = [|
+    "shiny gold bags contain 2 dark red bags."
+    "dark red bags contain 2 dark orange bags."
+    "dark orange bags contain 2 dark yellow bags."
+    "dark yellow bags contain 2 dark green bags."
+    "dark green bags contain 2 dark blue bags."
+    "dark blue bags contain 2 dark violet bags."
+    "dark violet bags contain no other bags."
+  |]
+
+  let findAll bag rules =
+    let filter = new HashSet<_>()
+    let rec loop bag = seq {
+      let bags =
+        rules
+        |> Array.choose(fun (outerBag, bags) ->
+          if Map.containsKey bag bags && filter.Add(outerBag)
+          then Some outerBag
+          else None
+        )
+      yield! bags
+      yield! bags |> Seq.collect loop
+    }
+    loop bag
+
+  let makeRules input =
+    input
+    |> Array.map(fun rule ->
+      Array.head rule, rule |> Array.tail |> Array.map(fun (s: string) -> s.Substring(2), int <| s.Substring(0, 1)) |> Map.ofArray
+    )
+
+  // 224
+  let part1() =
+    parse input
+    |> makeRules
+    |> findAll "shiny gold"
+    |> Seq.length
+
+  // 1488
+  let part2() =
+    let bagMap =
+      parse input
+      |> makeRules
+      |> Map.ofArray
+
+    let rec loop bag =
+      let innerBags = bagMap.[bag] |> Seq.sumBy(fun (KeyValue(bag, count)) -> loop bag * count)
+      innerBags + 1
+    loop "shiny gold" - 1
 
 //module Day8 =
 //  let input = readInput 8
