@@ -444,8 +444,71 @@ module Day7 =
       innerBags + 1
     loop "shiny gold" - 1
 
-//module Day8 =
-//  let input = readInput 8
+module Day8 =
+  let input = readInput 8
+
+  let sample = [|
+    "nop +0"
+    "acc +1"
+    "jmp +4"
+    "acc +3"
+    "jmp -3"
+    "acc -99"
+    "acc +1"
+    "jmp -4"
+    "acc +6"
+  |]
+
+  let parse instructions =
+    instructions
+    |> Array.map(fun (s: string) ->
+      s.Substring(0, 3), int(s.Substring(4))
+    )
+
+  let run (instructions: _[]) =
+    let seen = Array.zeroCreate instructions.Length
+    let mutable acc = 0
+    let mutable i = 0
+    let mutable stop = None
+    while Option.isNone stop do
+      if seen.[i] then stop <- Some false else
+      seen.[i] <- true
+      match instructions.[i] with
+      | "nop", _ -> i <- i + 1
+      | "acc", x ->
+        i <- i + 1
+        acc <- acc + x
+      | "jmp", x -> i <- i + x
+      | _ -> failwith "Invalid instruction"
+      if i = instructions.Length then stop <- Some true
+    stop.Value, acc
+
+  // 1420
+  let part1() =
+    let s = parse sample |> run // 5
+    parse input |> run
+
+  let fix (instructions: _[]) =
+    instructions
+    |> Seq.mapi(fun i op ->
+      if fst op = "acc" then None else
+      let fixedOp =
+        match op with
+        | "nop", count -> "jmp", count
+        | "jmp", count -> "nop", count
+        | _ -> failwith "Invalid instruction"
+      let finished, acc =
+        instructions
+        |> Array.mapi(fun i' op -> if i = i' then fixedOp else op)
+        |> run
+      if finished then Some acc else None
+    )
+    |> Seq.pick id
+
+  // 1245
+  let part2() =
+    let s = parse sample |> fix // 8
+    parse input |> fix
 
 //module Day9 =
 //  let input = readInput 9
