@@ -510,8 +510,73 @@ module Day8 =
     let s = parse sample |> fix // 8
     parse input |> fix
 
-//module Day9 =
-//  let input = readInput 9
+module Day9 =
+  let input = readInput 9 |> Array.map int64
+
+  let sample = [|
+    35L
+    20L
+    15L
+    25L
+    47L
+    40L
+    62L
+    55L
+    65L
+    95L
+    102L
+    117L
+    150L
+    182L
+    127L
+    219L
+    299L
+    277L
+    309L
+    576L
+  |]
+
+  let findError preample (values: _[]) =
+    values
+    |> Seq.indexed
+    |> Seq.skip preample
+    |> Seq.find(fun (i, value) ->
+      let set = values.[i - preample  .. i - 1] |> Set.ofArray
+      set
+      |> Set.map(fun i -> value - i)
+      |> Set.filter(fun i -> i <> value/2L)
+      |> Set.intersect set
+      |> Seq.isEmpty
+    )
+
+  // 57195069
+  let part1() =
+    let s = findError 5 sample // 127
+    findError 25 input
+
+  let findWeakness (values: _[]) error =
+    let arr =
+      values
+      |> Array.mapi(fun i _ ->
+        let mutable sum = 0L
+        let arr =
+          values
+          |> Seq.skip i
+          |> Seq.takeWhile(fun v ->
+            sum <- sum + v
+            sum < error
+          )
+          |> Seq.toArray
+        if sum = error && arr.Length > 1 then arr
+        else Array.Empty()
+      )
+      |> Seq.find(fun a -> a.Length > 1)
+    Seq.min arr + Seq.max arr
+
+  // 7409241
+  let part2() =
+    let s = findWeakness sample 127L // 62
+    part1() |> snd |> findWeakness input
 
 //module Day10 =
 //  let input = readInput 10
