@@ -662,9 +662,84 @@ module Day10 =
 
 //module Day11 =
 //  let input = readInput 11
+module Day12 =
 
-//module Day12 =
-//  let input = readInput 12
+  let input = readInput 12
+
+  let sample = [|
+    "F10"
+    "N3"
+    "F7"
+    "R90"
+    "F11"
+  |]
+
+  [<StructuredFormatDisplay("({X}, {Y})")>]
+  type Vector =
+    { X : int
+      Y : int }
+    static member (+) (v1, v2) = { X = v1.X + v2.X ; Y = v1.Y + v2.Y }
+    static member (-) (v1, v2) = { X = v1.X - v2.X ; Y = v1.Y - v2.Y }
+    static member (*) (d, v) = { X = v.X * d ; Y = v.Y * d }
+    static member Create(x, y) = { X = x ; Y = y }
+    member this.Manhattan = abs this.X + abs this.Y
+    override this.ToString() = $"{this.X}, {this.Y}"
+
+  module Vector =
+    let rotate degrees { X = x ; Y = y } =
+      let r = (float degrees) * Math.PI / 180.
+      let sinr = sin r |> round |> int
+      let cosr = cos r |> round |> int
+      let x' = x * cosr - y * sinr
+      let y' = x * sinr + y * cosr
+      { X = x' ; Y = y' }
+
+  let Origin = Vector.Create( 0,  0)
+  let North  = Vector.Create( 0,  1)
+  let South  = Vector.Create( 0, -1)
+  let East   = Vector.Create( 1,  0)
+  let West   = Vector.Create(-1,  0)
+
+  let getEndPosition ship dir instructions =
+    ((ship, dir), instructions)
+    ||> Array.fold(fun (ship, dir: Vector) (s: string) ->
+      let v = Int32.Parse(s.Substring(1))
+      match s.[0] with
+      | 'N' -> ship + v * North, dir
+      | 'S' -> ship + v * South, dir
+      | 'E' -> ship + v * East , dir
+      | 'W' -> ship + v * West , dir
+      | 'L' -> ship, Vector.rotate v dir
+      | 'R' -> ship, Vector.rotate -v dir
+      | 'F' -> ship + v * dir, dir
+      | c -> failwithf "Invalid instruction: %c" c
+    )
+
+  // 882
+  let part1() =
+    let s = (getEndPosition Origin East sample |> fst).Manhattan // 25
+    (getEndPosition Origin East input |> fst).Manhattan
+
+  let getEndPosition2 ship waypoint instructions =
+    ((ship, waypoint), instructions)
+    ||> Array.fold(fun (ship, wp: Vector) (s: string) ->
+      let v = Int32.Parse(s.Substring(1))
+      match s.[0] with
+      | 'N' -> ship, wp + v * North
+      | 'S' -> ship, wp + v * South
+      | 'E' -> ship, wp + v * East
+      | 'W' -> ship, wp + v * West
+      | 'L' -> ship, Vector.rotate  v wp
+      | 'R' -> ship, Vector.rotate -v wp
+      | 'F' -> ship + v * wp, wp
+      | c -> failwithf "Invalid instruction: %c" c
+    )
+
+  // 28885
+  let part2() =
+    let wp = Vector.Create(10, 1)
+    let s = (getEndPosition2 Origin wp sample |> fst).Manhattan // 286
+    (getEndPosition2 Origin wp input |> fst).Manhattan
 
 //module Day13 =
 //  let input = readInput 13
