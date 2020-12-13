@@ -578,8 +578,87 @@ module Day9 =
     let s = findWeakness sample 127L // 62
     part1() |> snd |> findWeakness input
 
-//module Day10 =
-//  let input = readInput 10
+module Day10 =
+  let input = readInput 10 |> Array.map int |> Array.sort
+
+  let sample1 = [|
+    1
+    4
+    5
+    6
+    7
+    10
+    11
+    12
+    15
+    16
+    19
+  |]
+
+  let sample2 = [|
+    1
+    2
+    3
+    4
+    7
+    8
+    09
+    10
+    11
+    14
+    17
+    18
+    19
+    20
+    23
+    24
+    25
+    28
+    31
+    32
+    33
+    34
+    35
+    38
+    39
+    42
+    45
+    46
+    47
+    48
+    49
+  |]
+
+  let countJoltDifferences adapters =
+    let (_, counts) =
+      ((0, Map.empty), adapters)
+      ||> Array.fold(fun (previous, counts) jolt ->
+        let diff = jolt - previous
+        let count = counts.TryFind(diff) |> Option.defaultValue 0
+        jolt, counts.Add(diff, count + 1)
+      )
+    counts.[1] * (counts.[3] + 1)
+
+  // 2574
+  let part1() =
+    let s1 = countJoltDifferences sample1 // 35
+    let s2 = countJoltDifferences sample2 // 220
+    countJoltDifferences input
+
+  let countArrangements input =
+    ([0, 1L], input)
+    ||> Array.fold(fun list jolt ->
+      let sum = list |> List.sumBy(fun (lesserJolt, count) -> if jolt - lesserJolt <= 3 then count else 0L)
+      (jolt,sum) :: list
+    )
+    |> List.head
+    |> snd
+
+  // 2644613988352
+  let part2() =
+    let s1 = countArrangements sample1 // 8
+    let s2 = countArrangements sample2 // 19208
+    countArrangements input
 
 //module Day11 =
 //  let input = readInput 11
