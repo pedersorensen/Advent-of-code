@@ -660,10 +660,136 @@ module Day10 =
     let s2 = countArrangements sample2 // 19208
     countArrangements input
 
-//module Day11 =
-//  let input = readInput 11
-module Day12 =
+module Day11 =
+  let input = readInput 11
 
+  let sample = [|
+    "L.LL.LL.LL"
+    "LLLLLLL.LL"
+    "L.L.L..L.."
+    "LLLL.LL.LL"
+    "L.LL.LL.LL"
+    "L.LLLLL.LL"
+    "..L.L....."
+    "LLLLLLLLLL"
+    "L.LLLLLL.L"
+    "L.LLLLL.LL"
+  |]
+
+  let directions = [|
+    -1, -1
+    -1, +0
+    -1, +1
+    +0, +1
+    +0, -1
+    +1, +1
+    +1, +0
+    +1, -1
+  |]
+
+  let to2dArray (strings: string[]) =
+    Array2D.init strings.Length strings.[0].Length (fun y x -> strings.[y].[x])
+
+  let [<Literal>] Floor = '.'
+  let [<Literal>] EmptySeat = 'L'
+  let [<Literal>] OccupiedSeat = '#'
+
+  let isInRange x y array =
+    x > -1 && y > -1 && x < Array2D.length1 array && y < Array2D.length2 array
+
+  let isOccupied x y array =
+    isInRange x y array && array.[x, y] = OccupiedSeat
+
+  let iterate array =
+    let changes = ref 0
+    let array' =
+      array
+      |> Array2D.mapi(fun i j seat ->
+        if seat = Floor then Floor else
+        let count =
+          directions
+          |> Array.countTrue(fun (dx, dy) -> isOccupied (i + dx) (j + dy) array)
+        if seat = EmptySeat && count = 0 then
+          incr changes
+          OccupiedSeat
+        elif seat = OccupiedSeat && count > 3 then
+          incr changes
+          EmptySeat
+        else seat
+      )
+    if !changes = 0 then None else
+    Some array'
+
+  let iterateTillUnchanged array =
+    array
+    |> Seq.unfold(iterate >> Option.map(fun b -> b, b))
+    |> Seq.last
+
+  let countOccupied array =
+    let count = ref 0
+    array
+    |> Array2D.iter(fun v -> if v = OccupiedSeat then incr count)
+    !count
+
+  let stableOccupation seats =
+    to2dArray seats
+    |> iterateTillUnchanged
+    |> countOccupied
+
+  // 2310
+  let part1() =
+    let s = stableOccupation sample // 37
+    stableOccupation input
+
+  let isDirectionOccupied i j dx dy array =
+    (i, j)
+    |> Seq.unfold(fun (i, j) ->
+      let p = i + dx, j + dy
+      let x, y = p
+      if isInRange x y array then Some(p, p) else None
+    )
+    |> Seq.tryPick(fun (x, y) ->
+      match array.[x, y] with
+      | OccupiedSeat -> Some 1
+      | EmptySeat -> Some 0
+      | _ -> None)
+
+  let iterate2 array =
+    let changes = ref 0
+    let array' =
+      array
+      |> Array2D.mapi(fun i j seat ->
+        if seat = Floor then Floor else
+        let count =
+          directions
+          |> Array.sumBy(fun (dx, dy) -> isDirectionOccupied i j dx dy array |> Option.defaultValue 0 )
+        if seat = EmptySeat && count = 0 then
+          incr changes
+          OccupiedSeat
+        elif seat = OccupiedSeat && count > 4 then
+          incr changes
+          EmptySeat
+        else seat
+      )
+    if !changes = 0 then None else
+    Some array'
+
+  let iterate2TillUnchanged array =
+    array
+    |> Seq.unfold(iterate2 >> Option.map(fun b -> b, b))
+    |> Seq.last
+
+  let stableOccupation2 seats =
+    to2dArray seats
+    |> iterate2TillUnchanged
+    |> countOccupied
+
+  // 2074
+  let part2() =
+    let s = stableOccupation2 sample // 26
+    stableOccupation2 input
+
+module Day12 =
   let input = readInput 12
 
   let sample = [|
