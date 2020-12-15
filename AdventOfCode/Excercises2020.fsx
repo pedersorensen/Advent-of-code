@@ -867,8 +867,30 @@ module Day12 =
     let s = (getEndPosition2 Origin wp sample |> fst).Manhattan // 286
     (getEndPosition2 Origin wp input |> fst).Manhattan
 
-//module Day13 =
-//  let input = readInput 13
+module Day13 =
+
+  let input = readInput 13
+
+  let sample = [|
+    "939"
+    "7,13,x,x,59,x,31,19"
+  |]
+
+  let get (input: string[]) =
+    let earliest = int input.[0]
+    let intervals =
+      input.[1].Split([|',' ; 'x'|], StringSplitOptions.RemoveEmptyEntries)
+      |> Array.map int
+    let busId =
+      intervals
+      |> Array.minBy(fun id -> id * (earliest / id + 1))
+    let time = busId * (earliest / busId + 1)
+    busId * (time - earliest)
+
+  // 2165
+  let part1() =
+    let s = get sample // 295
+    get input
 
 //module Day14 =
 //  let input = readInput 14
