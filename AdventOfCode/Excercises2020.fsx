@@ -892,6 +892,57 @@ module Day13 =
     let s = get sample // 295
     get input
 
+  let part2() =
+    let intervals =
+      input.[1].Split(',')
+      |> Array.mapi(fun i s ->
+        match Int32.TryParse(s) with
+        | true, v -> v, i
+        | _ -> 0, i)
+      |> Array.filter(fun (v, _) -> v <> 0)
+
+    //intervals
+    //|> Array.map(fun (i, d) ->
+    //  $"Math.DivRem(i + {d},  {i}) |> snd = 0 &&"
+    //)
+    //|> String.concat "\r\n"
+    //|> clip
+
+    (*
+      lcm(A, B) = M = P * A = Q * B = (A * B) / gcd(A, B)
+
+      lcm'(A, B, N) = M = P * A + N = Q * B
+    *)
+
+    let t =
+      Seq.initInfinite(fun i -> 59 * i - 4)
+      |> Seq.find(fun i ->
+        Math.DivRem(i + 0,  7) |> snd = 0 &&
+        Math.DivRem(i + 1, 13) |> snd = 0 &&
+        //Math.DivRem(i + 4, 59) |> snd = 0 &&
+        Math.DivRem(i + 6, 31) |> snd = 0 &&
+        Math.DivRem(i + 7, 19) |> snd = 0
+      )
+
+    let t2 =
+      Seq.initInfinite(fun i -> 59 * i - 4)
+      |> Seq.find(fun i ->
+        (i + 0) %  7 = 0 &&
+        (i + 1) % 13 = 0 &&
+        //(i + 4) % 59 = 0 &&
+        (i + 6) % 31 = 0 &&
+        (i + 7) % 19 = 0
+      )
+
+    (*
+    let t0 = 7 * A
+    let t1 = 13 * B = t0 + 1
+    let t2 = 59 * C = t0 + 4
+    let t3 = 31 * D = t0 + 6
+    let t4 = 19 * E = t0 + 7
+    *)
+    ()
+
 //module Day14 =
 //  let input = readInput 14
 
