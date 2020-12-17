@@ -943,8 +943,72 @@ module Day13 =
     *)
     ()
 
-//module Day14 =
-//  let input = readInput 14
+module Day14 =
+  let input = readInput 14
+
+  let sample = [|
+    "mask = XXXXXXXXXXXXXXXXXXXXXXXXXXXXX1XXXX0X"
+    "mem[8] = 11"
+    "mem[7] = 101"
+    "mem[8] = 0"
+  |]
+
+  let applyMask (mask: string) (value: int64) =
+    let bits = Convert.ToString(value, 2)
+    let chars = Array.create mask.Length '0'
+    for i = 0 to bits.Length - 1 do
+      chars.[^i] <- bits.[^i]
+    for i = 0 to chars.Length - 1 do
+      let ch = mask.[i]
+      if ch <> 'X' then
+        chars.[i] <- ch
+    Convert.ToInt64(String(chars), 2)
+
+  let loadAndSum (values: string[]) =
+    ((Map.empty, ""), values)
+    ||> Array.fold(fun (map, mask) row ->
+      let idx = row.IndexOf('=')
+      let value = row.Substring(idx + 2)
+      if row.StartsWith("mask") then map, value else
+      let i = row.IndexOf('[') + 1
+      let j = row.IndexOf(']') - i
+      let mem = row.Substring(i, j) |> int
+      let value = int64 value |> applyMask mask
+      map.Add(mem, value), mask
+    )
+    |> fst
+    |> Seq.sumBy(fun kvp -> kvp.Value)
+
+  // 14839536808842
+  let part1() =
+    let s = loadAndSum sample // 65
+    loadAndSum input
+
+  let sample2 = [|
+    "mask = 000000000000000000000000000000X1001X"
+    "mem[42] = 100"
+    "mask = 00000000000000000000000000000000X0XX"
+    "mem[26] = 1"
+  |]
+
+  let loadAndSum2 (values: string[]) =
+    ((Map.empty, ""), values)
+    ||> Array.fold(fun (map, mask) row ->
+      let idx = row.IndexOf('=')
+      let value = row.Substring(idx + 2)
+      if row.StartsWith("mask") then map, value else
+      let i = row.IndexOf('[') + 1
+      let j = row.IndexOf(']') - i
+      let mem = row.Substring(i, j) |> int
+      let value = int64 value |> applyMask mask
+      map.Add(mem, value), mask
+    )
+    |> fst
+    |> Seq.sumBy(fun kvp -> kvp.Value)
+
+  let part2() =
+    let s = loadAndSum2 sample2
+    ()
 
 //module Day15 =
 //  let input = readInput 15
