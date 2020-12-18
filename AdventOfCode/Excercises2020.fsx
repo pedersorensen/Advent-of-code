@@ -944,6 +944,7 @@ module Day13 =
     ()
 
 module Day14 =
+
   let input = readInput 14
 
   let sample = [|
@@ -952,6 +953,11 @@ module Day14 =
     "mem[7] = 101"
     "mem[8] = 0"
   |]
+
+  let memAddr (line: string) =
+    let i = line.IndexOf('[') + 1
+    let j = line.IndexOf(']') - i
+    line.Substring(i, j)
 
   let applyMask (mask: string) (value: int64) =
     let bits = Convert.ToString(value, 2)
@@ -966,22 +972,21 @@ module Day14 =
 
   let loadAndSum (values: string[]) =
     ((Map.empty, ""), values)
-    ||> Array.fold(fun (map, mask) row ->
-      let idx = row.IndexOf('=')
-      let value = row.Substring(idx + 2)
-      if row.StartsWith("mask") then map, value else
-      let i = row.IndexOf('[') + 1
-      let j = row.IndexOf(']') - i
-      let mem = row.Substring(i, j) |> int
-      let value = int64 value |> applyMask mask
-      map.Add(mem, value), mask
+    ||> Array.fold(fun (map, mask) line ->
+      let idx = line.IndexOf('=')
+      let value = line.Substring(idx + 2)
+      if line.StartsWith("mask") then
+        map, value
+      else
+        let value = int64 value |> applyMask mask
+        map.Add(memAddr line, value), mask
     )
     |> fst
     |> Seq.sumBy(fun kvp -> kvp.Value)
 
   // 14839536808842
   let part1() =
-    let s = loadAndSum sample // 65
+    let s = loadAndSum sample // 165
     loadAndSum input
 
   let sample2 = [|
@@ -991,24 +996,56 @@ module Day14 =
     "mem[26] = 1"
   |]
 
+  let applyMask2 (mask: string) (memAddr: int64) =
+    let bits = Convert.ToString(memAddr, 2)
+    let chars = Array.create mask.Length '0'
+    for i = 0 to bits.Length - 1 do
+      chars.[^i] <- bits.[^i]
+    let mutable floating = []
+    for i = 0 to chars.Length - 1 do
+      let ch = mask.[i]
+      if ch <> '0' then
+        chars.[i] <- ch
+        if ch = 'X' then floating <- i :: floating
+    chars, floating
+
+  let rec unfloat xs = [
+    match xs with
+    | [] -> []
+    | _ :: xs ->
+      for l in unfloat xs do
+        '0' :: l
+        '1' :: l
+  ]
+
   let loadAndSum2 (values: string[]) =
     ((Map.empty, ""), values)
-    ||> Array.fold(fun (map, mask) row ->
-      let idx = row.IndexOf('=')
-      let value = row.Substring(idx + 2)
-      if row.StartsWith("mask") then map, value else
-      let i = row.IndexOf('[') + 1
-      let j = row.IndexOf(']') - i
-      let mem = row.Substring(i, j) |> int
-      let value = int64 value |> applyMask mask
-      map.Add(mem, value), mask
+    ||> Array.fold(fun (map, mask) line ->
+      let idx = line.IndexOf('=')
+      let value = line.Substring(idx + 2)
+      if line.StartsWith("mask") then
+        map, value
+      else
+        let memAddr = memAddr line |> int64
+        let (addr, xs) = applyMask2 mask memAddr
+        // TODO 'unfloat' just generated all number from 0 to 2^(xs.Length-1) but
+        // in a very poorly performing way, rewrite this.
+        let added =
+          (map, unfloat xs)
+          ||> List.fold(fun map list ->
+            (xs, list) ||> List.iter2(Array.set addr)
+            let memAddr = String(addr)
+            map.Add(memAddr, int64 value)
+          )
+        added, mask
     )
     |> fst
     |> Seq.sumBy(fun kvp -> kvp.Value)
 
+  // 4215284199669
   let part2() =
-    let s = loadAndSum2 sample2
-    ()
+    let s = loadAndSum2 sample2 // 208
+    loadAndSum2 input
 
 //module Day15 =
 //  let input = readInput 15
