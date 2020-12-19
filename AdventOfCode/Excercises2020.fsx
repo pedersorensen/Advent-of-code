@@ -1047,8 +1047,71 @@ module Day14 =
     let s = loadAndSum2 sample2 // 208
     loadAndSum2 input
 
-//module Day15 =
-//  let input = readInput 15
+module Day15 =
+  open System.Collections.Generic
+
+  let input = (readInput 15).[0].Split(',') |> Array.map int
+
+  let sample = [| 0 ; 3 ; 6 |]
+
+  type [<Measure>] turn
+
+  let play rounds (input: int[]) =
+    let rec loop turn lastSpoken (map: Map<_, _>) =
+      let nextTurn = turn + 1<turn>
+      if nextTurn > rounds then lastSpoken else
+      let value =
+        match snd map.[lastSpoken] with
+        | None -> 0
+        | Some last -> turn - last |> int
+      let lastTurn = map.TryFind(value) |> Option.map fst
+      map
+      |> Map.add value (nextTurn, lastTurn)
+      |> loop nextTurn value
+    ((0<turn>, 0, Map.empty), input)
+    ||> Array.fold(fun (turn, _, map) value ->
+      let turn = turn + 1<turn>
+      turn, value, map.Add(value, (turn, None))
+    ) |||> loop
+
+  let play2 rounds (input: int[]) =
+    let map = Dictionary()
+    let rec loop turn lastSpoken =
+      let nextTurn = turn + 1<turn>
+      if nextTurn > rounds then lastSpoken else
+      let value =
+        match snd map.[lastSpoken] with
+        | None -> 0
+        | Some last -> turn - last |> int
+      let lastTurn =
+        match map.TryGetValue(value) with
+        | true, value -> Some(fst value)
+        | _ -> None
+      map.[value] <- (nextTurn, lastTurn)
+      loop nextTurn value
+    ((0<turn>, 0), input)
+    ||> Array.fold(fun (turn, _) value ->
+      let turn = turn + 1<turn>
+      map.Add(value, (turn, None)) |> ignore
+      turn, value
+    ) ||> loop
+
+  // 706
+  let part1() =
+    let s = play 10<turn> sample // 0
+    let t = 2020<turn>
+    let s = play t [|1;3;2|] // 1
+    let s = play t [|2;1;3|] // 10
+    let s = play t [|1;2;3|] // 27
+    let s = play t [|2;3;1|] // 78
+    let s = play t [|3;2;1|] // 438
+    let s = play t [|3;1;2|] // 1836
+    play t input
+
+  // 19331
+  let part2() =
+    let t = 30000000<turn>
+    play2 t input
 
 //module Day16 =
 //  let input = readInput 16
