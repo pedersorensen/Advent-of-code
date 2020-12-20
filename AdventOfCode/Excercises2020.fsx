@@ -2,6 +2,7 @@
 
 open Utils
 open System
+open System.Collections.Generic
 
 Year <- 2020
 
@@ -28,6 +29,12 @@ module String =
 module Map =
   let addTuple (key, value) map =
     Map.add key value map
+
+type IDictionary<'TKey, 'TValue> with
+  member this.TryGet(key) =
+    match this.TryGetValue(key) with
+    | true, value -> Some value
+    | _ -> None
 
 module Day1 =
   let input = readInput 1 |> Array.map int |> set
@@ -1057,44 +1064,36 @@ module Day15 =
   type [<Measure>] turn
 
   let play rounds (input: int[]) =
-    let rec loop turn lastSpoken (map: Map<_, _>) =
-      let nextTurn = turn + 1<turn>
-      if nextTurn > rounds then lastSpoken else
+    let rec loop turn lastSpokenAt (map: Map<_, _>) =
+      let turn' = turn + 1<turn>
       let value =
-        match snd map.[lastSpoken] with
+        match lastSpokenAt with
         | None -> 0
         | Some last -> turn - last |> int
-      let lastTurn = map.TryFind(value) |> Option.map fst
-      map
-      |> Map.add value (nextTurn, lastTurn)
-      |> loop nextTurn value
-    ((0<turn>, 0, Map.empty), input)
-    ||> Array.fold(fun (turn, _, map) value ->
-      let turn = turn + 1<turn>
-      turn, value, map.Add(value, (turn, None))
-    ) |||> loop
+      if turn' >= rounds then value else
+      let lastTurn = map.TryFind(value)
+      map.Add(value, turn')
+      |> loop turn' lastTurn
+    input
+    |> Array.mapi(fun i v -> v, (i + 1) * 1<turn>)
+    |> Map.ofArray
+    |> loop (input.Length * 1<turn>) None
 
   let play2 rounds (input: int[]) =
     let map = Dictionary()
-    let rec loop turn lastSpoken =
-      let nextTurn = turn + 1<turn>
-      if nextTurn > rounds then lastSpoken else
+    let rec loop turn lastSpokenAt =
+      let turn' = turn + 1<turn>
       let value =
-        match snd map.[lastSpoken] with
+        match lastSpokenAt with
         | None -> 0
         | Some last -> turn - last |> int
-      let lastTurn =
-        match map.TryGetValue(value) with
-        | true, value -> Some(fst value)
-        | _ -> None
-      map.[value] <- (nextTurn, lastTurn)
-      loop nextTurn value
-    ((0<turn>, 0), input)
-    ||> Array.fold(fun (turn, _) value ->
-      let turn = turn + 1<turn>
-      map.Add(value, (turn, None)) |> ignore
-      turn, value
-    ) ||> loop
+      if turn' >= rounds then value else
+      let lastTurn = map.TryGet(value)
+      map.[value] <- turn'
+      loop turn' lastTurn
+    for i = 0 to input.Length - 1 do
+      map.[input.[i]] <- (i + 1) * 1<turn>
+    loop (input.Length * 1<turn>) None
 
   // 706
   let part1() =
