@@ -1035,8 +1035,6 @@ module Day14 =
       else
         let memAddr = memAddr line |> int64
         let (addr, xs) = applyMask2 mask memAddr
-        // TODO 'unfloat' just generated all number from 0 to 2^(xs.Length-1) but
-        // in a very poorly performing way, rewrite this.
         let added =
           (map, unfloat xs)
           ||> List.fold(fun map list ->
@@ -1054,8 +1052,48 @@ module Day14 =
     let s = loadAndSum2 sample2 // 208
     loadAndSum2 input
 
+  let bitsCache = new Dictionary<_, _>()
+
+  let toBits (i: int) =
+    match bitsCache.TryGetValue(i) with
+    | true, bits -> bits
+    | _ ->
+      let bits = Convert.ToString(i, 2)
+      bitsCache.[i] <- bits
+      bits
+
+  let loadAndSum3 (values: string[]) =
+    let map = Dictionary<_, _>()
+    ("", values)
+    ||> Array.fold(fun mask line ->
+      let idx = line.IndexOf('=')
+      let value = line.Substring(idx + 2)
+      if line.StartsWith("mask") then
+        value
+      else
+        let memAddr = memAddr line |> int64
+        let (addr, xs) = applyMask2 mask memAddr
+        let value = int64 value
+        for i = 0 to (1 <<< xs.Length) do
+          let s = toBits i
+          let length = min xs.Length s.Length
+          for j = 0 to length - 1 do
+            addr.[xs.[j]] <- s.[^j]
+          for j = length to xs.Length - 1 do
+            addr.[xs.[j]] <- '0'
+          let memAddr = String(addr)
+          map.[memAddr] <- value
+        mask
+    )
+    |> ignore
+    map |> Seq.sumBy(fun kvp -> kvp.Value)
+
+  // 4215284199669
+  let part2'() =
+    let s = loadAndSum3 sample2 // 208
+    loadAndSum3 input
+
 module Day15 =
-  open System.Collections.Generic
 
   let input = (readInput 15).[0].Split(',') |> Array.map int
 
