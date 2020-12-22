@@ -1156,8 +1156,81 @@ module Day15 =
 //module Day17 =
 //  let input = readInput 17
 
-//module Day18 =
-//  let input = readInput 18
+module Day18 =
+  let input = readInput 18
+
+  let cint64 (ch: char) =
+    if Char.IsNumber ch |> not then
+      invalidOp <| sprintf "Not a number: %c" ch
+    int64 ch - int64 '0'
+
+  let sadd = Some (+)
+  let smult = Some (*)
+
+  let evalOp op acc v =
+    match op with
+    | Some op -> op acc v
+    | None -> v
+
+  let eval (exp: string) =
+    let rec loop op tokens acc =
+      match tokens with
+      | token :: tail ->
+        match token with
+        | '+' -> loop sadd tail acc
+        | '*' -> loop smult tail acc
+        | v when Char.IsNumber v->
+          cint64 v |> evalOp op acc |> loop None tail
+        | '(' ->
+          let v, tail = loop None tail 0L
+          evalOp op acc v |> loop None tail
+        | ')' -> acc, tail
+        | ' ' -> loop op tail acc
+        | c -> failwithf "Unexpected token: %c" c
+      | tail -> acc, tail
+    let tokens = exp.ToCharArray() |> List.ofArray
+    loop None tokens 0L |> fst
+
+  // 12918250417632
+  let part1() =
+    let s1 = eval "1 + 2 * 3 + 4 * 5 + 6" // 71
+    let s2 = eval "1 + (2 * 3) + (4 * (5 + 6))" // 51
+    let s3 = eval "2 * 3 + (4 * 5)" // 26
+    let s4 = eval "5 + (8 * 3 + 9 + 3 * 4 * 3)" // 437
+    let s5 = eval "5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))" // 12240
+    let s6 = eval "((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2" // 13632
+    input |> Array.sumBy eval
+
+  let eval2 (exp: string) =
+    let rec loop op tokens acc =
+      match tokens with
+      | token :: tail ->
+        match token with
+        | '+' -> loop sadd tail acc
+        | '*' ->
+          let v, tail = loop None tail 0L
+          acc * v, tail
+        | v when Char.IsNumber v->
+          cint64 v |> evalOp op acc |> loop None tail
+        | '(' ->
+          let v, tail = loop None tail 0L
+          evalOp op acc v |> loop None tail
+        | ')' -> acc, tail
+        | ' ' -> loop op tail acc
+        | c -> failwithf "Unexpected token: %c" c
+      | tail -> acc, tail
+    let tokens = exp.ToCharArray() |> List.ofArray
+    loop None tokens 0L |> fst
+
+  // 171259538712010
+  let part2() =
+    let s1 = eval2 "1 + 2 * 3 + 4 * 5 + 6" // 231
+    let s2 = eval2 "1 + (2 * 3) + (4 * (5 + 6))" // 51
+    let s3 = eval2 "2 * 3 + (4 * 5)" // 46
+    let s4 = eval2 "5 + (8 * 3 + 9 + 3 * 4 * 3)" // 1445
+    let s5 = eval2 "5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))" // 669060
+    let s6 = eval2 "((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2" // 23340
+    input |> Array.sumBy eval2
 
 //module Day19 =
 //  let input = readInput 19
