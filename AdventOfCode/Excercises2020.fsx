@@ -1188,7 +1188,7 @@ module Day18 =
         | ' ' -> loop op tail acc
         | c -> failwithf "Unexpected token: %c" c
       | tail -> acc, tail
-    let tokens = exp.ToCharArray() |> List.ofArray
+    let tokens = List.ofSeq exp
     loop None tokens 0L |> fst
 
   // 12918250417632
@@ -1208,19 +1208,38 @@ module Day18 =
         match token with
         | '+' -> loop sadd tail acc
         | '*' ->
-          let v, tail = loop None tail 0L
-          acc * v, tail
-        | v when Char.IsNumber v->
+          let v, tail' = loop None tail 0L
+          acc * v, tail'
+        | v when Char.IsNumber v ->
           cint64 v |> evalOp op acc |> loop None tail
         | '(' ->
-          let v, tail = loop None tail 0L
-          evalOp op acc v |> loop None tail
+          let v, tail' = loop None tail 0L
+          evalOp op acc v |> loop None tail'
         | ')' -> acc, tail
         | ' ' -> loop op tail acc
         | c -> failwithf "Unexpected token: %c" c
-      | tail -> acc, tail
-    let tokens = exp.ToCharArray() |> List.ofArray
+      | [] -> acc, []
+    let tokens = List.ofSeq exp
     loop None tokens 0L |> fst
+
+  let eval3 (tokens: string) =
+    let rec loop op i acc =
+      if i = tokens.Length then acc, i else
+      let i' = i + 1
+      match tokens.[i] with
+      | '+' -> loop sadd i' acc
+      | '*' ->
+        let v, i'' = loop None i' 0L
+        acc * v, i''
+      | v when Char.IsNumber v ->
+        cint64 v |> evalOp op acc |> loop None i'
+      | '(' ->
+        let v, i'' = loop None i' 0L
+        evalOp op acc v |> loop None i''
+      | ')' -> acc, i'
+      | ' ' -> loop op i' acc
+      | c -> failwithf "Unexpected token: %c" c
+    loop None 0 0L |> fst
 
   // 171259538712010
   let part2() =
@@ -1230,7 +1249,8 @@ module Day18 =
     let s4 = eval2 "5 + (8 * 3 + 9 + 3 * 4 * 3)" // 1445
     let s5 = eval2 "5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))" // 669060
     let s6 = eval2 "((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2" // 23340
-    input |> Array.sumBy eval2
+    let s = input |> Array.sumBy eval2
+    input |> Array.sumBy eval3
 
 //module Day19 =
 //  let input = readInput 19
