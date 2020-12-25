@@ -6,36 +6,6 @@ open System.Collections.Generic
 
 Year <- 2020
 
-module Seq =
-
-  let batchOnNewline combiner accumulator init array =
-    (init, array)
-    ||> Seq.fold(fun (state, acc) line ->
-      if String.IsNullOrWhiteSpace line
-      then fst init, accumulator state acc
-      else combiner line state, acc)
-    |> fun (set, count) -> accumulator set count
-
-let cons head tail = head :: tail
-
-module String =
-
-  let splitAt (char: char) (s: string) = s.Split(char)
-
-  let cutAt (char: char) (s: string) =
-    let i = s.IndexOf(char)
-    s.Substring(0, i), s.Substring(i + 1)
-
-module Map =
-  let addTuple (key, value) map =
-    Map.add key value map
-
-type IDictionary<'TKey, 'TValue> with
-  member this.TryGet(key) =
-    match this.TryGetValue(key) with
-    | true, value -> Some value
-    | _ -> None
-
 module Day1 =
   let input = readInput 1 |> Array.map int |> set
 
@@ -330,7 +300,6 @@ module Day5 =
     |> (+) 1
 
 module Day6 =
-
   let input = (readAllInput 6).Split([|"\n\n"|], StringSplitOptions.RemoveEmptyEntries)
 
   let input' = readInput 6
@@ -372,8 +341,6 @@ module Day6 =
     (([], 0), input') ||> Seq.batchOnNewline (Set >> cons) (Set.intersectMany >> Set.count >> (+))
 
 module Day7 =
-  open System.Collections.Generic
-
   let input = readInput 7
 
   let parse input =

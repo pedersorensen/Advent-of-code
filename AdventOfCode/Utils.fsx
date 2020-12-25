@@ -2,6 +2,7 @@
 
 open System
 open System.IO
+open System.Collections.Generic
 open FSharp.Data
 
 Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
@@ -32,6 +33,8 @@ let rec gcd64 a b = if b = 0L then a else gcd64 b (a % b)
 /// Lowest Common Multiple
 let lcm64 a b = a * b / gcd64 a b
 
+let cons head tail = head :: tail
+
 module Seq =
 
   let print (s : seq<_>) = s |> Seq.iter(printfn "%A")
@@ -39,6 +42,14 @@ module Seq =
 
   let countTrue predicate source =
     source |> Seq.sumBy(fun x -> if predicate x then 1 else 0)
+
+  let batchOnNewline combiner accumulator init array =
+    (init, array)
+    ||> Seq.fold(fun (state, acc) line ->
+      if String.IsNullOrWhiteSpace line
+      then fst init, accumulator state acc
+      else combiner line state, acc)
+    |> fun (set, count) -> accumulator set count
 
 module Array =
 
@@ -52,3 +63,22 @@ module Tuple =
   let max (x1, y1) (x2, y2) = max x1 x2, max y1 y2
 
   let min (x1, y1) (x2, y2) = min x1 x2, min y1 y2
+
+module String =
+
+  let splitAt (char: char) (s: string) = s.Split(char)
+
+  let cutAt (char: char) (s: string) =
+    let i = s.IndexOf(char)
+    s.Substring(0, i), s.Substring(i + 1)
+
+module Map =
+  let addTuple (key, value) map =
+    Map.add key value map
+
+type IDictionary<'TKey, 'TValue> with
+  member this.TryGet(key) =
+    match this.TryGetValue(key) with
+    | true, value -> Some value
+    | _ -> None
+
