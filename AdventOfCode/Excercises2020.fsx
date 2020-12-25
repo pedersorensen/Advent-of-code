@@ -1228,8 +1228,117 @@ module Day18 =
 //module Day21 =
 //  let input = readInput 21
 
-//module Day22 =
-//  let input = readInput 22
+module Day22 =
+  let input = readInput 22
+
+  let sample = [|
+    "Player 1:"
+    "9"
+    "2"
+    "6"
+    "3"
+    "1"
+    ""
+    "Player 2:"
+    "5"
+    "8"
+    "4"
+    "7"
+    "10"
+  |]
+
+  let parse input =
+    let map =
+      (((null, null), Map.empty), input)
+      ||> Seq.batchOnNewline(fun line (player, values) ->
+          if line.StartsWith("Player")
+          then line, LinkedList()
+          else
+            values.AddLast(int line) |> ignore
+            player, values
+      ) Map.addTuple
+    map.["Player 1:"], map.["Player 2:"]
+
+  let (|TryHead|Empty|) (list: LinkedList<_>) =
+    match list.First with
+    | null -> Empty
+    | node -> TryHead node
+
+  let play (p1, p2) =
+    let rec loop() =
+      match p1, p2 with
+      | TryHead n1, TryHead n2 ->
+        p1.Remove(n1)
+        p2.Remove(n2)
+        let v1 = n1.Value
+        let v2 = n2.Value
+        let (winner, v1, v2) =
+          if v1 > v2
+          then p1, v1, v2
+          else p2, v2, v1
+        winner.AddLast(v1).List.AddLast(v2) |> ignore
+        loop()
+      | TryHead _, Empty -> p1
+      | Empty, TryHead _ -> p2
+      | Empty, Empty -> failwith "No winner"
+    loop()
+
+  let score (winner: LinkedList<_>) =
+    let cards = winner.Count
+    winner
+    |> Seq.mapi(fun i v -> v , (cards - i))
+    |> Seq.sumBy(fun (a, b) -> a * b)
+
+  // 32598
+  let part1() =
+    let s = parse sample |> play |> score // 306
+    parse input |> play |> score
+
+  let rec play2 (p1:LinkedList<int>, p2:LinkedList<int>) =
+    let seen = HashSet()
+    let rec loop() =
+      let p1Values = String.Join(", ", p1)
+      let p2Values = String.Join(", ", p2)
+      if seen.Add(p1Values + p2Values) |> not then p1 else
+      match p1.First, p2.First with
+      | null, null -> failwith "No winner"
+      | _, null -> p1
+      | null, _ -> p2
+      | n1, n2 ->
+        let v1 = n1.Value
+        let v2 = n2.Value
+        p1.Remove(n1)
+        p2.Remove(n2)
+        let (winner, v1, v2) =
+          if p1.Count >= v1 && p2.Count >= v2 then
+            let p1' = LinkedList(Seq.take v1 p1)
+            let p2' = LinkedList(Seq.take v2 p2)
+            if play2 (p1', p2') = p1'
+            then p1, v1, v2
+            else p2, v2, v1
+          elif v1 > v2
+          then p1, v1, v2
+          else p2, v2, v1
+        winner.AddLast(v1).List.AddLast(v2) |> ignore
+        loop()
+    loop()
+
+  let sampleInf = [|
+    "Player 1:"
+    "43"
+    "19"
+    ""
+    "Player 2:"
+    "2"
+    "29"
+    "14"
+  |]
+
+  // 35836
+  let part2() =
+    let s = parse sample |> play2 |> score // 291
+    let t = parse sampleInf |> play2 |> score // 105
+    parse input |> play2 |> score
 
 //module Day23 =
 //  let input = readInput 23
