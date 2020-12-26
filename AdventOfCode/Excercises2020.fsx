@@ -1222,8 +1222,187 @@ module Day18 =
 //module Day19 =
 //  let input = readInput 19
 
-//module Day20 =
-//  let input = readInput 20
+module Day20 =
+  let input = readInput 20
+
+  let sample = [|
+    "Tile 2311:"
+    "..##.#..#."
+    "##..#....."
+    "#...##..#."
+    "####.#...#"
+    "##.##.###."
+    "##...#.###"
+    ".#.#.#..##"
+    "..#....#.."
+    "###...#.#."
+    "..###..###"
+    ""
+    "Tile 1951:"
+    "#.##...##."
+    "#.####...#"
+    ".....#..##"
+    "#...######"
+    ".##.#....#"
+    ".###.#####"
+    "###.##.##."
+    ".###....#."
+    "..#.#..#.#"
+    "#...##.#.."
+    ""
+    "Tile 1171:"
+    "####...##."
+    "#..##.#..#"
+    "##.#..#.#."
+    ".###.####."
+    "..###.####"
+    ".##....##."
+    ".#...####."
+    "#.##.####."
+    "####..#..."
+    ".....##..."
+    ""
+    "Tile 1427:"
+    "###.##.#.."
+    ".#..#.##.."
+    ".#.##.#..#"
+    "#.#.#.##.#"
+    "....#...##"
+    "...##..##."
+    "...#.#####"
+    ".#.####.#."
+    "..#..###.#"
+    "..##.#..#."
+    ""
+    "Tile 1489:"
+    "##.#.#...."
+    "..##...#.."
+    ".##..##..."
+    "..#...#..."
+    "#####...#."
+    "#..#.#.#.#"
+    "...#.#.#.."
+    "##.#...##."
+    "..##.##.##"
+    "###.##.#.."
+    ""
+    "Tile 2473:"
+    "#....####."
+    "#..#.##..."
+    "#.##..#..."
+    "######.#.#"
+    ".#...#.#.#"
+    ".#########"
+    ".###.#..#."
+    "########.#"
+    "##...##.#."
+    "..###.#.#."
+    ""
+    "Tile 2971:"
+    "..#.#....#"
+    "#...###..."
+    "#.#.###..."
+    "##.##..#.."
+    ".#####..##"
+    ".#..####.#"
+    "#..#.#..#."
+    "..####.###"
+    "..#.#.###."
+    "...#.#.#.#"
+    ""
+    "Tile 2729:"
+    "...#.#.#.#"
+    "####.#...."
+    "..#.#....."
+    "....#..#.#"
+    ".##..##.#."
+    ".#.####..."
+    "####.#.#.."
+    "##.####..."
+    "##..#.##.."
+    "#.##...##."
+    ""
+    "Tile 3079:"
+    "#.#.#####."
+    ".#..######"
+    "..#......."
+    "######...."
+    "####.#..#."
+    ".#...#.##."
+    "#.#####.##"
+    "..#.###..."
+    "..#......."
+    "..#.###..."
+  |]
+
+  module ResizeArray =
+    let add item (array: ResizeArray<_>) =
+      array.Add(item)
+      array
+
+  let parse input =
+    (((null, null), Map.empty), input)
+    ||> Seq.batchOnNewline(fun line (tile, lines) ->
+      if line.StartsWith("Tile")
+      then line.Substring(5, 4), ResizeArray()
+      else tile, ResizeArray.add line lines
+    ) (fun (tile, lines) ->
+      if String.IsNullOrWhiteSpace(tile) then id else
+      lines.ToArray() |> Map.add (int tile))
+
+  let reverse (s: string) =
+    let chars = s.ToCharArray()
+    Array.Reverse(chars)
+    String(chars)
+
+  let getBorders (tile: string[]) =
+    let leftChars  = Array.zeroCreate tile.Length
+    let rightChars = Array.zeroCreate tile.Length
+    for i = 0 to tile.Length - 1 do
+      leftChars.[i]  <- tile.[i].[0]
+      rightChars.[i] <- tile.[i].[^0]
+    let left  = String(leftChars)
+    let right = String(rightChars)
+    Array.Reverse(leftChars)
+    Array.Reverse(rightChars)
+    let leftFlipped  = String(leftChars)
+    let rightFlipped = String(rightChars)
+    [|
+      tile.[0]
+      reverse tile.[0]
+      tile.[^0]
+      reverse tile.[^0]
+      left
+      leftFlipped
+      right
+      rightFlipped
+    |]
+
+  let getCorners tiles =
+    // A mapping from a tile id to all permutations of its borders
+    let tileToBorder =
+      tiles |> Map.map(fun _ tile -> getBorders tile)
+    // A mapping of all border permutations to any matching tile
+    let borderToTile =
+      tileToBorder
+      |> Seq.collect(fun kvp -> kvp.Value |> Array.map(fun border -> border, kvp.Key))
+      |> Seq.groupBy fst
+      |> Seq.map(fun (border, v) -> border, Seq.map snd v |> Seq.toArray)
+      |> Map.ofSeq
+    // Find any tile that has exactly two borders that are not found on any other tile.
+    tileToBorder
+    |> Map.filter(fun _ borders ->
+      borders
+      |> Array.filter(fun border -> borderToTile.[border].Length = 1)
+      |> Array.length
+      |> (=) 4
+    )
+    |> Seq.map(fun kvp -> int64 kvp.Key)
+
+  // 30425930368573
+  let part1() =
+    let s = parse sample |> getCorners |> Seq.reduce (*) // 20899048083289
+    parse input |> getCorners |> Seq.reduce (*)
 
 //module Day21 =
 //  let input = readInput 21
