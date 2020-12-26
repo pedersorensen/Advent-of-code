@@ -1294,6 +1294,18 @@ module Day22 =
     let s = parse sample |> play |> score // 306
     parse input |> play |> score
 
+  module LinkedList =
+
+    let cloneN n (list: LinkedList<'T>) =
+      let clone = LinkedList<'T>()
+      let rec loop n (node: LinkedListNode<'T>) =
+        if n = 0 then clone else
+        if isNull node then
+          invalidOp "The input sequence has an insufficient number of elements."
+        clone.AddLast(node.Value) |> ignore
+        loop (n - 1) node.Next
+      loop n list.First
+
   let rec play2 (p1:LinkedList<int>, p2:LinkedList<int>) =
     let seen = HashSet()
     let rec loop() =
@@ -1311,8 +1323,8 @@ module Day22 =
         p2.Remove(n2)
         let (winner, v1, v2) =
           if p1.Count >= v1 && p2.Count >= v2 then
-            let p1' = LinkedList(Seq.take v1 p1)
-            let p2' = LinkedList(Seq.take v2 p2)
+            let p1' = LinkedList.cloneN v1 p1
+            let p2' = LinkedList.cloneN v2 p2
             if play2 (p1', p2') = p1'
             then p1, v1, v2
             else p2, v2, v1
