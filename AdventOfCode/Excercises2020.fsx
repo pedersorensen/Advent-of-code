@@ -1531,8 +1531,81 @@ module Day22 =
     let t = parse sampleInf |> play2 |> score // 105
     parse input |> play2 |> score
 
-//module Day23 =
-//  let input = readInput 23
+module Day23 =
+  let input = readInput 23 |> Array.exactlyOne
+
+  let sample = "389125467"
+
+  let parse (input: string) =
+    input
+    |> Seq.map(fun ch -> int ch - int '0')
+    |> LinkedList
+
+  type LinkedListNode<'T> with
+    member this.NextOrWrap =
+      match this.Next with
+      | null -> this.List.First
+      | node -> node
+
+  module LinkedList =
+    let findValue value (list: LinkedList<_>) =
+      let rec loop (node: LinkedListNode<_>) =
+        match node with
+        | null -> failwith "No value"
+        | node ->
+          if node.Value = value then node else loop node.Next
+      loop list.First
+
+  let rec makeMap (list: LinkedList<_>) =
+    let map = Dictionary()
+    let rec loop (node: LinkedListNode<_>) =
+      match node with
+      | null -> map
+      | node ->
+        map.[node.Value] <- node
+        loop node.Next
+    loop list.First
+
+  let play rounds (cups: LinkedList<int>) =
+    let max = Seq.max cups
+    let nodes = makeMap cups
+    let rec loop round (current: LinkedListNode<_>) =
+      let cups = current.List
+      if round >= rounds then cups else
+      let n1 = current.NextOrWrap
+      let n2 = n1.NextOrWrap
+      let n3 = n2.NextOrWrap
+      cups.Remove(n1)
+      cups.Remove(n2)
+      cups.Remove(n3)
+      let rec findNext value =
+        if value < 1 then findNext max
+        elif value = n1.Value || value = n2.Value || value = n3.Value
+        then findNext (value - 1)
+        else nodes.[value]
+      let next = findNext (current.Value - 1)
+      cups.AddAfter(next, n1)
+      cups.AddAfter(n1, n2)
+      cups.AddAfter(n2, n3)
+      nodes.[n1.Value] <- n1
+      nodes.[n2.Value] <- n2
+      nodes.[n3.Value] <- n3
+      loop (round + 1) current.NextOrWrap
+    loop 0 cups.First
+
+  let getValue cups =
+    let n = cups |> LinkedList.findValue 1
+    n.NextOrWrap
+    |> Seq.unfold(fun n ->
+      if n.Value = 1 then None else
+        Some(n.Value, n.NextOrWrap))
+    |> Seq.fold(fun s t -> 10 * s + t) 0
+
+  // 38756249
+  let part1() =
+    let rounds = 100
+    let s = parse sample |> play rounds |> getValue // 67384529
+    parse input |> play rounds |> getValue
 
 //module Day24 =
 //  let input = readInput 24
