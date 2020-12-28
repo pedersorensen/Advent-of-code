@@ -1674,6 +1674,15 @@ module Day24 =
   let nw = -1,  1
   let se =  1, -1
 
+  let all = [|
+    e
+    w
+    ne
+    sw
+    nw
+    se
+  |]
+
   let getLocation s =
     ((0, 0), s)
     ||> List.fold(fun p c ->
@@ -1698,6 +1707,33 @@ module Day24 =
   let part1() =
     let s = blackTiles sample |> Array.length // 10
     blackTiles input |> Array.length
+
+  let advance black =
+    let blackS = set black
+    black
+    |> Array.collect(fun p -> all |> Array.map(Tuple.add p))
+    |> Array.append black
+    |> Array.distinct
+    |> Array.choose(fun n ->
+      let isBlack = blackS.Contains(n)
+      let c =
+        all
+        |> Array.filter(fun d -> Tuple.add d n |> blackS.Contains)
+        |> Array.length
+      if isBlack && (c = 0 || c > 2) then None
+      elif not isBlack && c = 2 then Some n
+      elif isBlack then Some n else None
+    )
+
+  let run count input =
+    (blackTiles input, Seq.init count ignore)
+    ||> Seq.fold(fun d () -> advance d)
+    |> Array.length
+
+  // 3697
+  let part2() =
+    let s = run 100 sample // 2208
+    run 100 input
 
 //module Day25 =
 //  let input = readInput 25
