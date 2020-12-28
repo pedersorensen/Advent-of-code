@@ -1630,8 +1630,75 @@ module Day23 =
     let s = parse sample |> play2 maxCups rounds // 149245887792
     parse input |> play2 maxCups rounds
 
-//module Day24 =
-//  let input = readInput 24
+module Day24 =
+  let input = readInput 24
+
+  let sample = [|
+    "sesenwnenenewseeswwswswwnenewsewsw"
+    "neeenesenwnwwswnenewnwwsewnenwseswesw"
+    "seswneswswsenwwnwse"
+    "nwnwneseeswswnenewneswwnewseswneseene"
+    "swweswneswnenwsewnwneneseenw"
+    "eesenwseswswnenwswnwnwsewwnwsene"
+    "sewnenenenesenwsewnenwwwse"
+    "wenwwweseeeweswwwnwwe"
+    "wsweesenenewnwwnwsenewsenwwsesesenwne"
+    "neeswseenwwswnwswswnw"
+    "nenwswwsewswnenenewsenwsenwnesesenew"
+    "enewnwewneswsewnwswenweswnenwsenwsw"
+    "sweneswneswneneenwnewenewwneswswnese"
+    "swwesenesewenwneswnwwneseswwne"
+    "enesenwswwswneneswsenwnewswseenwsese"
+    "wnwnesenesenenwwnenwsewesewsesesew"
+    "nenewswnwewswnenesenwnesewesw"
+    "eneswnwswnwsenenwnwnwwseeswneewsenese"
+    "neswnwewnwnwseenwseesewsenwsweewe"
+    "wseweeenwnesenwwwswnew"
+  |]
+
+  let parse (line: string) =
+    let rec loop i acc =
+      if i = line.Length then acc else
+      match line.[i] with
+      | 'e' -> loop (i + 1) ("e" :: acc)
+      | 'w' -> loop (i + 1) ("w" :: acc)
+      | 'n' ->
+        match line.[i + 1] with
+        | 'e' -> loop (i + 2) ("ne" :: acc)
+        | 'w' -> loop (i + 2) ("nw" :: acc)
+        | c -> failwithf "Unexpected character: %c" c
+      | 's' ->
+        match line.[i + 1] with
+        | 'e' -> loop (i + 2) ("se" :: acc)
+        | 'w' -> loop (i + 2) ("sw" :: acc)
+        | c -> failwithf "Unexpected character: %c" c
+      | c -> failwithf "Unexpected character: %c" c
+    loop 0 [] |> List.rev
+
+  let getLoocation s =
+    ((0, 0), s)
+    ||> List.fold(fun (x, y) c ->
+      match c with
+      | "e"  -> x + 1, y
+      | "w"  -> x - 1, y
+      | "ne" -> x, y + 1
+      | "sw" -> x, y - 1
+      | "nw" -> x - 1, y + 1
+      | "se" -> x + 1, y - 1
+      | c -> failwithf "Unexpected character: %s" c
+    )
+
+  let countBlack input =
+    input
+    |> Array.map (parse >> getLoocation)
+    |> Array.countBy id
+    |> Array.countBy snd
+    |> Array.sumBy(fun (flips, count) -> if flips % 2 = 0 then 0 else count)
+
+  // 254
+  let part1() =
+    let s = countBlack sample // 10
+    countBlack input
 
 //module Day25 =
 //  let input = readInput 25
