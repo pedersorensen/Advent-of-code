@@ -1607,6 +1607,29 @@ module Day23 =
     let s = parse sample |> play rounds |> getValue // 67384529
     parse input |> play rounds |> getValue
 
+  let extendList total (list: LinkedList<_>) =
+    let c = list.Count
+    Seq.init (total - c) (fun i -> i + c + 1)
+    |> Seq.append list
+    |> LinkedList
+
+  let play2 maxCups rounds list =
+    let played =
+      list
+      |> extendList maxCups
+      |> play rounds
+      |> LinkedList.findValue 1
+    let n1 = played.NextOrWrap
+    let n2 = n1.NextOrWrap
+    int64 n1.Value * int64 n2.Value
+
+  // 21986479838
+  let part2() =
+    let rounds = 10_000_000
+    let maxCups = 1_000_000
+    let s = parse sample |> play2 maxCups rounds // 149245887792
+    parse input |> play2 maxCups rounds
+
 //module Day24 =
 //  let input = readInput 24
 
