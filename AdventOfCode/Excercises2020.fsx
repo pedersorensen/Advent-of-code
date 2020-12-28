@@ -1657,48 +1657,47 @@ module Day24 =
   |]
 
   let parse (line: string) =
-    let rec loop i acc =
-      if i = line.Length then acc else
-      match line.[i] with
-      | 'e' -> loop (i + 1) ("e" :: acc)
-      | 'w' -> loop (i + 1) ("w" :: acc)
-      | 'n' ->
-        match line.[i + 1] with
-        | 'e' -> loop (i + 2) ("ne" :: acc)
-        | 'w' -> loop (i + 2) ("nw" :: acc)
-        | c -> failwithf "Unexpected character: %c" c
-      | 's' ->
-        match line.[i + 1] with
-        | 'e' -> loop (i + 2) ("se" :: acc)
-        | 'w' -> loop (i + 2) ("sw" :: acc)
-        | c -> failwithf "Unexpected character: %c" c
-      | c -> failwithf "Unexpected character: %c" c
-    loop 0 [] |> List.rev
+    ((None, []), line)
+    ||> Seq.fold(fun (prev, acc) ch ->
+      match ch with
+      | 'n' | 's' -> Some ch, acc
+      | _ ->
+        match prev with
+        | Some p -> None, $"{p}{ch}" :: acc
+        | None   -> None, $"{ch}"    :: acc
+    ) |> snd
 
-  let getLoocation s =
+  let e  =  1,  0
+  let w  = -1,  0
+  let ne =  0,  1
+  let sw =  0, -1
+  let nw = -1,  1
+  let se =  1, -1
+
+  let getLocation s =
     ((0, 0), s)
-    ||> List.fold(fun (x, y) c ->
+    ||> List.fold(fun p c ->
       match c with
-      | "e"  -> x + 1, y
-      | "w"  -> x - 1, y
-      | "ne" -> x, y + 1
-      | "sw" -> x, y - 1
-      | "nw" -> x - 1, y + 1
-      | "se" -> x + 1, y - 1
+      | "e"  -> e
+      | "w"  -> w
+      | "ne" -> ne
+      | "sw" -> sw
+      | "nw" -> nw
+      | "se" -> se
       | c -> failwithf "Unexpected character: %s" c
+      |> Tuple.add p
     )
 
-  let countBlack input =
+  let blackTiles input =
     input
-    |> Array.map (parse >> getLoocation)
+    |> Array.map(parse >> getLocation)
     |> Array.countBy id
-    |> Array.countBy snd
-    |> Array.sumBy(fun (flips, count) -> if flips % 2 = 0 then 0 else count)
+    |> Array.choose(fun (p, c) -> if c % 2 = 0 then None else Some p)
 
   // 254
   let part1() =
-    let s = countBlack sample // 10
-    countBlack input
+    let s = blackTiles sample |> Array.length // 10
+    blackTiles input |> Array.length
 
 //module Day25 =
 //  let input = readInput 25
