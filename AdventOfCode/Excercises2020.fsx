@@ -1117,8 +1117,130 @@ module Day15 =
     let t = 30000000<turn>
     play2 t input
 
-//module Day16 =
-//  let input = readInput 16
+module Day16 =
+  open System.Text.RegularExpressions
+
+  let input = readInput 16
+
+  let sample = [|
+    "class: 1-3 or 5-7"
+    "row: 6-11 or 33-44"
+    "seat: 13-40 or 45-50"
+    ""
+    "your ticket:"
+    "7,1,14"
+    ""
+    "nearby tickets:"
+    "7,3,47"
+    "40,4,50"
+    "55,2,20"
+    "38,6,12"
+  |]
+
+  let sample2 = [|
+    "class: 0-1 or 4-19"
+    "row: 0-5 or 8-19"
+    "seat: 0-13 or 16-19"
+    ""
+    "your ticket:"
+    "11,12,13"
+    ""
+    "nearby tickets:"
+    "3,9,18"
+    "15,1,5"
+    "5,14,9"
+  |]
+
+  let parseRule rule =
+    let m = Regex.Match(rule, "([a-z\s]+): (\d+)-(\d+) or (\d+)-(\d+)$")
+    if not m.Success then failwith "Not a match."
+    let grp = m.Groups
+    let name = grp.[1].Value
+    let r1 = int grp.[2].Value, int grp.[3].Value
+    let r2 = int grp.[4].Value, int grp.[5].Value
+    name, (r1, r2)
+
+  let parseTicket (ticket: string) = ticket.Split(',') |> Array.map int
+
+  let parse input =
+    let i1 = Array.IndexOf(input, "")
+    let i2 = Array.IndexOf(input, "", i1 + 1)
+    let rules = input |> Array.take i1 |> Array.map parseRule
+    let myTicket = input.[i1 + 2] |> parseTicket
+    let l = input.Length - i2 - 2
+    let nearbyTickets = Array.zeroCreate<string> l
+    Array.Copy(input, i2 + 2, nearbyTickets, 0, l)
+    rules, myTicket, nearbyTickets |> Array.map parseTicket
+
+  let applyRule value rule =
+    let (_name, ((l1, h1), (l2, h2))) = rule
+    (l1 <= value && value <= h1) ||
+    (l2 <= value && value <= h2)
+
+  let errorRate rules tickets =
+    tickets
+    |> Array.collect(fun ticket ->
+      ticket
+      |> Array.filter(fun (value: int) ->
+        rules
+        |> Array.exists(applyRule value)
+        |> not
+      )
+    )
+    |> Array.sum
+
+  let validTickets rules tickets =
+    tickets
+    |> Array.filter(fun ticket ->
+      ticket
+      |> Array.forall(fun (value: int) ->
+        rules |> Array.exists(applyRule value)
+      )
+    )
+
+  // 23954
+  let part1() =
+    let s =
+      let (rules, _, tickets) = parse sample
+      errorRate rules tickets // 71
+    let (rules, _, tickets) = parse input
+    errorRate rules tickets
+
+  let rec reduce acc (map: Map<string, Set<int>>) =
+    let o =
+      map |> Seq.tryFind(fun kvp -> kvp.Value.Count = 1)
+    match o with
+    | Some (KeyValue(rule, set)) ->
+      let value = Seq.exactlyOne set
+      map.Remove(rule)
+      |> Map.map(fun _ v -> v.Remove(value))
+      |> reduce ((rule, value)::acc)
+    | None -> acc
+
+  // 453459307723
+  let part2() =
+    let (rules, my, tickets) = parse input
+    let valid = validTickets rules tickets
+
+    let fields = Array.init my.Length id
+
+    let mapped =
+      rules
+      |> Array.map(fun rule ->
+        fst rule,
+        fields
+        |> Array.filter(fun field ->
+          valid
+          |> Array.forall(fun ticket ->
+            applyRule ticket.[field] rule
+          )
+        ) |> Set.ofArray
+      ) |> Map.ofArray
+
+    reduce [] mapped
+    |> List.filter(fun (r, _) -> r.StartsWith("departure"))
+    |> List.map(fun (_, i) -> int64 my.[i])
+    |> List.reduce (*)
 
 //module Day17 =
 //  let input = readInput 17
