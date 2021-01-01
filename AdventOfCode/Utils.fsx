@@ -10,6 +10,7 @@ Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 let mutable Year = 0
 
 let ensureExists (day: int) =
+  if Year = 0 then invalidOp "Year has not been set."
   let path = $"input{Year}/day{day}.txt"
   if File.Exists path |> not then
     let cookies = [| "session", File.ReadAllText("cookie.txt") |]
