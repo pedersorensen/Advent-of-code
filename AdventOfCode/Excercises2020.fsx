@@ -866,56 +866,67 @@ module Day13 =
     let s = get sample // 295
     get input
 
-  let part2() =
-    let intervals =
-      input.[1].Split(',')
+  // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
+  /// Computes Bézout coefficients (x, y) such that
+  /// a * x + b * y = gcd(a, b)
+  let extendedGcd a b =
+    let rec loop (r0, s0, t0) (r, s, t) =
+      if r = 0 then
+        let gcd = t0
+        let bezout = s0, t0
+        gcd, bezout//, (t, s)
+      else
+        let q = r0 / r
+        let r' = r0 - q * r
+        let s' = s0 - q * s
+        let t' = t0 - q * t
+        loop (r, s, t) (r', s', t')
+    loop (a, 1, 0) (b, 0, 1)
+
+  // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Computing_multiplicative_inverses_in_modular_structures
+  // https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
+  /// Computes the modular multiplicative inverse t of a mod n such that
+  /// a * t = 1 % n
+  let inverse a n =
+    let rec loop (r0, t0) (r, t) =
+      if r = 0L then
+        if r0 > 1L then failwithf "%A is not invertible." a
+        if t0 < 0L then t0 + n else t0
+      else
+        let q = r0 / r
+        let r' = r0 - q * r
+        let t' = t0 - q * t
+        loop (r, t) (r', t')
+    loop (n, 0L) (a, 1L)
+
+  // https://brilliant.org/wiki/chinese-remainder-theorem/
+  let getEarliestTime (input: string) =
+    let (n, a') =
+      input.Split(',')
       |> Array.mapi(fun i s ->
         match Int32.TryParse(s) with
-        | true, v -> v, i
-        | _ -> 0, i)
-      |> Array.filter(fun (v, _) -> v <> 0)
+        | true, v -> int64 v, int64 -i
+        | _ -> 0L, int64 -i)
+      |> Array.filter(fun (v, _) -> v <> 0L)
+      |> Array.unzip
+    let a = (n, a') ||> Array.map2(fun n a -> (n + a) % n)
+    let N = n |> Array.reduce (*)
+    let y = n |> Array.map(fun i -> N / i)
+    let z = (y, n) ||> Array.map2 inverse
+    (a, y, z)
+    |||> Array.map3(fun a y z -> a * y * z)
+    |> Array.sum
+    |> fun x -> x % N
 
-    //intervals
-    //|> Array.map(fun (i, d) ->
-    //  $"Math.DivRem(i + {d},  {i}) |> snd = 0 &&"
-    //)
-    //|> String.concat "\r\n"
-    //|> clip
-
-    (*
-      lcm(A, B) = M = P * A = Q * B = (A * B) / gcd(A, B)
-
-      lcm'(A, B, N) = M = P * A + N = Q * B
-    *)
-
-    let t =
-      Seq.initInfinite(fun i -> 59 * i - 4)
-      |> Seq.find(fun i ->
-        Math.DivRem(i + 0,  7) |> snd = 0 &&
-        Math.DivRem(i + 1, 13) |> snd = 0 &&
-        //Math.DivRem(i + 4, 59) |> snd = 0 &&
-        Math.DivRem(i + 6, 31) |> snd = 0 &&
-        Math.DivRem(i + 7, 19) |> snd = 0
-      )
-
-    let t2 =
-      Seq.initInfinite(fun i -> 59 * i - 4)
-      |> Seq.find(fun i ->
-        (i + 0) %  7 = 0 &&
-        (i + 1) % 13 = 0 &&
-        //(i + 4) % 59 = 0 &&
-        (i + 6) % 31 = 0 &&
-        (i + 7) % 19 = 0
-      )
-
-    (*
-    let t0 = 7 * A
-    let t1 = 13 * B = t0 + 1
-    let t2 = 59 * C = t0 + 4
-    let t3 = 31 * D = t0 + 6
-    let t4 = 19 * E = t0 + 7
-    *)
-    ()
+  // 534035653563227
+  let part2() =
+    let s1 = getEarliestTime "7,13,x,x,59,x,31,19" // 1068781
+    let s2 = getEarliestTime "17,x,13,19" // 3417
+    let s3 = getEarliestTime "67,7,59,61" // 754018
+    let s4 = getEarliestTime "67,x,7,59,61" // 779210
+    let s5 = getEarliestTime "67,7,x,59,61" // 1261476
+    let s6 = getEarliestTime "1789,37,47,1889" // 1202161486
+    getEarliestTime input.[1]
 
 module Day14 =
 
