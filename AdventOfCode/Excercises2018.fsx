@@ -315,28 +315,48 @@ module Day5 =
   let input = readInput 5 |> Array.exactlyOne
   let testInput = "dabAcCaCBAcCcaDA"
 
-  let upper ch = Char.ToUpper ch
+  module Char =
+    let isUpperLowerPair (a: char) (b: char) =
+      let d = int a - int b
+      d = 32 || d = -32
 
-  let isPair c1 c2 = c1 <> c2 && upper c1 = upper c2
+    let equalsIgnoreCase (a: char) (b: char) =
+      let d = int a - int b
+      d = 0 || d = 32 || d = -32
 
-  let removePairs predicate list =
-    let rec loop acc = function
+  let removePairs list =
+    let rec loop acc list =
+      match list with
       | [] -> acc
       | x :: xs ->
         match acc with
-        | y :: ys when predicate x y -> loop ys xs
+        | y :: ys when Char.isUpperLowerPair x y -> loop ys xs
         | _ -> loop (x :: acc) xs
     loop [] list
 
-  let input' = input
+  // 10638
+  let part1() =
+    input |> Seq.toList |> removePairs |> List.length
 
-  input' |> Seq.toList |> removePairs isPair |> List.length
+  let removePairsIgnoreChar list ignoreChar =
+    let rec loop acc list =
+      match list with
+      | [] -> acc
+      | x :: xs ->
+        if Char.equalsIgnoreCase ignoreChar x then
+          loop acc xs
+        else
+          match acc with
+          | y :: ys when Char.isUpperLowerPair x y -> loop ys xs
+          | _ -> loop (x :: acc) xs
+    loop [] list
 
-  let inputList = input' |> Seq.toList
-  ['a' .. 'z']
-  |> Seq.map(fun ch -> inputList |> List.filter(fun c -> c <> ch && c <> upper ch))
-  |> Seq.map(removePairs isPair >> List.length)
-  |> Seq.min
+  // 4944
+  let part2() =
+    let inputList = Seq.toList input
+    { 'a' .. 'z' }
+    |> Seq.map(removePairsIgnoreChar inputList >> List.length)
+    |> Seq.min
 
 module Day6 =
   let sep = [|','|]
