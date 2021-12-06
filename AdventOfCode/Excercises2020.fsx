@@ -145,7 +145,7 @@ module Day4 =
     ||> Seq.batchOnNewline
       (String.splitAt ' ' >> Array.foldBack(String.cutAt ':' >> Map.addTuple)) cons
 
-  let isNumberInRange min max s =
+  let isNumberInRange min max (s: string) =
     match Int32.TryParse(s) with
     | true, n when min <= n && n <= max -> true
     | _ -> false
