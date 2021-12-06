@@ -10,6 +10,7 @@
     <None Include="Excercises2018.fsx" />
     <None Include="Excercises2019.fsx" />
     <None Include="Excercises2020.fsx" />
+    <None Include="Excercises2021.fsx" />
   </ItemGroup>
 
 </Project>
