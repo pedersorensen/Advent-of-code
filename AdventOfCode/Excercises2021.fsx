@@ -191,41 +191,47 @@ module Day5 =
     "5,5 -> 8,2"
   |]
 
-  let parse (s: string) =
-    match s.Split([|' ' ; ','|]) with
-    | [| x1 ; y1 ; _ ; x2 ; y2 |] -> (int x1, int y1), (int x2, int y2)
-    | _ -> failwithf $"Invalid input: {s}"
-
-  let countOverlaps skipDiagonals (parsed: _[]) =
+  let countOverlaps skipDiagonals (input: string[]) =
     let mutable overlaps = 0
     let first = HashSet()
     let second = HashSet()
 
-    for p in parsed do
-      let (x1, y1), (x2, y2) = p
+    let add x y =
+      let point = struct(x, y)
+      if first.Add(point) |> not && second.Add(point) then
+        overlaps <- overlaps + 1
+
+    for s in input do
+      let p = s.Split([|' ' ; ','|])
+      let x1 = int p[0]
+      let y1 = int p[1]
+      let x2 = int p[3]
+      let y2 = int p[4]
 
       let dx, dy = (x2 - x1), (y2 - y1)
       if not skipDiagonals || dx = 0 || dy = 0 then
         let l = max (abs dx) (abs dy)
         let deltax, deltay = sign dx, sign dy
 
-        for i = 0 to l do
+        add x1 y1
+        add x2 y2
+
+        for i = 1 to l - 1 do
           let x = x1 + i * deltax
           let y = y1 + i * deltay
-          if first.Add(x, y) |> not && second.Add(x, y) then
-            overlaps <- overlaps + 1
+          add x y
 
     overlaps
 
   // 8622
   let part1() =
-    //sample |> Array.map parse |> countOverlaps true
-    input |> Array.map parse |> countOverlaps true
+    //sample |> countOverlaps true
+    input |> countOverlaps true
 
   // 22037
   let part2() =
-    //sample |> Array.map parse |> countOverlaps false
-    input |> Array.map parse |> countOverlaps false
+    //sample |> countOverlaps false
+    input |> countOverlaps false
 
 module Day6 =
 
