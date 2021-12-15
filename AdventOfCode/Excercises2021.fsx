@@ -286,3 +286,34 @@ module Day6 =
     //simulate2 80 input
     simulate2 256 input
 
+module Day7 =
+
+  let input = readsInts 7
+
+  let sample = "16,1,2,0,4,2,7,1,2,14".Split(',') |> Array.map int
+
+  let getFuelCost(input: int[]) =
+    let m = Array.max input
+    let pos = Array.init m id
+    let getCost p = input |> Array.sumBy(fun i -> abs(p - i))
+    pos
+    |> Array.minBy getCost
+    |> getCost
+
+  // 347509
+  let part1() =
+    //getFuelCost sample // 37
+    getFuelCost input
+
+  let getFuelCost2(input: int[]) =
+    let m = Array.max input
+    let pos = Array.init m id
+    let getCost p = input |> Array.sumBy(fun i -> let n =  abs(p - i) in n * (n + 1) / 2)
+    pos
+    |> Array.minBy getCost
+    |> getCost
+
+  // 98257206
+  let part2() =
+    //getFuelCost2 sample // 168
+    getFuelCost2 input
