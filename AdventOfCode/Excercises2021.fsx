@@ -201,27 +201,33 @@ module Day4 =
     "2  0 12  3  7"
   |]
 
+  let [<Literal>] DrawnBit = 1024
+
+  let setDrawnBit i = i ^^^ DrawnBit
+  let isDrawn i = i &&& DrawnBit = DrawnBit
+
   type Board(values: int []) =
     do
       if values.Length <> 25
         then invalidArg (nameof values) "Input array must have length 25."
-    let drawn = Array.zeroCreate<bool> 25
-    member _.Values = values
-    member _.Drawn = drawn
-    member _.Draw(i) =
-      let idx = Array.IndexOf(values, i)
-      if idx > -1 then drawn[idx] <- true
-    member this.DrawAndCheck(i) =
-      this.Draw(i)
-      this.HasWon
-    member _.HasWon =
+    let draw idx = values[idx] <- setDrawnBit values[idx]
+    let isDrawn i = isDrawn values[i]
+    let draw number =
+      let idx = Array.IndexOf(values, number)
+      if idx > -1 then draw idx
+    let hasWon() =
       let mutable hasWon = false
       for i = 0 to 4 do
         let j = 5 * i
-        let isFullRow = drawn[j] && drawn[j + 1] && drawn[j + 2] && drawn[j + 3] && drawn[j + 4]
-        let isFullColumn = drawn[i] && drawn[i + 5] && drawn[i + 10] && drawn[i + 15] && drawn[i + 20]
+        let isFullRow = isDrawn j && isDrawn (j + 1) && isDrawn (j + 2) && isDrawn (j + 3) && isDrawn (j + 4)
+        let isFullColumn = isDrawn i && isDrawn (i + 5) && isDrawn (i + 10) && isDrawn (i + 15) && isDrawn (i + 20)
         hasWon <- hasWon || isFullColumn || isFullRow
       hasWon
+
+    member _.Values = values
+    member _.HasWon = hasWon()
+    member _.Draw(number) = draw number
+    member _.DrawAndCheck(number) = draw number ; hasWon()
 
   let toBoards (lines: seq<string>) = [|
     let buffer = ResizeArray()
@@ -240,21 +246,21 @@ module Day4 =
 
   let getScore (board: Board, number) =
     let sum =
-      (board.Drawn, board.Values)
-      ||> Array.map2(fun drawn value -> if drawn then 0 else value)
-      |> Array.sum
+      board.Values
+      |> Array.sumBy(fun i -> if isDrawn i then 0 else i)
     sum * number
 
   let getWinnerScore input =
     let boards, numbers = parse input
-    numbers
-    |> Array.pick(fun number ->
-      for board in boards do board.Draw(number)
-      boards
-      |> Array.tryFind(fun b -> b.HasWon)
-      |> Option.map(fun board -> board, number)
-    )
-    |> getScore
+    let board, number =
+      numbers
+      |> Array.pick(fun number ->
+        for board in boards do board.Draw(number)
+        boards
+        |> Array.tryFind(fun b -> b.HasWon)
+        |> Option.map(fun board -> board, number)
+      )
+    getScore (board, number)
 
   // 5685
   let part1() =
