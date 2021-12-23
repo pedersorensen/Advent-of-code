@@ -317,3 +317,72 @@ module Day7 =
   let part2() =
     //getFuelCost2 sample // 168
     getFuelCost2 input
+
+module Day14 =
+  open System.Text
+  open System.Runtime.InteropServices
+
+  let input = readInput 14
+
+  let sample = [|
+    "NNCB"
+    ""
+    "CH -> B"
+    "HH -> N"
+    "CB -> H"
+    "NH -> C"
+    "HB -> C"
+    "HC -> B"
+    "HN -> C"
+    "NN -> C"
+    "BH -> H"
+    "NC -> B"
+    "NB -> B"
+    "BN -> B"
+    "BB -> N"
+    "BC -> B"
+    "CC -> N"
+    "CN -> C"
+  |]
+
+  let iterate (rules: Map<struct(char * char), char>) (polymer: StringBuilder) =
+    let sb = StringBuilder(2 * polymer.Length - 1)
+    for i = 0 to polymer.Length - 2 do
+      sb.Append(polymer[i])
+        .Append(rules[polymer[i], polymer[i + 1]])
+        |> ignore
+    sb.Append(polymer[polymer.Length - 1])
+
+  let applyRules (input: string[]) =
+    let rules =
+      input
+      |> Array.skip 2
+      |> Array.map(fun s -> struct(s[0], s[1]), s[6])
+      |> Map.ofArray
+
+    let s =
+      StringBuilder(input[0])
+      |> iterate rules
+      |> iterate rules
+      |> iterate rules
+      |> iterate rules
+      |> iterate rules
+      |> iterate rules
+      |> iterate rules
+      |> iterate rules
+      |> iterate rules
+      |> iterate rules
+    let counts = Dictionary<_, _>()
+    for chunk in s.GetChunks() do
+      let mutable exists = false
+      for ch in chunk.Span do
+        let mutable value = &CollectionsMarshal.GetValueRefOrAddDefault(counts, ch, &exists)
+        value <- value + 1
+
+    Seq.max counts.Values - Seq.min counts.Values
+
+  // 2112
+  let part1() =
+    //applyRules sample // 1588
+    applyRules input
+
