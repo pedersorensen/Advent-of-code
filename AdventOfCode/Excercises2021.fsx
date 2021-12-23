@@ -1,6 +1,7 @@
 ﻿#load "Utils.fsx"
 
 open Utils
+open System
 open System.Collections.Generic
 
 Year <- 2021
@@ -173,6 +174,115 @@ module Day3 =
     let oxygenRate = filter maxParam input |> binaryToInt
     let co2Rate = filter minParam input |> binaryToInt
     oxygenRate * co2Rate
+
+module Day4 =
+
+  let input = readInput 4
+
+  let sample = [|
+    "7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1"
+    ""
+    "22 13 17 11  0"
+    "8  2 23  4 24"
+    "21  9 14 16  7"
+    "6 10  3 18  5"
+    "1 12 20 15 19"
+    ""
+    "3 15  0  2 22"
+    "9 18 13 17  5"
+    "19  8  7 25 23"
+    "20 11 10 24  4"
+    "14 21 16 12  6"
+    ""
+    "14 21 17 24  4"
+    "10 16 15  9 19"
+    "18  8 23 26 20"
+    "22 11 13  6  5"
+    "2  0 12  3  7"
+  |]
+
+  type Board(values: int []) =
+    do
+      if values.Length <> 25
+        then invalidArg (nameof values) "Input array must have length 25."
+    let drawn = Array.zeroCreate<bool> 25
+    member _.Values = values
+    member _.Drawn = drawn
+    member _.Draw(i) =
+      let idx = Array.IndexOf(values, i)
+      if idx > -1 then drawn[idx] <- true
+    member this.DrawAndCheck(i) =
+      this.Draw(i)
+      this.HasWon
+    member _.HasWon =
+      let mutable hasWon = false
+      for i = 0 to 4 do
+        let j = 5 * i
+        let isFullRow = drawn[j] && drawn[j + 1] && drawn[j + 2] && drawn[j + 3] && drawn[j + 4]
+        let isFullColumn = drawn[i] && drawn[i + 5] && drawn[i + 10] && drawn[i + 15] && drawn[i + 20]
+        hasWon <- hasWon || isFullColumn || isFullRow
+      hasWon
+
+  let toBoards (lines: seq<string>) = [|
+    let buffer = ResizeArray()
+    for l in lines do
+      if String.IsNullOrWhiteSpace (l) then
+        if buffer.Count> 1 then
+          yield Board(buffer.ToArray())
+          buffer.Clear()
+      else buffer.AddRange(l.Split(' ', StringSplitOptions.RemoveEmptyEntries) |> Array.map int)
+    if buffer.Count > 0 then yield Board(buffer.ToArray())
+  |]
+
+  let parse (input: string[]) =
+    let boards = input |> Seq.skip 1 |> toBoards
+    boards, input[0].Split(',') |> Array.map int
+
+  let getScore (board: Board, number) =
+    let sum =
+      (board.Drawn, board.Values)
+      ||> Array.map2(fun drawn value -> if drawn then 0 else value)
+      |> Array.sum
+    sum * number
+
+  let getWinnerScore input =
+    let boards, numbers = parse input
+    numbers
+    |> Array.pick(fun number ->
+      for board in boards do board.Draw(number)
+      boards
+      |> Array.tryFind(fun b -> b.HasWon)
+      |> Option.map(fun board -> board, number)
+    )
+    |> getScore
+
+  // 5685
+  let part1() =
+    //getWinnerScore sample // 4512
+    getWinnerScore input
+
+  let getLastWinnerScore(input: string[]) =
+    let boards, numbers = parse input
+    let boards = ResizeArray(boards)
+    let winners = ResizeArray()
+    numbers
+    |> Array.pick(fun number ->
+      for i = 0 to boards.Count - 1 do
+        if boards[i].DrawAndCheck(number) then winners.Add(i)
+      if boards.Count = 1 && boards[0].HasWon then
+        Some(boards[0], number)
+      else
+        for i = winners.Count - 1 downto 0 do
+          boards.RemoveAt(winners[i])
+        winners.Clear()
+        None
+    )
+    |> getScore
+
+  // 21070
+  let part2() =
+    //getLastWinnerScore sample // 1924
+    getLastWinnerScore input
 
 module Day5 =
 
