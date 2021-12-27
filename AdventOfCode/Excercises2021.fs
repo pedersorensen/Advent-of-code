@@ -162,6 +162,7 @@ module Day3 =
 module Day4 =
 
   let [<Literal>] DrawnBit = 1024
+  let [<Literal>] Width = 5
 
   let setDrawnBit i = i ||| DrawnBit
   let isDrawn i = i &&& DrawnBit = DrawnBit
@@ -172,17 +173,15 @@ module Day4 =
         then invalidArg (nameof values) "Input array must have length 25."
     let draw idx = values[idx] <- setDrawnBit values[idx]
     let isDrawn i = isDrawn values[i]
+    let isFullRow j = isDrawn j && isDrawn (j + 1) && isDrawn (j + 2) && isDrawn (j + 3) && isDrawn (j + 4)
+    let isFullColumn i = isDrawn i && isDrawn (i + 5) && isDrawn (i + 10) && isDrawn (i + 15) && isDrawn (i + 20)
     let draw number =
       let idx = Array.IndexOf(values, number)
       if idx > -1 then draw idx
     let hasWon() =
-      let mutable hasWon = false
-      for i = 0 to 4 do
-        let j = 5 * i
-        let isFullRow = isDrawn j && isDrawn (j + 1) && isDrawn (j + 2) && isDrawn (j + 3) && isDrawn (j + 4)
-        let isFullColumn = isDrawn i && isDrawn (i + 5) && isDrawn (i + 10) && isDrawn (i + 15) && isDrawn (i + 20)
-        hasWon <- hasWon || isFullColumn || isFullRow
-      hasWon
+      let rec loop i =
+        i < Width && (isFullColumn i || isFullRow (Width * i) || loop (i + 1))
+      loop 0
 
     member _.Values = values
     member _.HasWon = hasWon()
