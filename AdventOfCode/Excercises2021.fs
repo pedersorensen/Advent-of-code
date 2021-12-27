@@ -1,67 +1,60 @@
-﻿#load "Utils.fsx"
+﻿namespace Excercises2021
 
-open Utils
+open Xunit
 open System
+open System.IO
+open System.Text
 open System.Collections.Generic
+open System.Runtime.InteropServices
 
-Year <- 2021
+type FileDataAttribute(file: string, result: obj) =
+  inherit Sdk.DataAttribute()
+  override _.GetData(_) =
+    let path = Path.Combine("input2021", file)
+    [| [| File.ReadAllLines(path) |> box ; result |] |]
+
+[<AutoOpen>]
+module Utils =
+  let (|Ints|) (data: string[]) = data |> Array.map int
+  let (|SingeLineInts|) (data: string[]) = (Array.exactlyOne data).Split(',') |> Array.map int
+
+  let inline (=!) (actual : 'T) (expected : 'T) = Assert.Equal<'T>(expected, actual)
 
 module Day1 =
 
-  let input = readInput 1 |> Array.map int
-
-  let sample = [|
-    199
-    200
-    208
-    210
-    200
-    207
-    240
-    269
-    260
-    263
-  |]
-
-  let countIncreases (array: int[]) =
-    let rec loop acc i =
-      if i = array.Length then acc else
-      let acc' =
-        if array.[i] > array.[i - 1] then acc + 1
-        else acc
-      loop acc' (i + 1)
-    loop 0 1
-  countIncreases input
-
-  // 1387
-  let part1() =
+  let countIncreasesA (input: int[]) =
     input
     |> Seq.pairwise
     |> Seq.where(fun (a, b) -> a < b)
     |> Seq.length
 
-  let part1'() =
-    countIncreases input
+  let countIncreasesB (input: int[]) =
+    let rec loop acc i =
+      if i = input.Length then acc else
+      let acc' =
+        if input.[i] > input.[i - 1] then acc + 1
+        else acc
+      loop acc' (i + 1)
+    loop 0 1
 
-  // 1362
-  let part2() =
+  [<Theory>]
+  [<FileData("day1.txt", 1387)>]
+  [<FileData("day1sample.txt", 7)>]
+  let part1 (Ints input) expected =
+    countIncreasesA input =! expected
+    countIncreasesB input =! expected
+
+  [<Theory>]
+  [<FileData("day1.txt", 1362)>]
+  [<FileData("day1sample.txt", 5)>]
+  let part2 (Ints input) expected =
     input
     |> Array.windowed 3
     |> Array.map Array.sum
-    |> countIncreases
+    |> countIncreasesB
+     =! expected
 
 module Day2 =
-
-  let input = readInput 2
-
-  let sample = [|
-    "forward 5"
-    "down 5"
-    "forward 8"
-    "up 3"
-    "down 8"
-    "forward 2"
-  |]
 
   let (|Up|Down|Forward|) (s: string) =
     match s.Split(' ') with
@@ -80,9 +73,11 @@ module Day2 =
     )
     |> fun struct(h, d) -> h * d
 
-  // 2147104
-  let part1() =
-    moveIt input
+  [<Theory>]
+  [<FileData("day2.txt", 2147104)>]
+  [<FileData("day2sample.txt", 150)>]
+  let part1 input expected =
+    moveIt input =! expected
 
   let moveItAgain directions =
     (struct(0, 0, 0), directions)
@@ -94,28 +89,13 @@ module Day2 =
     )
     |> fun struct(h, d, _) -> h * d
 
-  // 2044620088
-  let part2() =
-    moveItAgain input
+  [<Theory>]
+  [<FileData("day2.txt", 2044620088)>]
+  [<FileData("day2sample.txt", 900)>]
+  let part2 input expected =
+    moveItAgain input =! expected
 
 module Day3 =
-
-  let input = readInput 3
-
-  let sample = [|
-    "00100"
-    "11110"
-    "10110"
-    "10111"
-    "10101"
-    "01111"
-    "00111"
-    "11100"
-    "10000"
-    "11001"
-    "00010"
-    "01010"
-  |]
 
   let binaryToInt digits =
     let struct (value, _) =
@@ -141,10 +121,12 @@ module Day3 =
       |> Array.unzip
     binaryToInt gamma, binaryToInt epsilon
 
-  // 3847100
-  let part1() =
+  [<Theory>]
+  [<FileData("day3.txt", 3847100)>]
+  [<FileData("day3sample.txt", 198)>]
+  let part1 input expected =
     let (gamma, epsilon) = getReadings input
-    gamma * epsilon
+    gamma * epsilon =! expected
 
   let getFilterBit (a,b) i (input: string[]) =
     let struct(zeros, ones) =
@@ -167,43 +149,21 @@ module Day3 =
       else reduce m i data |> loop (i + 1)
     loop 0 input
 
-  // 4105235
-  let part2() =
+  [<Theory>]
+  [<FileData("day3.txt", 4105235)>]
+  [<FileData("day3sample.txt", 230)>]
+  let part2 input expected =
     let maxParam = ('0', '1')
     let minParam = ('1', '0')
     let oxygenRate = filter maxParam input |> binaryToInt
     let co2Rate = filter minParam input |> binaryToInt
-    oxygenRate * co2Rate
+    oxygenRate * co2Rate =! expected
 
 module Day4 =
 
-  let input = readInput 4
-
-  let sample = [|
-    "7,4,9,5,11,17,23,2,0,14,21,24,10,16,13,6,15,25,12,22,18,20,8,19,3,26,1"
-    ""
-    "22 13 17 11  0"
-    "8  2 23  4 24"
-    "21  9 14 16  7"
-    "6 10  3 18  5"
-    "1 12 20 15 19"
-    ""
-    "3 15  0  2 22"
-    "9 18 13 17  5"
-    "19  8  7 25 23"
-    "20 11 10 24  4"
-    "14 21 16 12  6"
-    ""
-    "14 21 17 24  4"
-    "10 16 15  9 19"
-    "18  8 23 26 20"
-    "22 11 13  6  5"
-    "2  0 12  3  7"
-  |]
-
   let [<Literal>] DrawnBit = 1024
 
-  let setDrawnBit i = i ^^^ DrawnBit
+  let setDrawnBit i = i ||| DrawnBit
   let isDrawn i = i &&& DrawnBit = DrawnBit
 
   type Board(values: int []) =
@@ -262,10 +222,11 @@ module Day4 =
       )
     getScore (board, number)
 
-  // 5685
-  let part1() =
-    //getWinnerScore sample // 4512
-    getWinnerScore input
+  [<Theory>]
+  [<FileData("day4.txt", 5685)>]
+  [<FileData("day4sample.txt", 4512)>]
+  let part1 input expected =
+    getWinnerScore input =! expected
 
   let getLastWinnerScore(input: string[]) =
     let boards, numbers = parse input
@@ -285,27 +246,13 @@ module Day4 =
     )
     |> getScore
 
-  // 21070
-  let part2() =
-    //getLastWinnerScore sample // 1924
-    getLastWinnerScore input
+  [<Theory>]
+  [<FileData("day4.txt", 21070)>]
+  [<FileData("day4sample.txt", 1924)>]
+  let part2 input expected =
+    getLastWinnerScore input =! expected
 
 module Day5 =
-
-  let input = readInput 5
-
-  let sample = [|
-    "0,9 -> 5,9"
-    "8,0 -> 0,8"
-    "9,4 -> 3,4"
-    "2,2 -> 2,1"
-    "7,0 -> 7,4"
-    "6,4 -> 2,0"
-    "0,9 -> 2,9"
-    "3,4 -> 1,4"
-    "0,0 -> 8,8"
-    "5,5 -> 8,2"
-  |]
 
   let countOverlaps skipDiagonals (input: string[]) =
     let mutable overlaps = 0
@@ -339,23 +286,19 @@ module Day5 =
 
     overlaps
 
-  // 8622
-  let part1() =
-    //sample |> countOverlaps true
-    input |> countOverlaps true
+  [<Theory>]
+  [<FileData("day5.txt", 8622)>]
+  [<FileData("day5sample.txt", 5)>]
+  let part1 input expected =
+    input |> countOverlaps true =! expected
 
-  // 22037
-  let part2() =
-    //sample |> countOverlaps false
-    input |> countOverlaps false
+  [<Theory>]
+  [<FileData("day5.txt", 22037)>]
+  [<FileData("day5sample.txt", 12)>]
+  let part2 input expected =
+    input |> countOverlaps false =! expected
 
 module Day6 =
-
-  let input = readInput 6 |> Array.exactlyOne
-
-  let sample = "3,4,3,1,2"
-
-  let parse (input: string) = input.Split(',') |> Array.map int
 
   let advance (array: ResizeArray<_>) =
     let toAdd = ResizeArray()
@@ -368,16 +311,11 @@ module Day6 =
         array[i] <- v
     array.AddRange(toAdd)
 
-  let simulate days input =
-    let arr = ResizeArray(parse input)
+  let simulate days (input: int []) =
+    let arr = ResizeArray(input)
     for _ = 0 to days - 1 do
       advance arr
     arr.Count
-
-  // 374927
-  let part1() =
-    //simulate 80 sample
-    simulate 80 input
 
   let advance2 (days: int64[]) =
     let first = days[0]
@@ -386,8 +324,7 @@ module Day6 =
     days[6] <- days[6] + first
     days[8] <- first
 
-  let simulate2 days input =
-    let fish = parse input
+  let simulate2 days fish =
     let daysLeft = Array.zeroCreate 9
     for f in fish do
       daysLeft[f] <- daysLeft[f] + 1L
@@ -395,18 +332,20 @@ module Day6 =
       advance2 daysLeft
     Array.sum daysLeft
 
-  // 1687617803407
-  let part2() =
-    //simulate2 80 sample
-    //simulate2 256 sample
-    //simulate2 80 input
-    simulate2 256 input
+  [<Theory>]
+  [<FileData("day6.txt", 374927)>]
+  [<FileData("day6sample.txt", 5934)>]
+  let part1 (SingeLineInts input) expected =
+    simulate 80 input =! expected
+    simulate2 80 input =! expected
+
+  [<Theory>]
+  [<FileData("day6.txt", 1687617803407L)>]
+  [<FileData("day6sample.txt", 26984457539L)>]
+  let part2 (SingeLineInts input) expected =
+    simulate2 256 input =! expected
 
 module Day7 =
-
-  let input = readsInts 7
-
-  let sample = "16,1,2,0,4,2,7,1,2,14".Split(',') |> Array.map int
 
   let getFuelCost(input: int[]) =
     let m = Array.max input
@@ -416,10 +355,11 @@ module Day7 =
     |> Array.minBy getCost
     |> getCost
 
-  // 347509
-  let part1() =
-    //getFuelCost sample // 37
-    getFuelCost input
+  [<Theory>]
+  [<FileData("day7.txt", 347509)>]
+  [<FileData("day7sample.txt", 37)>]
+  let part1 (SingeLineInts input) expected =
+    getFuelCost input =! expected
 
   let getFuelCost2(input: int[]) =
     let m = Array.max input
@@ -429,37 +369,13 @@ module Day7 =
     |> Array.minBy getCost
     |> getCost
 
-  // 98257206
-  let part2() =
-    //getFuelCost2 sample // 168
-    getFuelCost2 input
+  [<Theory>]
+  [<FileData("day7.txt", 98257206)>]
+  [<FileData("day7sample.txt", 168)>]
+  let part2 (SingeLineInts input) expected =
+    getFuelCost2 input =! expected
 
 module Day14 =
-  open System.Text
-  open System.Runtime.InteropServices
-
-  let input = readInput 14
-
-  let sample = [|
-    "NNCB"
-    ""
-    "CH -> B"
-    "HH -> N"
-    "CB -> H"
-    "NH -> C"
-    "HB -> C"
-    "HC -> B"
-    "HN -> C"
-    "NN -> C"
-    "BH -> H"
-    "NC -> B"
-    "NB -> B"
-    "BN -> B"
-    "BB -> N"
-    "BC -> B"
-    "CC -> N"
-    "CN -> C"
-  |]
 
   let iterate (rules: Map<struct(char * char), char>) (polymer: StringBuilder) =
     let sb = StringBuilder(2 * polymer.Length - 1)
@@ -497,8 +413,8 @@ module Day14 =
 
     Seq.max counts.Values - Seq.min counts.Values
 
-  // 2112
-  let part1() =
-    //applyRules sample // 1588
-    applyRules input
-
+  [<Theory>]
+  [<FileData("day14.txt", 2112)>]
+  [<FileData("day14sample.txt", 1588)>]
+  let part1 input expected =
+    applyRules input =! expected

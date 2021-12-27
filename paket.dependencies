@@ -1,0 +1,9 @@
+source https://api.nuget.org/v3/index.json
+
+framework: auto-detect
+
+nuget FsCheck.Xunit
+nuget FSharp.Data
+nuget xunit
+nuget xunit.runner.visualstudio
+nuget Microsoft.NET.Test.Sdk

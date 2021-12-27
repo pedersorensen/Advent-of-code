@@ -1,16 +1,17 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
-
   <ItemGroup>
+    <Compile Include="Utils.fs" />
     <Compile Include="TopologicalSort.fs" />
+    <Compile Include="Excercises2021.fs" />
     <None Include="Utils.fsx" />
     <None Include="Excercises2018.fsx" />
     <None Include="Excercises2019.fsx" />
     <None Include="Excercises2020.fsx" />
-    <None Include="Excercises2021.fsx" />
+    <None Include="paket.references" />
   </ItemGroup>
-
+  <Import Project="..\.paket\Paket.Restore.targets" />
 </Project>
