@@ -1,4 +1,10 @@
-﻿namespace Excercises2021
+﻿#if Interactive
+#r "nuget: FSharp.Data"
+#load "Utils.fs"
+Year <- 2021
+#else
+namespace Excercises2021
+#endif
 
 open Xunit
 open System
@@ -373,6 +379,56 @@ module Day7 =
   [<FileData("day7sample.txt", 168)>]
   let part2 (SingeLineInts input) expected =
     getFuelCost2 input =! expected
+
+module Day9 =
+
+  let directions = [|
+    +1,+0
+    +0,-1
+    +0,+1
+    -1,+0
+  |]
+
+  let getRiskSum (input: string[]) =
+    let height = input.Length
+    let width = input[0].Length
+
+    let get i j =
+      if i < 0 || i >= height || j < 0 || j >= width then 99 else int(input[i][j]) - int '0'
+
+    let mutable sum = 0
+
+    for i = 0 to height - 1 do
+      for j = 0 to width - 1 do
+        let v = get i j
+        let isLowest =
+          directions
+          |> Array.forall(fun (x, y) ->
+            let w = get (i + x) (j + y)
+            v < w
+          )
+        if isLowest then sum <- sum + v + 1
+    sum
+
+  [<Theory>]
+  [<FileData("day9.txt", 570)>]
+  [<FileData("day9sample.txt", 15)>]
+  let part1 input expected =
+    getRiskSum input =! expected
+
+  let sample = [|
+    "2199943210"
+    "3987894921"
+    "9856789892"
+    "8767896789"
+    "9899965678"
+  |]
+
+  [<Theory>]
+  [<FileData("day9.txt", 570)>]
+  [<FileData("day9sample.txt", 15)>]
+  let part2 input expected =
+    ()
 
 module Day14 =
 
