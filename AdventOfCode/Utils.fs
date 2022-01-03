@@ -6,24 +6,21 @@ open System.IO
 open System.Collections.Generic
 open FSharp.Data
 
-Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
-
-let mutable Year = 0
-
-let ensureExists (day: int) =
-  if Year = 0 then invalidOp "Year has not been set."
-  let path = $"input{Year}/day{day}.txt"
+let ensureExists (year: int) (day: int) =
+  let path = $"input{year}/day{day}.txt"
   if File.Exists path |> not then
     let cookies = [| "session", File.ReadAllText("cookie.txt") |]
-    Directory.CreateDirectory($"input{Year}") |> ignore
+    Directory.CreateDirectory($"input{year}") |> ignore
     printfn $"Input for day {day} does not exists, downloading file {path}."
-    let url = $"https://adventofcode.com/{Year}/day/{day}/input"
+    let url = $"https://adventofcode.com/{year}/day/{day}/input"
     let response = Http.RequestString(url, cookies = cookies)
     File.WriteAllText(path, response)
   path
 
-let readInput (day: int) = File.ReadAllLines(ensureExists day)
-let readAllInput (day: int) = File.ReadAllText(ensureExists day)
+let mutable Year = 0
+
+let readInput (day: int) = File.ReadAllLines(ensureExists Year day)
+let readAllInput (day: int) = File.ReadAllText(ensureExists Year day)
 
 let readsInts day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int
 let readsInt64s day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int64
