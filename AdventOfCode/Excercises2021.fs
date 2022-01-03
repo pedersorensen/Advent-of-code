@@ -28,7 +28,7 @@ module Utils =
 
   let inline (=!) (actual : 'T) (expected : 'T) = Assert.Equal<'T>(expected, actual)
 
-module Day1 =
+module Day01 =
 
   let countIncreasesA (input: int[]) =
     input
@@ -75,7 +75,7 @@ module Day1 =
     |> countIncreasesB
      =! expected
 
-module Day2 =
+module Day02 =
 
   let (|Up|Down|Forward|) (s: string) =
     match s.Split(' ') with
@@ -125,7 +125,7 @@ module Day2 =
   let part2 input expected =
     moveItAgain input =! expected
 
-module Day3 =
+module Day03 =
 
   let binaryToInt digits =
     let struct (value, _) =
@@ -204,7 +204,7 @@ module Day3 =
     let co2Rate = filter minParam input |> binaryToInt
     oxygenRate * co2Rate =! expected
 
-module Day4 =
+module Day04 =
 
   let [<Literal>] DrawnBit = 1024
   let [<Literal>] Width = 5
@@ -318,7 +318,7 @@ module Day4 =
   let part2 input expected =
     getLastWinnerScore input =! expected
 
-module Day5 =
+module Day05 =
 
   let countOverlaps skipDiagonals (input: string[]) =
     let mutable overlaps = 0
@@ -377,7 +377,7 @@ module Day5 =
   let part2 input expected =
     input |> countOverlaps false =! expected
 
-module Day6 =
+module Day06 =
 
   let advance (array: ResizeArray<_>) =
     let toAdd = ResizeArray()
@@ -428,7 +428,7 @@ module Day6 =
   let part2 (SingeLineInts input) expected =
     simulate2 256 input =! expected
 
-module Day7 =
+module Day07 =
 
   let getFuelCost(input: int[]) =
     let m = Array.max input
@@ -462,7 +462,7 @@ module Day7 =
   let part2 (SingeLineInts input) expected =
     getFuelCost2 input =! expected
 
-module Day9 =
+module Day09 =
 
   let directions = [|
     +1,+0
