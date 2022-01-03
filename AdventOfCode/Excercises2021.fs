@@ -479,11 +479,11 @@ module Day9 =
 
     let points = ResizeArray()
 
-    for i = 0 to height - 1 do
-      for j = 0 to width - 1 do
-        let v = get i j
-        let isLowest = directions |> Array.forall(fun (x, y) -> v < get (i + x) (j + y))
-        if isLowest then points.Add(i, j)
+    for x = 0 to height - 1 do
+      for y = 0 to width - 1 do
+        let v = get x y
+        let isLowest = directions |> Array.forall(fun (dx, dy) -> v < get (x + dx) (y + dy))
+        if isLowest then points.Add(x, y)
 
     points.ToArray()
 
@@ -501,6 +501,36 @@ module Day9 =
   let part1 input expected =
     getLowPoints input
     |> Array.sumBy(fun (x,y) -> int(input[x][y]) - int '0' + 1)
+    =! expected
+
+  let getBasinSize (input: string[]) point =
+    let height = input.Length
+    let width = input[0].Length
+    let get i j = if i < 0 || i >= height || j < 0 || j >= width then 'A' else input[i][j]
+
+    let basin = HashSet<int*int>()
+
+    let rec loop point =
+      let (x, y) = point
+      for (dx, dy) in directions do
+        let point2 = dx + x, dy + y
+        let ch = get (dx + x) (dy + y)
+        if ch <> '9' && ch <> 'A' && basin.Add(point2) then
+          loop point2
+
+    basin.Add(point) |> ignore
+    loop point
+    basin.Count
+
+  [<Theory>]
+  [<FileData(9, 899392)>]
+  [<MemberData(nameof sample, 1134)>]
+  let part2 input expected =
+    getLowPoints input
+    |> Array.map(fun p -> getBasinSize input p)
+    |> Array.sortDescending
+    |> Array.take 3
+    |> Array.reduce (*)
     =! expected
 
 module Day14 =
