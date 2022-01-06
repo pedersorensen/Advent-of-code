@@ -50,10 +50,36 @@ module Seq =
       else combiner line state, acc)
     |> fun (set, count) -> accumulator set count
 
+[<RequireQualifiedAccess>]
 module Array =
 
   let countTrue predicate source =
     source |> Array.sumBy(fun x -> if predicate x then 1 else 0)
+
+  let private toArray (array : ResizeArray<_>) =
+    if array.Count = 0 then Array.Empty() else array.ToArray()
+
+  /// Splits the collection into two collections, containing the elements for
+  /// which the given projection returns 'Choice1Of2' and 'Choice2Of2' respectively.
+  let partitionBy projection (array : _[]) =
+    let left = new ResizeArray<_>(array.Length)
+    let right = new ResizeArray<_>()
+    for elem in array do
+      match projection elem with
+      | Choice1Of2 x -> left.Add x
+      | Choice2Of2 x -> right.Add x
+    toArray left, toArray right
+
+  /// Splits the collection into two collections, containing the elements for
+  /// which the given projection returns 'Ok' and 'Error' respectively.
+  let partitionByResult projection (array : _[]) =
+    let ok = new ResizeArray<_>(array.Length)
+    let error = new ResizeArray<_>()
+    for elem in array do
+      match projection elem with
+      | Ok x -> ok.Add x
+      | Error x -> error.Add x
+    toArray ok, toArray error
 
 module Tuple =
 

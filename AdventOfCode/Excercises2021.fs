@@ -506,7 +506,7 @@ module Day09 =
   let getBasinSize (input: string[]) point =
     let height = input.Length
     let width = input[0].Length
-    let get i j = if i < 0 || i >= height || j < 0 || j >= width then 'A' else input[i][j]
+    let get (i, j) = if i < 0 || i >= height || j < 0 || j >= width then 'A' else input[i][j]
 
     let basin = HashSet<int*int>()
 
@@ -514,7 +514,7 @@ module Day09 =
       let (x, y) = point
       for (dx, dy) in directions do
         let point2 = dx + x, dy + y
-        let ch = get (dx + x) (dy + y)
+        let ch = get point2
         if ch <> '9' && ch <> 'A' && basin.Add(point2) then
           loop point2
 
@@ -532,6 +532,92 @@ module Day09 =
     |> Array.take 3
     |> Array.reduce (*)
     =! expected
+
+module Day10 =
+
+  let sample (result: int) = makeSample result [|
+    "[({(<(())[]>[[{[]{<()<>>"
+    "[(()[<>])]({[<{<<[]>>("
+    "{([(<{}[<>[]}>{[]{[(<()>"
+    "(((({<>}<{<{<>}{[]{[]{}"
+    "[[<[([]))<([[{}[[()]]]"
+    "[{[{({}]{}}([{[{{{}}([]"
+    "{<[[]]>}<{[{[{[]{()[[[]"
+    "[<(<(<(<{}))><([]([]()"
+    "<{([([[(<>()){}]>(<<{{"
+    "<{([{{}}[<[[[<>{}]]]>[]]"
+  |]
+
+  let (|Open|Close|) ch = if ch = '(' || ch = '[' || ch = '{' || ch = '<' then Open ch else Close ch
+
+  let isPair a b =
+    (a = '(' && b = ')') ||
+    (a = '[' && b = ']') ||
+    (a = '{' && b = '}') ||
+    (a = '<' && b = '>')
+
+  let getOther ch =
+    match ch with
+    | '(' -> ')'
+    | '[' -> ']'
+    | '{' -> '}'
+    | '<' -> '>'
+    | _ -> invalidArg (nameof ch) "Not a valid opening character."
+
+  let rec loop left right =
+    match left, right with
+    | ch, [] -> Choice1Of2 ch
+    | [], r :: right -> loop [r] right
+    | l :: left, r :: right ->
+      match l, r with
+      | Open l, Close r when isPair l r -> loop left right
+      | Open l, Close r -> Choice2Of2($"Corrupted, expected {getOther l}, got {r}.", r)
+      | Open l, Open r -> loop (r :: l :: left) right
+      | Close _, Open _ -> failwith "Cannot happen."
+      | Close _, Close _ -> failwith "Cannot happen."
+
+  let getScore ch =
+    match ch with
+    | ')' -> 3
+    | ']' -> 57
+    | '}' -> 1197
+    | '>' -> 25137
+    | _ -> invalidArg (nameof ch) "Not a valid closing character."
+
+  let getSyntaxErrorScore (input: string []) =
+    input
+    |> Array.partitionBy(List.ofSeq >> loop [])
+    |> snd
+    |> Array.sumBy(snd >> getScore)
+
+  [<Theory>]
+  [<FileData(10, 374061)>]
+  [<MemberData(nameof sample, 26397)>]
+  let part1 (input: string array) expected =
+    getSyntaxErrorScore input =! expected
+
+  let getScore2 ch =
+    match ch with
+    | '(' -> 1L
+    | '[' -> 2L
+    | '{' -> 3L
+    | '<' -> 4L
+    | _ -> invalidArg (nameof ch) "Not a valid opening character."
+
+  let getCompletionScore (input: string []) =
+    let scores =
+      input
+      |> Array.partitionBy(List.ofSeq >> loop [])
+      |> fst
+      |> Array.map(List.fold (fun score ch -> score * 5L + getScore2 ch) 0L)
+      |> Array.sort
+    scores[scores.Length / 2]
+
+  [<Theory>]
+  [<FileData(10, 2116639949)>]
+  [<MemberData(nameof sample, 288957)>]
+  let part2 input expected =
+    getCompletionScore input =! expected
 
 module Day14 =
 
