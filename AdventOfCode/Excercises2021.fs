@@ -462,6 +462,23 @@ module Day07 =
   let part2 (SingeLineInts input) expected =
     getFuelCost2 input =! expected
 
+module Day08 =
+
+  let sample (result: int) = makeSample result [|
+  |]
+
+  [<Theory>]
+  [<FileData(08, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 input expected =
+    ()
+
+  [<Theory>]
+  [<FileData(08, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 input expected =
+    ()
+
 module Day09 =
 
   let directions = [|
@@ -619,6 +636,95 @@ module Day10 =
   let part2 input expected =
     getCompletionScore input =! expected
 
+module Day11 =
+
+  let sample (result: int) = makeSample result [|
+    "5483143223"
+    "2745854711"
+    "5264556173"
+    "6141336146"
+    "6357385478"
+    "4167524645"
+    "2176841721"
+    "6882881134"
+    "4846848554"
+    "5283751526"
+  |]
+
+  [<Theory>]
+  [<FileData(11, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 input expected =
+    ()
+
+  [<Theory>]
+  [<FileData(11, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 input expected =
+    ()
+
+module Day12 =
+
+  let sample (result: int) = makeSample result [|
+    "start-A"
+    "start-b"
+    "A-c"
+    "A-b"
+    "b-d"
+    "A-end"
+    "b-end"
+  |]
+
+  [<Theory>]
+  [<FileData(12, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 input expected =
+    ()
+
+  [<Theory>]
+  [<FileData(12, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 input expected =
+    ()
+
+module Day13 =
+
+  let sample (result: int) = makeSample result [|
+    "6,10"
+    "0,14"
+    "9,10"
+    "0,3"
+    "10,4"
+    "4,11"
+    "6,0"
+    "6,12"
+    "4,1"
+    "0,13"
+    "10,12"
+    "3,4"
+    "3,0"
+    "8,4"
+    "1,10"
+    "2,14"
+    "8,10"
+    "9,0"
+    ""
+    "fold along y=7"
+    "fold along x=5"
+  |]
+
+  [<Theory>]
+  [<FileData(13, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 input expected =
+    ()
+
+  [<Theory>]
+  [<FileData(13, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 input expected =
+    ()
+
 module Day14 =
 
   let iterate (rules: Map<struct(char * char), char>) (polymer: StringBuilder) =
@@ -683,3 +789,301 @@ module Day14 =
   [<MemberData(nameof sample, 1588)>]
   let part1 input expected =
     applyRules input =! expected
+
+  [<Theory>]
+  [<FileData(14, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 input expected =
+    ()
+
+module Day15 =
+
+  let sample (result: int) = makeSample result [|
+    "1163751742"
+    "1381373672"
+    "2136511328"
+    "3694931569"
+    "7463417111"
+    "1319128137"
+    "1359912421"
+    "3125421639"
+    "1293138521"
+    "2311944581"
+  |]
+
+  [<Theory>]
+  [<FileData(15, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 input expected =
+    ()
+
+  [<Theory>]
+  [<FileData(15, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 input expected =
+    ()
+
+module Day16 =
+
+  let sample (result: int) = makeSample result [|
+    "0 = 0000"
+    "1 = 0001"
+    "2 = 0010"
+    "3 = 0011"
+    "4 = 0100"
+    "5 = 0101"
+    "6 = 0110"
+    "7 = 0111"
+    "8 = 1000"
+    "9 = 1001"
+    "A = 1010"
+    "B = 1011"
+    "C = 1100"
+    "D = 1101"
+    "E = 1110"
+    "F = 1111"
+  |]
+
+  [<Theory>]
+  [<FileData(16, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 input expected =
+    ()
+
+  [<Theory>]
+  [<FileData(16, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 input expected =
+    ()
+
+
+module Day17 =
+
+  let sample (result: int) = makeSample result [|
+    "target area: x=20..30, y=-10..-5"
+  |]
+
+  [<Theory>]
+  [<FileData(17, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 input expected =
+    ()
+
+  [<Theory>]
+  [<FileData(17, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 input expected =
+    ()
+
+module Day18 =
+
+  let sample (result: int) = makeSample result [|
+    "[1,2]"
+    "[[1,2],3]"
+    "[9,[8,7]]"
+    "[[1,9],[8,5]]"
+    "[[[[1,2],[3,4]],[[5,6],[7,8]]],9]"
+    "[[[9,[3,8]],[[0,9],6]],[[[3,7],[4,9]],3]]"
+    "[[[[1,3],[5,3]],[[1,3],[8,7]]],[[[4,9],[6,9]],[[8,2],[7,3]]]]"
+  |]
+
+  [<Theory>]
+  [<FileData(18, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 input expected =
+    ()
+
+  [<Theory>]
+  [<FileData(18, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 input expected =
+    ()
+
+module Day19 =
+
+  let sample (result: int) = makeSample result [|
+    "--- scanner 0 ---"
+    "0,2"
+    "4,1"
+    "3,3"
+    ""
+    "--- scanner 1 ---"
+    "-1,-1"
+    "-5,0"
+    "-2,1"
+  |]
+
+  [<Theory>]
+  [<FileData(19, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 input expected =
+    ()
+
+  [<Theory>]
+  [<FileData(19, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 input expected =
+    ()
+
+module Day20 =
+
+  let sample (result: int) = makeSample result [|
+    "..#.#..#####.#.#.#.###.##.....###.##.#..###.####..#####..#....#..#..##..##"
+    "#..######.###...####..#..#####..##..#.#####...##.#.#..#.##..#.#......#.###"
+    ".######.###.####...#.##.##..#..#..#####.....#.#....###..#.##......#.....#."
+    ".#..#..##..#...##.######.####.####.#.#...#.......#..#.#.#...####.##.#....."
+    ".#..#...##.#.##..#...##.#.##..###.#......#.#.......#.#.#.####.###.##...#.."
+    "...####.#..#..#.##.#....##..#.####....##...##..#...#......#.#.......#....."
+    "..##..####..#...#.#.#...##..#.#..###..#####........#..####......#..#"
+    ""
+    "#..#."
+    "#...."
+    "##..#"
+    "..#.."
+    "..###"
+  |]
+
+  [<Theory>]
+  [<FileData(20, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 input expected =
+    ()
+
+  [<Theory>]
+  [<FileData(20, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 input expected =
+    ()
+
+module Day21 =
+
+  let sample (result: int) = makeSample result [|
+    "Player 1 starting position: 4"
+    "Player 2 starting position: 8"
+  |]
+
+  [<Theory>]
+  [<FileData(21, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 input expected =
+    ()
+
+  [<Theory>]
+  [<FileData(21, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 input expected =
+    ()
+
+module Day22 =
+
+  let sample (result: int) = makeSample result [|
+    "on x=10..12,y=10..12,z=10..12"
+    "on x=11..13,y=11..13,z=11..13"
+    "off x=9..11,y=9..11,z=9..11"
+    "on x=10..10,y=10..10,z=10..10"
+  |]
+
+  [<Theory>]
+  [<FileData(22, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 input expected =
+    ()
+
+  [<Theory>]
+  [<FileData(22, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 input expected =
+    ()
+
+module Day23 =
+
+  let sample (result: int) = makeSample result [|
+    "#############"
+    "#...........#"
+    "###B#C#B#D###"
+    "  #A#D#C#A#  "
+    "  #########  "
+  |]
+
+  [<Theory>]
+  [<FileData(23, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 input expected =
+    ()
+
+  [<Theory>]
+  [<FileData(23, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 input expected =
+    ()
+
+module Day24 =
+
+  let sample1 (result: int) = makeSample result [|
+    "inp x"
+    "mul x -1"
+  |]
+
+  let sample2 (result: int) = makeSample result [|
+    "inp z"
+    "inp x"
+    "mul z 3"
+    "eql z x"
+  |]
+
+  let sample3 (result: int) = makeSample result [|
+    "inp w"
+    "add z w"
+    "mod z 2"
+    "div w 2"
+    "add y w"
+    "mod y 2"
+    "div w 2"
+    "add x w"
+    "mod x 2"
+    "div w 2"
+    "mod w 2"
+  |]
+
+  [<Theory>]
+  [<FileData(24, 0)>]
+  [<MemberData(nameof sample1, 0)>]
+  [<MemberData(nameof sample2, 0)>]
+  [<MemberData(nameof sample3, 0)>]
+  let part1 input expected =
+    ()
+
+  [<Theory>]
+  [<FileData(24, 0)>]
+  [<MemberData(nameof sample1, 0)>]
+  [<MemberData(nameof sample2, 0)>]
+  [<MemberData(nameof sample3, 0)>]
+  let part2 input expected =
+    ()
+
+module Day25 =
+
+  let sample (result: int) = makeSample result [|
+    "v...>>.vv>"
+    ".vv>>.vv.."
+    ">>.>v>...v"
+    ">>v>>.>.v."
+    "v>v.vv.v.."
+    ">.>>..v..."
+    ".vv..>.>v."
+    "v.v..>>v.v"
+    "....v..v.>"
+  |]
+
+  [<Theory>]
+  [<FileData(25, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 input expected =
+    ()
+
+  [<Theory>]
+  [<FileData(25, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 input expected =
+    ()
+
