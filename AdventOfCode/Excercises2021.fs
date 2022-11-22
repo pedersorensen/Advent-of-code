@@ -464,8 +464,7 @@ module Day07 =
 
 module Day08 =
 
-  let sample (result: int) = makeSample result [|
-  |]
+  let sample (result: int) = makeSample result [| |]
 
   [<Theory>]
   [<FileData(08, 0)>]
