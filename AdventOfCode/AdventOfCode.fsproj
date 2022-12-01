@@ -7,6 +7,7 @@
     <Compile Include="Utils.fs" />
     <Compile Include="TopologicalSort.fs" />
     <Compile Include="Excercises2021.fs" />
+    <Compile Include="Excercises2022.fs" />
     <None Include="Utils.fsx" />
     <None Include="Excercises2018.fsx" />
     <None Include="Excercises2019.fsx" />

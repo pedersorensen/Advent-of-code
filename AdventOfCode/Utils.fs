@@ -81,6 +81,19 @@ module Array =
       | Error x -> error.Add x
     toArray ok, toArray error
 
+  let chunkBy condition (array: _ []) =
+    let result = new ResizeArray<_>()
+    let buffer = new ResizeArray<_>()
+    for item in array do
+      if condition item then
+        result.Add(buffer.ToArray())
+        buffer.Clear()
+      else
+        buffer.Add(item)
+    if buffer.Count > 0 then
+      result.Add(buffer.ToArray())
+    result.ToArray()
+
 module Tuple =
 
   let inline add (x1, y1) (x2, y2) = x1 + x2, y1 + y2

@@ -150,7 +150,7 @@ module Day4 =
     | true, n when min <= n && n <= max -> true
     | _ -> false
 
-  let isMatch pattern value = Regex.IsMatch(value, pattern)
+  let isMatch (pattern: string) (value: string) = Regex.IsMatch(value, pattern)
 
   let isHeight value =
     let m = Regex.Match(value, "([0-9]+)(cm|in)")
