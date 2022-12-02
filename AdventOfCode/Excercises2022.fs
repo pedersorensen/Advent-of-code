@@ -66,3 +66,73 @@ module Day01 =
     |> Array.take 3
     |> Array.sum
     =! expected
+
+module Day02 =
+
+  let sample (result: int) = makeSample result [|
+    "A Y"
+    "B X"
+    "C Z"
+  |]
+
+  type Hand = Rock | Paper | Scissor
+
+  let mapHand =
+    function
+    | "A" | "X" -> Rock
+    | "B" | "Y" -> Paper
+    | "C" | "Z" -> Scissor
+    | _ -> invalidOp ""
+
+  let evaluate =
+    function
+    | Rock, Rock -> 3 + 1
+    | Rock, Paper -> 6 + 2
+    | Rock, Scissor -> 0 + 3
+    | Paper, Rock -> 0 + 1
+    | Paper, Paper -> 3 + 2
+    | Paper, Scissor -> 6 + 3
+    | Scissor, Rock -> 6 + 1
+    | Scissor, Paper -> 0 + 2
+    | Scissor, Scissor -> 3 + 3
+
+  [<Theory>]
+  [<FileData(2, 10404)>]
+  [<MemberData(nameof sample, 15)>]
+  let part1 (input: string []) expected =
+    input
+    |> Array.map(fun s ->
+      match s.Split(' ') with
+      | [|a ; b|] -> mapHand a, mapHand b
+      | _ -> invalidOp ""
+    )
+    |> Array.sumBy evaluate
+    =! expected
+
+  let mapSnd =
+    function
+    | Rock, "X" -> Scissor
+    | Rock, "Y" -> Rock
+    | Rock, "Z" -> Paper
+    | Paper, "X" -> Rock
+    | Paper, "Y" -> Paper
+    | Paper, "Z" -> Scissor
+    | Scissor, "X" -> Paper
+    | Scissor, "Y" -> Scissor
+    | Scissor, "Z" -> Rock
+    | _ -> invalidOp ""
+
+  [<Theory>]
+  [<FileData(2, 10334)>]
+  [<MemberData(nameof sample, 12)>]
+  let part2 (input: string []) expected =
+    input
+    |> Array.map(fun s ->
+      match s.Split(' ') with
+      | [|a ; b|] ->
+        let a = mapHand a
+        a, mapSnd (a, b)
+      | _ -> invalidOp ""
+    )
+    |> Array.sumBy evaluate
+    =! expected
