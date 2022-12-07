@@ -136,3 +136,70 @@ module Day02 =
     )
     |> Array.sumBy evaluate
     =! expected
+
+module Day03 =
+  open System.Collections.Generic
+
+  let sample (result: int) = makeSample result [|
+    "vJrwpWtwJgWrhcsFMMfFFhFp"
+    "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL"
+    "PmmdzqPrVvPwwTWBwg"
+    "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn"
+    "ttgJtRGJQctTZtZT"
+    "CrZsJsPPZsGzwwsLwLmpwMDw"
+  |]
+
+  let getPriority (ch: Char) =
+    let a = int 'a'
+    let z = int 'z'
+    let A = int 'A'
+    let Z = int 'Z'
+    let i = int ch
+    if a <= i && i <= z then i - a + 1
+    elif A <= i && i <= Z then i - A + 27
+    else raise(ArgumentOutOfRangeException(nameof ch, ch, "Invalid value."))
+
+  [<Theory>]
+  [<FileData(3, 7990)>]
+  [<MemberData(nameof sample, 157)>]
+  let part1 (input: string []) expected =
+    input
+    |> Seq.collect(fun s ->
+      let midpoint = s.Length / 2
+      let set = HashSet(Seq.take midpoint s)
+      set.IntersectWith(Seq.skip midpoint s)
+      set
+    )
+    |> Seq.sumBy getPriority
+    =! expected
+
+  [<Theory>]
+  [<FileData(3, 2602)>]
+  [<MemberData(nameof sample, 70)>]
+  let part2 (input: string []) expected =
+    input
+    |> Array.chunkBySize 3
+    |> Seq.collect (fun chunk ->
+      let set = HashSet(chunk[0])
+      set.IntersectWith(chunk[1])
+      set.IntersectWith(chunk[2])
+      set
+    )
+    |> Seq.sumBy getPriority
+    =! expected
+
+module DayNN =
+
+  let sample (result: int) = makeSample result [| |]
+
+  [<Theory>]
+  [<FileData(1, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 (input: string []) expected =
+    0 =! expected
+
+  [<Theory>]
+  [<FileData(1, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string []) expected =
+    0 =! expected
