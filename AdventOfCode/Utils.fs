@@ -9,7 +9,11 @@ open FSharp.Data
 let ensureExists (year: int) (day: int) =
   let path = $"input{year}/day{day}.txt"
   if File.Exists path |> not then
-    let cookies = [| "session", File.ReadAllText("cookie.txt") |]
+    let cookie =
+      if File.Exists("cookie.txt")
+      then File.ReadAllText("cookie.txt")
+      else Environment.GetEnvironmentVariable("cookie")
+    let cookies = [| "session", cookie |]
     Directory.CreateDirectory($"input{year}") |> ignore
     printfn $"Input for day {day} does not exists, downloading file {path}."
     let url = $"https://adventofcode.com/{year}/day/{day}/input"

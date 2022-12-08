@@ -3,20 +3,28 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AdventOfCode", "AdventOfCode\AdventOfCode.fsproj", "{E20AB3A1-2EEE-461B-9605-23FD192ECDF4}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "AdventOfCode", "AdventOfCode\AdventOfCode.fsproj", "{E20AB3A1-2EEE-461B-9605-23FD192ECDF4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{28364C6D-4371-4DB5-919B-591A69E6C4A9}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\buildAndTest.yml = .github\workflows\buildAndTest.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
-	GlobalSection(SolutionProperties) = preSolution
-		HideSolutionNode = FALSE
-	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{E20AB3A1-2EEE-461B-9605-23FD192ECDF4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E20AB3A1-2EEE-461B-9605-23FD192ECDF4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E20AB3A1-2EEE-461B-9605-23FD192ECDF4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E20AB3A1-2EEE-461B-9605-23FD192ECDF4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E645E532-CDFF-432C-B1FF-EC44DB3DC760}
 	EndGlobalSection
 EndGlobal
