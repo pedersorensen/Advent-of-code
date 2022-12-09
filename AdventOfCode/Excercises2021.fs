@@ -13,21 +13,6 @@ open System.Text
 open System.Collections.Generic
 open System.Runtime.InteropServices
 
-type FileDataAttribute(day, result: obj) =
-  inherit Sdk.DataAttribute()
-  override _.GetData(_) =
-    let path = ensureExists 2021 day
-    [| [| File.ReadAllLines(path) |> box ; result |] |]
-
-[<AutoOpen>]
-module Utils =
-  let (|Ints|) (data: string[]) = data |> Array.map int
-  let (|SingeLineInts|) (data: string[]) = (Array.exactlyOne data).Split(',') |> Array.map int
-
-  let makeSample result (data: string []) = [| [| box data ; box result |] |]
-
-  let inline (=!) (actual : 'T) (expected : 'T) = Assert.Equal<'T>(expected, actual)
-
 module Day01 =
 
   let countIncreasesA (input: int[]) =
@@ -59,14 +44,14 @@ module Day01 =
   |]
 
   [<Theory>]
-  [<FileData(1, 1387)>]
+  [<FileData(2021, 1, 1387)>]
   [<MemberData(nameof sample, 7)>]
   let part1 (Ints input) expected =
     countIncreasesA input =! expected
     countIncreasesB input =! expected
 
   [<Theory>]
-  [<FileData(1, 1362)>]
+  [<FileData(2021, 1, 1362)>]
   [<MemberData(nameof sample, 5)>]
   let part2 (Ints input) expected =
     input
@@ -104,7 +89,7 @@ module Day02 =
   |]
 
   [<Theory>]
-  [<FileData(2, 2147104)>]
+  [<FileData(2021, 2, 2147104)>]
   [<MemberData(nameof sample, 150)>]
   let part1 input expected =
     moveIt input =! expected
@@ -120,7 +105,7 @@ module Day02 =
     |> fun struct(h, d, _) -> h * d
 
   [<Theory>]
-  [<FileData(2, 2044620088)>]
+  [<FileData(2021, 2, 2044620088)>]
   [<MemberData(nameof sample, 900)>]
   let part2 input expected =
     moveItAgain input =! expected
@@ -167,7 +152,7 @@ module Day03 =
   |]
 
   [<Theory>]
-  [<FileData(3, 3847100)>]
+  [<FileData(2021, 3, 3847100)>]
   [<MemberData(nameof sample, 198)>]
   let part1 input expected =
     let (gamma, epsilon) = getReadings input
@@ -195,7 +180,7 @@ module Day03 =
     loop 0 input
 
   [<Theory>]
-  [<FileData(3, 4105235)>]
+  [<FileData(2021, 3, 4105235)>]
   [<MemberData(nameof sample, 230)>]
   let part2 input expected =
     let maxParam = ('0', '1')
@@ -289,7 +274,7 @@ module Day04 =
   |]
 
   [<Theory>]
-  [<FileData(4, 5685)>]
+  [<FileData(2021, 4, 5685)>]
   [<MemberData(nameof sample, 4512)>]
   let part1 input expected =
     getWinnerScore input =! expected
@@ -313,7 +298,7 @@ module Day04 =
     |> getScore
 
   [<Theory>]
-  [<FileData(4, 21070)>]
+  [<FileData(2021, 4, 21070)>]
   [<MemberData(nameof sample, 1924)>]
   let part2 input expected =
     getLastWinnerScore input =! expected
@@ -366,13 +351,13 @@ module Day05 =
   |]
 
   [<Theory>]
-  [<FileData(5, 8622)>]
+  [<FileData(2021, 5, 8622)>]
   [<MemberData(nameof sample, 5)>]
   let part1 input expected =
     input |> countOverlaps true =! expected
 
   [<Theory>]
-  [<FileData(5, 22037)>]
+  [<FileData(2021, 5, 22037)>]
   [<MemberData(nameof sample, 12)>]
   let part2 input expected =
     input |> countOverlaps false =! expected
@@ -416,14 +401,14 @@ module Day06 =
   |]
 
   [<Theory>]
-  [<FileData(6, 374927L)>]
+  [<FileData(2021, 6, 374927L)>]
   [<MemberData(nameof sample, 5934L)>]
   let part1 (SingeLineInts input) expected =
     simulate 80 input =! expected
     simulate2 80 input =! expected
 
   [<Theory>]
-  [<FileData(6, 1687617803407L)>]
+  [<FileData(2021, 6, 1687617803407L)>]
   [<MemberData(nameof sample, 26984457539L)>]
   let part2 (SingeLineInts input) expected =
     simulate2 256 input =! expected
@@ -443,7 +428,7 @@ module Day07 =
   |]
 
   [<Theory>]
-  [<FileData(7, 347509)>]
+  [<FileData(2021, 7, 347509)>]
   [<MemberData(nameof sample, 37)>]
   let part1 (SingeLineInts input) expected =
     getFuelCost input =! expected
@@ -457,7 +442,7 @@ module Day07 =
     |> getCost
 
   [<Theory>]
-  [<FileData(7, 98257206)>]
+  [<FileData(2021, 7, 98257206)>]
   [<MemberData(nameof sample, 168)>]
   let part2 (SingeLineInts input) expected =
     getFuelCost2 input =! expected
@@ -467,13 +452,13 @@ module Day08 =
   let sample (result: int) = makeSample result [| |]
 
   [<Theory>]
-  [<FileData(08, 0)>]
+  [<FileData(2021, 08, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 input expected =
     ()
 
   [<Theory>]
-  [<FileData(08, 0)>]
+  [<FileData(2021, 08, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 input expected =
     ()
@@ -512,7 +497,7 @@ module Day09 =
   |]
 
   [<Theory>]
-  [<FileData(9, 570)>]
+  [<FileData(2021, 9, 570)>]
   [<MemberData(nameof sample, 15)>]
   let part1 input expected =
     getLowPoints input
@@ -539,7 +524,7 @@ module Day09 =
     basin.Count
 
   [<Theory>]
-  [<FileData(9, 899392)>]
+  [<FileData(2021, 9, 899392)>]
   [<MemberData(nameof sample, 1134)>]
   let part2 input expected =
     getLowPoints input
@@ -607,7 +592,7 @@ module Day10 =
     |> Array.sumBy(snd >> getScore)
 
   [<Theory>]
-  [<FileData(10, 374061)>]
+  [<FileData(2021, 10, 374061)>]
   [<MemberData(nameof sample, 26397)>]
   let part1 (input: string array) expected =
     getSyntaxErrorScore input =! expected
@@ -630,7 +615,7 @@ module Day10 =
     scores[scores.Length / 2]
 
   [<Theory>]
-  [<FileData(10, 2116639949)>]
+  [<FileData(2021, 10, 2116639949)>]
   [<MemberData(nameof sample, 288957)>]
   let part2 input expected =
     getCompletionScore input =! expected
@@ -651,13 +636,13 @@ module Day11 =
   |]
 
   [<Theory>]
-  [<FileData(11, 0)>]
+  [<FileData(2021, 11, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 input expected =
     ()
 
   [<Theory>]
-  [<FileData(11, 0)>]
+  [<FileData(2021, 11, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 input expected =
     ()
@@ -675,13 +660,13 @@ module Day12 =
   |]
 
   [<Theory>]
-  [<FileData(12, 0)>]
+  [<FileData(2021, 12, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 input expected =
     ()
 
   [<Theory>]
-  [<FileData(12, 0)>]
+  [<FileData(2021, 12, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 input expected =
     ()
@@ -713,13 +698,13 @@ module Day13 =
   |]
 
   [<Theory>]
-  [<FileData(13, 0)>]
+  [<FileData(2021, 13, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 input expected =
     ()
 
   [<Theory>]
-  [<FileData(13, 0)>]
+  [<FileData(2021, 13, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 input expected =
     ()
@@ -784,13 +769,13 @@ module Day14 =
   |]
 
   [<Theory>]
-  [<FileData(14, 2112)>]
+  [<FileData(2021, 14, 2112)>]
   [<MemberData(nameof sample, 1588)>]
   let part1 input expected =
     applyRules input =! expected
 
   [<Theory>]
-  [<FileData(14, 0)>]
+  [<FileData(2021, 14, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 input expected =
     ()
@@ -811,13 +796,13 @@ module Day15 =
   |]
 
   [<Theory>]
-  [<FileData(15, 0)>]
+  [<FileData(2021, 15, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 input expected =
     ()
 
   [<Theory>]
-  [<FileData(15, 0)>]
+  [<FileData(2021, 15, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 input expected =
     ()
@@ -844,13 +829,13 @@ module Day16 =
   |]
 
   [<Theory>]
-  [<FileData(16, 0)>]
+  [<FileData(2021, 16, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 input expected =
     ()
 
   [<Theory>]
-  [<FileData(16, 0)>]
+  [<FileData(2021, 16, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 input expected =
     ()
@@ -863,13 +848,13 @@ module Day17 =
   |]
 
   [<Theory>]
-  [<FileData(17, 0)>]
+  [<FileData(2021, 17, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 input expected =
     ()
 
   [<Theory>]
-  [<FileData(17, 0)>]
+  [<FileData(2021, 17, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 input expected =
     ()
@@ -887,13 +872,13 @@ module Day18 =
   |]
 
   [<Theory>]
-  [<FileData(18, 0)>]
+  [<FileData(2021, 18, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 input expected =
     ()
 
   [<Theory>]
-  [<FileData(18, 0)>]
+  [<FileData(2021, 18, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 input expected =
     ()
@@ -913,13 +898,13 @@ module Day19 =
   |]
 
   [<Theory>]
-  [<FileData(19, 0)>]
+  [<FileData(2021, 19, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 input expected =
     ()
 
   [<Theory>]
-  [<FileData(19, 0)>]
+  [<FileData(2021, 19, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 input expected =
     ()
@@ -943,13 +928,13 @@ module Day20 =
   |]
 
   [<Theory>]
-  [<FileData(20, 0)>]
+  [<FileData(2021, 20, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 input expected =
     ()
 
   [<Theory>]
-  [<FileData(20, 0)>]
+  [<FileData(2021, 20, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 input expected =
     ()
@@ -962,13 +947,13 @@ module Day21 =
   |]
 
   [<Theory>]
-  [<FileData(21, 0)>]
+  [<FileData(2021, 21, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 input expected =
     ()
 
   [<Theory>]
-  [<FileData(21, 0)>]
+  [<FileData(2021, 21, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 input expected =
     ()
@@ -983,13 +968,13 @@ module Day22 =
   |]
 
   [<Theory>]
-  [<FileData(22, 0)>]
+  [<FileData(2021, 22, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 input expected =
     ()
 
   [<Theory>]
-  [<FileData(22, 0)>]
+  [<FileData(2021, 22, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 input expected =
     ()
@@ -1005,13 +990,13 @@ module Day23 =
   |]
 
   [<Theory>]
-  [<FileData(23, 0)>]
+  [<FileData(2021, 23, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 input expected =
     ()
 
   [<Theory>]
-  [<FileData(23, 0)>]
+  [<FileData(2021, 23, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 input expected =
     ()
@@ -1045,7 +1030,7 @@ module Day24 =
   |]
 
   [<Theory>]
-  [<FileData(24, 0)>]
+  [<FileData(2021, 24, 0)>]
   [<MemberData(nameof sample1, 0)>]
   [<MemberData(nameof sample2, 0)>]
   [<MemberData(nameof sample3, 0)>]
@@ -1053,7 +1038,7 @@ module Day24 =
     ()
 
   [<Theory>]
-  [<FileData(24, 0)>]
+  [<FileData(2021, 24, 0)>]
   [<MemberData(nameof sample1, 0)>]
   [<MemberData(nameof sample2, 0)>]
   [<MemberData(nameof sample3, 0)>]
@@ -1075,13 +1060,13 @@ module Day25 =
   |]
 
   [<Theory>]
-  [<FileData(25, 0)>]
+  [<FileData(2021, 25, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 input expected =
     ()
 
   [<Theory>]
-  [<FileData(25, 0)>]
+  [<FileData(2021, 25, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 input expected =
     ()

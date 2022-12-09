@@ -9,22 +9,6 @@ namespace Excercises2022
 
 open Xunit
 open System
-open System.IO
-
-type FileDataAttribute(day, result: obj) =
-  inherit Sdk.DataAttribute()
-  override _.GetData(_) =
-    let path = ensureExists 2022 day
-    [| [| File.ReadAllLines(path) |> box ; result |] |]
-
-[<AutoOpen>]
-module Utils =
-  let (|Ints|) (data: string[]) = data |> Array.map int
-  let (|SingeLineInts|) (data: string[]) = (Array.exactlyOne data).Split(',') |> Array.map int
-
-  let makeSample result (data: string []) = [| [| box data ; box result |] |]
-
-  let inline (=!) (actual : 'T) (expected : 'T) = Assert.Equal<'T>(expected, actual)
 
 module Day01 =
 
@@ -46,7 +30,7 @@ module Day01 =
   |]
 
   [<Theory>]
-  [<FileData(1, 67_450)>]
+  [<FileData(2022, 1, 67_450)>]
   [<MemberData(nameof sample, 24_000)>]
   let part1 (input: string []) expected =
     input
@@ -56,7 +40,7 @@ module Day01 =
     =! expected
 
   [<Theory>]
-  [<FileData(1, 199357)>]
+  [<FileData(2022, 1, 199357)>]
   [<MemberData(nameof sample, 45_000)>]
   let part2 (input: string []) expected =
     input
@@ -97,7 +81,7 @@ module Day02 =
     | Scissor, Scissor -> 3 + 3
 
   [<Theory>]
-  [<FileData(2, 10404)>]
+  [<FileData(2022, 2, 10404)>]
   [<MemberData(nameof sample, 15)>]
   let part1 (input: string []) expected =
     input
@@ -123,7 +107,7 @@ module Day02 =
     | _ -> invalidOp ""
 
   [<Theory>]
-  [<FileData(2, 10334)>]
+  [<FileData(2022, 2, 10334)>]
   [<MemberData(nameof sample, 12)>]
   let part2 (input: string []) expected =
     input
@@ -160,7 +144,7 @@ module Day03 =
     else raise(ArgumentOutOfRangeException(nameof ch, ch, "Invalid value."))
 
   [<Theory>]
-  [<FileData(3, 7990)>]
+  [<FileData(2022, 3, 7990)>]
   [<MemberData(nameof sample, 157)>]
   let part1 (input: string []) expected =
     input
@@ -174,7 +158,7 @@ module Day03 =
     =! expected
 
   [<Theory>]
-  [<FileData(3, 2602)>]
+  [<FileData(2022, 3, 2602)>]
   [<MemberData(nameof sample, 70)>]
   let part2 (input: string []) expected =
     input
@@ -193,13 +177,13 @@ module DayNN =
   let sample (result: int) = makeSample result [| |]
 
   [<Theory>]
-  [<FileData(1, 0)>]
+  [<FileData(2022, 1, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 (input: string []) expected =
     0 =! expected
 
   [<Theory>]
-  [<FileData(1, 0)>]
+  [<FileData(2022, 1, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 (input: string []) expected =
     0 =! expected

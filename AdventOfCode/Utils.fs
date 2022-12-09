@@ -5,6 +5,7 @@ open System
 open System.IO
 open System.Collections.Generic
 open FSharp.Data
+open Xunit
 
 let ensureExists (year: int) (day: int) =
   let path = $"input{year}/day{day}.txt"
@@ -20,6 +21,20 @@ let ensureExists (year: int) (day: int) =
     let response = Http.RequestString(url, cookies = cookies)
     File.WriteAllText(path, response)
   path
+
+type FileDataAttribute(year, day, result: obj) =
+  inherit Sdk.DataAttribute()
+  override _.GetData(_) =
+    let path = ensureExists year day
+    [| [| File.ReadAllLines(path) |> box ; result |] |]
+
+
+let (|Ints|) (data: string[]) = data |> Array.map int
+let (|SingeLineInts|) (data: string[]) = (Array.exactlyOne data).Split(',') |> Array.map int
+
+let makeSample result (data: string []) = [| [| box data ; box result |] |]
+
+let inline (=!) (actual : 'T) (expected : 'T) = Assert.Equal<'T>(expected, actual)
 
 let mutable Year = 0
 
