@@ -9,6 +9,8 @@ namespace Excercises2022
 
 open Xunit
 open System
+open System.Collections.Generic
+open System.Text.RegularExpressions
 
 module Day01 =
 
@@ -213,19 +215,72 @@ module Day04 =
 
  module Day05 =
 
-    let sample (result: int) = makeSample result [| |]
+  let sample (result: int) = makeSample result [|
+    "    [D]    "
+    "[N] [C]    "
+    "[Z] [M] [P]"
+    "1   2   3 "
+    ""
+    "move 1 from 2 to 1"
+    "move 3 from 1 to 3"
+    "move 2 from 2 to 1"
+    "move 1 from 1 to 2"
+  |]
 
-    [<Theory>]
-    [<FileData(2022, 05, 0)>]
-    [<MemberData(nameof sample, 0)>]
-    let part1 (input: string []) expected =
-      0 =! expected
+  let getStacks sep input =
+    input
+    |> Seq.take (sep - 1)
+    |> Seq.collect(fun line ->
+      Regex.Matches(line, "\w")
+      |> Seq.map(fun m -> m.Index, m.Value)
+      |> Seq.toArray
+    )
+    |> Seq.groupBy(fst)
+    |> Seq.sortBy fst
+    |> Seq.map(fun (_, grp) -> grp |> Seq.map snd |> Seq.rev |> Stack)
+    |> Seq.toArray
 
-    [<Theory>]
-    [<FileData(2022, 05, 0)>]
-    [<MemberData(nameof sample, 0)>]
-    let part2 (input: string []) expected =
-      0 =! expected
+  let getInstructions sep input =
+    input
+    |> Array.skip(sep + 1)
+    |> Array.map(fun line ->
+      let m = Regex.Matches(line, "\d+")
+      int m[0].Value, int m[1].Value, int m[2].Value
+    )
+
+  let move (stacks: Stack<_> []) (count, source, dest) =
+    let source = stacks[source - 1]
+    let dest = stacks[dest - 1]
+    for _ = 0 to count - 1 do
+      dest.Push(source.Pop())
+
+  [<Theory>]
+  [<FileData(2022, 05, "VPCDMSLWJ")>]
+  [<MemberData(nameof sample, "CMZ")>]
+  let part1 (input: string []) (expected: int) =
+    let sep = Array.IndexOf(input, "")
+    let stacks = getStacks sep input
+    getInstructions sep input |> Array.iter(move stacks)
+    String.Join("", stacks |> Array.map Seq.head) =! expected.ToString()
+
+  let move2 (stacks: Stack<_> []) (count, source, dest) =
+    let source = stacks[source - 1]
+    let dest = stacks[dest - 1]
+    let temp = Stack()
+    for _ = 0 to count - 1 do
+      temp.Push(source.Pop())
+    let mutable item = Unchecked.defaultof<_>
+    while temp.TryPop(&item) do
+      dest.Push(item)
+
+  [<Theory>]
+  [<FileData(2022, 05, "TPWCGNCCG")>]
+  [<MemberData(nameof sample, "MCD")>]
+  let part2 (input: string []) expected =
+    let sep = Array.IndexOf(input, "")
+    let stacks = getStacks sep input
+    getInstructions sep input |> Array.iter(move2 stacks)
+    String.Join("", stacks |> Array.map Seq.head) =! expected.ToString()
 
 #if INTERACTIVE
 
