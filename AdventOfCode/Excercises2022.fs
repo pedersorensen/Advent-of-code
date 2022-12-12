@@ -211,18 +211,42 @@ module Day04 =
     )
     =! expected
 
-module DayNN =
+ module Day05 =
+
+    let sample (result: int) = makeSample result [| |]
+
+    [<Theory>]
+    [<FileData(2022, 05, 0)>]
+    [<MemberData(nameof sample, 0)>]
+    let part1 (input: string []) expected =
+      0 =! expected
+
+    [<Theory>]
+    [<FileData(2022, 05, 0)>]
+    [<MemberData(nameof sample, 0)>]
+    let part2 (input: string []) expected =
+      0 =! expected
+
+#if INTERACTIVE
+
+let makeTemplate day =
+
+  sprintf """ module Day%02i =
 
   let sample (result: int) = makeSample result [| |]
 
   [<Theory>]
-  [<FileData(2022, 1, 0)>]
+  [<FileData(2022, %i, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 (input: string []) expected =
     0 =! expected
 
   [<Theory>]
-  [<FileData(2022, 1, 0)>]
+  [<FileData(2022, %i, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 (input: string []) expected =
-    0 =! expected
+    0 =! expected""" day day day
+
+makeTemplate |> clip
+
+#endif
