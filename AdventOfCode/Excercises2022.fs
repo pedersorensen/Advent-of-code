@@ -282,6 +282,59 @@ module Day04 =
     getInstructions sep input |> Array.iter(move2 stacks)
     String.Join("", stacks |> Array.map Seq.head) =! expected.ToString()
 
+ module Day06 =
+
+  let sample (result: int) = makeSample result [|
+    "mjqjpqmgbljsphdztnvjfqwrcgsmlb" // first marker after character 7
+    "bvwbjplbgvbhsrlpgdmjqwftvncz" // first marker after character 5
+    "nppdvjthqldpwncqszvftbrmjlhg" // first marker after character 6
+    "nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg" // first marker after character 10
+    "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw" // first marker after character 11
+  |]
+
+  let findStartOfPacket (s: string) =
+    let rec loop1 a b c d i =
+      if
+        a <> b && a <> c && a <> d &&
+        b <> c && b <> d &&
+        c <> d
+      then i else
+        loop1 b c d s[i] (i + 1)
+
+    loop1 s[0] s[1] s[2] s[3] 4
+
+  let findStartOfPacket2 count (s: string) =
+    let queue = Queue(Seq.take count s)
+    let rec loop i =
+      if queue |> Seq.distinct |> Seq.length = count
+      then i else
+        queue.Dequeue() |> ignore
+        queue.Enqueue(s[i])
+        loop (i + 1)
+    loop count
+
+  [<Theory>]
+  [<FileData(2022, 6, 1920)>]
+  [<MemberData(nameof sample, 7)>]
+  let part1 (input: string []) expected =
+    findStartOfPacket2 4 input[0] =! expected
+
+  let findStartOfMessage (s: string) =
+    let rec loop a b c d i =
+      if
+        a <> b && a <> c && a <> d &&
+        b <> c && b <> d &&
+        c <> d
+      then i else loop b c d s[i] (i + 1)
+
+    loop s[0] s[1] s[2] s[3] 4
+
+  [<Theory>]
+  [<FileData(2022, 6, 2334)>]
+  [<MemberData(nameof sample, 19)>]
+  let part2 (input: string []) expected =
+    findStartOfPacket2 14 input[0] =! expected
+
 #if INTERACTIVE
 
 let makeTemplate day =
