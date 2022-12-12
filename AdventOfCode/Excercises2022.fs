@@ -172,6 +172,45 @@ module Day03 =
     |> Seq.sumBy getPriority
     =! expected
 
+module Day04 =
+
+  let sample (result: int) = makeSample result [|
+    "2-4,6-8"
+    "2-3,4-5"
+    "5-7,7-9"
+    "2-8,3-7"
+    "6-6,4-6"
+    "2-6,4-8"
+  |]
+
+  [<Theory>]
+  [<FileData(2022, 4, 573)>]
+  [<MemberData(nameof sample, 2)>]
+  let part1 (input: string []) expected =
+    input
+    |> Array.countTrue(fun s ->
+      match s.Split([|',' ; '-'|]) with
+      | [| a ; b ; c ; d |] ->
+        let a, b, c, d = int a, int b, int c, int d
+        (a >=c && b <= d) || (a <=c && b >= d)
+      | _ -> failwith "Bad format"
+    )
+    =! expected
+
+  [<Theory>]
+  [<FileData(2022, 4, 867)>]
+  [<MemberData(nameof sample, 4)>]
+  let part2 (input: string []) expected =
+    input
+    |> Array.countTrue(fun s ->
+      match s.Split([|',' ; '-'|]) with
+      | [|a;b;c;d|] ->
+        let a, b, c, d = int a, int b, int c, int d
+        (b >= c && a < d) || (d >= a && c < b)
+      | _ -> failwith "Bad format"
+    )
+    =! expected
+
 module DayNN =
 
   let sample (result: int) = makeSample result [| |]
