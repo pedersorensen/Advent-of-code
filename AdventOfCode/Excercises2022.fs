@@ -215,7 +215,7 @@ module Day04 =
 
  module Day05 =
 
-  let sample (result: int) = makeSample result [|
+  let sample (result: string) = makeSample result [|
     "    [D]    "
     "[N] [C]    "
     "[Z] [M] [P]"
@@ -257,11 +257,11 @@ module Day04 =
   [<Theory>]
   [<FileData(2022, 05, "VPCDMSLWJ")>]
   [<MemberData(nameof sample, "CMZ")>]
-  let part1 (input: string []) (expected: int) =
+  let part1 (input: string []) expected =
     let sep = Array.IndexOf(input, "")
     let stacks = getStacks sep input
     getInstructions sep input |> Array.iter(move stacks)
-    String.Join("", stacks |> Array.map Seq.head) =! expected.ToString()
+    String.Join("", stacks |> Array.map Seq.head) =! expected
 
   let move2 (stacks: Stack<_> []) (count, source, dest) =
     let source = stacks[source - 1]
@@ -280,7 +280,7 @@ module Day04 =
     let sep = Array.IndexOf(input, "")
     let stacks = getStacks sep input
     getInstructions sep input |> Array.iter(move2 stacks)
-    String.Join("", stacks |> Array.map Seq.head) =! expected.ToString()
+    String.Join("", stacks |> Array.map Seq.head) =! expected
 
  module Day06 =
 
@@ -334,6 +334,108 @@ module Day04 =
   [<MemberData(nameof sample, 19)>]
   let part2 (input: string []) expected =
     findStartOfPacket2 14 input[0] =! expected
+
+ module Day07 =
+
+  let input = [|
+    "$ cd /"
+    "$ ls"
+    "dir a"
+    "14848514 b.txt"
+    "8504156 c.dat"
+    "dir d"
+    "$ cd a"
+    "$ ls"
+    "dir e"
+    "29116 f"
+    "2557 g"
+    "62596 h.lst"
+    "$ cd e"
+    "$ ls"
+    "584 i"
+    "$ cd .."
+    "$ cd .."
+    "$ cd d"
+    "$ ls"
+    "4060174 j"
+    "8033020 d.log"
+    "5626152 d.ext"
+    "7214296 k"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  type Directory =
+    { Name        : string
+      Parent      : Directory option
+      Files       : ResizeArray<File>
+      Directories : Dictionary<string, Directory> }
+    static member Create(name, ?parent)  =
+      { Name        = name
+        Parent      = parent
+        Files       = ResizeArray()
+        Directories = Dictionary() }
+  and File = File of name : string * size : int
+
+  let rec printDir indent (d: Directory) =
+    printfn $"{indent} - {d.Name} (dir)"
+    let indent = indent + "  "
+    for kvp in d.Directories do
+      printDir indent kvp.Value
+    for File(name, size) in d.Files do
+      printfn $"{indent} - {name} (file, size={size})"
+
+  #if INTERACTIVE
+  fsi.AddPrinter(fun dir ->
+    printDir "" dir
+    ""
+  )
+  #endif
+
+  let handle (dir: Directory) (l: string) : Directory =
+    let mutable fileSize = 0
+    match l.Split(' ') with
+    | [| "$" ; "cd" ; "/" |]    -> dir
+    | [| "$" ; "cd" ; ".." |]   -> dir.Parent |> Option.defaultValue dir
+    | [| "$" ; "cd" ; folder |] -> dir.Directories[folder]
+    | [| "$" ; "ls" |]          -> dir
+    | [| "dir" ; subDir |]      ->
+      dir.Directories.Add(subDir, Directory.Create(subDir, dir))
+      dir
+    | [| size ; name |] when Int32.TryParse(size, &fileSize) ->
+      dir.Files.Add(File(name, fileSize))
+      dir
+    | _ -> failwith $"Don't know: {l}"
+
+  let rec getSize (d: Directory) =
+    let totalFileSize = d.Files |> Seq.sumBy(fun (File(_, s)) -> s)
+    let totalFolderSize = d.Directories |> Seq.sumBy(fun kvp -> getSize kvp.Value)
+    totalFileSize + totalFolderSize
+
+  let rec findRoot (dir: Directory) =
+    match dir.Parent with
+    | None        -> dir
+    | Some parent -> findRoot parent
+
+  let rec getFolderSizes totalSize (d: Directory) =
+    let size = getSize d
+    let totalSize = if size <= 100_000 then totalSize + size else totalSize
+    (totalSize, d.Directories.Values) ||> Seq.fold getFolderSizes
+
+  [<Theory>]
+  [<FileData(2022, 7, 1844187)>]
+  [<MemberData(nameof sample, 95437)>]
+  let part1 (input: string []) expected =
+    input
+    |> Array.fold handle (Directory.Create("/"))
+    |> findRoot
+    |> getFolderSizes 0 =! expected
+
+  [<Theory>]
+  [<FileData(2022, 7, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string []) expected =
+    0 =! expected
 
 #if INTERACTIVE
 
