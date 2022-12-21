@@ -9,6 +9,7 @@ namespace Excercises2022
 
 open Xunit
 open System
+open System.Text
 open System.Collections.Generic
 open System.Text.RegularExpressions
 
@@ -124,7 +125,6 @@ module Day02 =
     =! expected
 
 module Day03 =
-  open System.Collections.Generic
 
   let sample (result: int) = makeSample result [|
     "vJrwpWtwJgWrhcsFMMfFFhFp"
@@ -367,55 +367,61 @@ module Day04 =
 
   type Directory =
     { Name        : string
-      Parent      : Directory option
-      Files       : ResizeArray<File>
-      Directories : Dictionary<string, Directory> }
-    static member Create(name, ?parent)  =
+      Files       : File list
+      Directories : Map<string, Directory> }
+    static member Create(name)  =
       { Name        = name
-        Parent      = parent
-        Files       = ResizeArray()
-        Directories = Dictionary() }
+        Files       = []
+        Directories = Map.empty }
   and File = File of name : string * size : int
 
-  let rec printDir indent (d: Directory) =
-    printfn $"{indent} - {d.Name} (dir)"
-    let indent = indent + "  "
-    for kvp in d.Directories do
-      printDir indent kvp.Value
-    for File(name, size) in d.Files do
-      printfn $"{indent} - {name} (file, size={size})"
+  module Directory =
+
+    let withFile file directory =
+      { directory with Files = file :: directory.Files }
+
+    let withSubDir subDir directory =
+      { directory with Directories = directory.Directories.Add(subDir.Name, subDir) }
+
+  let printDir (dir: Directory) =
+    let sb = StringBuilder()
+    let rec printDir indent (d: Directory) =
+      Printf.bprintf sb $"{indent} - {d.Name} (dir)"
+      sb.AppendLine() |> ignore
+      let indent = indent + "  "
+      for kvp in d.Directories do
+        printDir indent kvp.Value
+      for File(name, size) in d.Files do
+        Printf.bprintf sb $"{indent} - {name} (file, size={size})"
+        sb.AppendLine() |> ignore
+    printDir "" dir
+    sb.ToString()
 
   #if INTERACTIVE
-  fsi.AddPrinter(fun dir ->
-    printDir "" dir
-    ""
-  )
+  fsi.AddPrinter(fun (d: Directory) -> printDir "" d)
   #endif
 
-  let handle (dir: Directory) (l: string) : Directory =
+  let handle (dir: Directory, stack: Directory list) (l: string) =
     let mutable fileSize = 0
     match l.Split(' ') with
-    | [| "$" ; "cd" ; "/" |]    -> dir
-    | [| "$" ; "cd" ; ".." |]   -> dir.Parent |> Option.defaultValue dir
-    | [| "$" ; "cd" ; folder |] -> dir.Directories[folder]
-    | [| "$" ; "ls" |]          -> dir
+    | [| "$" ; "cd" ; "/"  |] -> dir, stack
+    | [| "$" ; "cd" ; ".." |] ->
+      let parent, stack = List.pop stack
+      parent |> Directory.withSubDir dir, stack
+    | [| "$" ; "cd" ; folder |] -> dir.Directories[folder], dir :: stack
+    | [| "$" ; "ls" |]          -> dir, stack
     | [| "dir" ; subDir |]      ->
-      dir.Directories.Add(subDir, Directory.Create(subDir, dir))
-      dir
+      let subDir = Directory.Create(subDir)
+      dir |> Directory.withSubDir subDir, stack
     | [| size ; name |] when Int32.TryParse(size, &fileSize) ->
-      dir.Files.Add(File(name, fileSize))
-      dir
+      let file = File(name, fileSize)
+      dir |> Directory.withFile file, stack
     | _ -> failwith $"Don't know: {l}"
 
   let rec getSize (d: Directory) =
-    let totalFileSize = d.Files |> Seq.sumBy(fun (File(_, s)) -> s)
+    let totalFileSize = d.Files |> List.sumBy(fun (File(_, s)) -> s)
     let totalFolderSize = d.Directories |> Seq.sumBy(fun kvp -> getSize kvp.Value)
     totalFileSize + totalFolderSize
-
-  let rec findRoot (dir: Directory) =
-    match dir.Parent with
-    | None        -> dir
-    | Some parent -> findRoot parent
 
   let rec getFolderSizes totalSize (d: Directory) =
     let size = getSize d
@@ -427,8 +433,9 @@ module Day04 =
   [<MemberData(nameof sample, 95437)>]
   let part1 (input: string []) expected =
     input
-    |> Array.fold handle (Directory.Create("/"))
-    |> findRoot
+    |> Array.fold handle (Directory.Create("/"), [])
+    |> snd
+    |> List.last
     |> getFolderSizes 0 =! expected
 
   [<Theory>]

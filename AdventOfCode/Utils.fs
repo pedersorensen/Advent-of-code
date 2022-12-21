@@ -113,6 +113,13 @@ module Array =
       result.Add(buffer.ToArray())
     result.ToArray()
 
+[<RequireQualifiedAccess>]
+module List =
+  let pop list =
+    match list with
+    | x :: xs -> x, xs
+    | [] -> invalidArg (nameof list) "The input list was empty."
+
 module Tuple =
 
   let inline add (x1, y1) (x2, y2) = x1 + x2, y1 + y2
