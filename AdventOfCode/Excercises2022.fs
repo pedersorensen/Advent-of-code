@@ -459,7 +459,7 @@ module Day04 =
     (totalSize, sizes)
     ||> List.fold(fun total size ->
       if size > free && size < total then size else total
-    )
+    ) =! expected
     // Alternatively, sort the list and find the first size that's above the limit, but that's a lot of extra work.
     //sizes |> List.sort |> List.find(fun s -> s > free) =! expected
 
