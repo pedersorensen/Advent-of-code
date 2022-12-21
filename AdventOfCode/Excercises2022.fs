@@ -398,7 +398,7 @@ module Day04 =
     sb.ToString()
 
   #if INTERACTIVE
-  fsi.AddPrinter(fun (d: Directory) -> printDir "" d)
+  fsi.AddPrinter printDir
   #endif
 
   let handle (dir: Directory, stack: Directory list) (l: string) =
@@ -406,10 +406,12 @@ module Day04 =
     match l.Split(' ') with
     | [| "$" ; "cd" ; "/"  |] -> dir, stack
     | [| "$" ; "cd" ; ".." |] ->
-      let parent, stack = List.pop stack
-      parent |> Directory.withSubDir dir, stack
+      match stack with
+      | [] -> dir, []
+      | parent :: stack ->
+        parent |> Directory.withSubDir dir, stack
     | [| "$" ; "cd" ; folder |] -> dir.Directories[folder], dir :: stack
-    | [| "$" ; "ls" |]          -> dir, stack
+    | [| "$" ; "ls" |] -> dir, stack
     | [| "dir" ; subDir |]      ->
       let subDir = Directory.Create(subDir)
       dir |> Directory.withSubDir subDir, stack
@@ -418,31 +420,48 @@ module Day04 =
       dir |> Directory.withFile file, stack
     | _ -> failwith $"Don't know: {l}"
 
+  let buildRoot input =
+    match input |> Array.fold handle (Directory.Create("/"), []) with
+    | dir, [] -> dir
+    | dir, stack -> stack |> List.last |> Directory.withSubDir dir
+
   let rec getSize (d: Directory) =
     let totalFileSize = d.Files |> List.sumBy(fun (File(_, s)) -> s)
     let totalFolderSize = d.Directories |> Seq.sumBy(fun kvp -> getSize kvp.Value)
     totalFileSize + totalFolderSize
 
-  let rec getFolderSizes totalSize (d: Directory) =
-    let size = getSize d
-    let totalSize = if size <= 100_000 then totalSize + size else totalSize
-    (totalSize, d.Directories.Values) ||> Seq.fold getFolderSizes
+  let getFolderSizes directory =
+    let rec loop sizes directory =
+      (getSize directory :: sizes, directory.Directories.Values)
+      ||> Seq.fold loop
+    loop [] directory
 
   [<Theory>]
   [<FileData(2022, 7, 1844187)>]
   [<MemberData(nameof sample, 95437)>]
   let part1 (input: string []) expected =
-    input
-    |> Array.fold handle (Directory.Create("/"), [])
-    |> snd
-    |> List.last
-    |> getFolderSizes 0 =! expected
+    let limit = 100_000
+    buildRoot input
+    |> getFolderSizes
+    |> List.sumBy(fun s -> if s < limit then s else 0)
+    =! expected
 
   [<Theory>]
-  [<FileData(2022, 7, 0)>]
-  [<MemberData(nameof sample, 0)>]
+  [<FileData(2022, 7, 4978279)>]
+  [<MemberData(nameof sample, 24933642)>]
   let part2 (input: string []) expected =
-    0 =! expected
+    let required       = 30_000_000
+    let totalAvailable = 70_000_000
+    let sizes = buildRoot input |> getFolderSizes
+    let totalSize = sizes |> List.last
+    let totalFree = totalAvailable - totalSize
+    let free = required - totalFree
+    (totalSize, sizes)
+    ||> List.fold(fun total size ->
+      if size > free && size < total then size else total
+    )
+    // Alternatively, sort the list and find the first size that's above the limit, but that's a lot of extra work.
+    //sizes |> List.sort |> List.find(fun s -> s > free) =! expected
 
 #if INTERACTIVE
 
