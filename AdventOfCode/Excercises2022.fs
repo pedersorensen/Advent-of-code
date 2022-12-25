@@ -335,7 +335,7 @@ module Day04 =
   let part2 (input: string []) expected =
     findStartOfPacket2 14 input[0] =! expected
 
- module Day07 =
+module Day07 =
 
   let input = [|
     "$ cd /"
@@ -460,16 +460,88 @@ module Day04 =
     ||> List.fold(fun total size ->
       if size > free && size < total then size else total
     ) =! expected
-    // Alternatively, sort the list and find the first size that's above the limit, but that's a lot of extra work.
-    //sizes |> List.sort |> List.find(fun s -> s > free) =! expected
+
+module Day08 =
+
+  let input = [|
+    "30373"
+    "25512"
+    "65332"
+    "33549"
+    "35390"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  let buildHeightMap input =
+    input
+    |> Array.map(fun (line: string) ->
+      Array.init line.Length (fun i -> int line[i] - int '0')
+    )
+
+  let [<Literal>] SeenFlag = 1000
+
+  let notSeen h = h < SeenFlag
+
+  let printMap heightsMap =
+    heightsMap
+    |> Array.map(Array.map(fun (i: int) -> i.ToString("D4")) >> String.concat "|")
+    |> String.concat "\r\n"
+    |> printfn "%s"
+
+  [<Theory>]
+  [<FileData(2022, 8, 1708)>]
+  [<MemberData(nameof sample, 21)>]
+  let part1 (input: string []) expected =
+    let heightsMap = buildHeightMap input
+
+    let width = heightsMap[0].Length
+    let height = heightsMap.Length
+
+    let mutable count = 0
+    let mutable maxHeight = -1
+
+    let check i j =
+      let value = &heightsMap[i][j]
+      let height = value % SeenFlag
+      if notSeen value then
+        if height > maxHeight then
+          value <- value + SeenFlag
+          count <- count + 1
+      maxHeight <- max maxHeight height
+
+    // Rows
+    for i = 0 to height - 1 do
+      // Left to right
+      maxHeight <- -1 ; for j = 0 to width - 1 do check i j
+      // Right to left
+      maxHeight <- -1 ; for j = width - 1 downto 0 do check i j
+
+    // Columns
+    for j = 0 to width - 1 do
+      // Left to right
+      maxHeight <- -1 ; for i = 0 to height - 1 do check i j
+      // Right to left
+      maxHeight <- -1 ; for i = height - 1 downto 0 do check i j
+
+    count =! expected
+
+  [<Theory>]
+  [<FileData(2022, 8, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string []) expected =
+    0 =! expected
 
 #if INTERACTIVE
 
 let makeTemplate day =
 
-  sprintf """ module Day%02i =
+  sprintf """module Day%02i =
 
-  let sample (result: int) = makeSample result [| |]
+  let input = [|
+  |]
+
+  let sample (result: int) = makeSample result input
 
   [<Theory>]
   [<FileData(2022, %i, 0)>]
