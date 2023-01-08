@@ -527,10 +527,42 @@ module Day08 =
     count =! expected
 
   [<Theory>]
-  [<FileData(2022, 8, 0)>]
-  [<MemberData(nameof sample, 0)>]
+  [<FileData(2022, 8, 504000)>]
+  [<MemberData(nameof sample, 8)>]
   let part2 (input: string []) expected =
-    0 =! expected
+    let heightsMap = buildHeightMap input
+
+    let width = heightsMap[0].Length
+    let height = heightsMap.Length
+
+    let getScenicScore i j =
+
+      let mutable m_one = 0
+      let mutable (u, d, l, r) = 0, 0, 0, 0
+
+      let h0 = heightsMap[i][j]
+
+      let dist i j =
+        let one = m_one
+        if heightsMap[i][j] >= h0 then m_one <- 0
+        one
+
+      m_one <- 1 ; for i = i - 1 downto 0      do u <- u + dist i j
+      m_one <- 1 ; for i = i + 1 to height - 1 do d <- d + dist i j
+      m_one <- 1 ; for j = j - 1 downto 0      do l <- l + dist i j
+      m_one <- 1 ; for j = j + 1 to width - 1  do r <- r + dist i j
+
+      u * l * d * r
+
+    let mutable maxScore = 0
+
+    for i = 1 to height - 2 do
+      for j = 1 to width - 2 do
+        let score = getScenicScore i j
+        if score > maxScore then
+          maxScore <- score
+
+    maxScore =! expected
 
 #if INTERACTIVE
 
