@@ -57,33 +57,29 @@ module Day01 =
       let i = span.IndexOfAny(digits)
       let j = span.LastIndexOfAny(digits)
 
-      let words =
+      let indexes =
         digitsAsWords
-        |> Array.mapi(fun value d -> value, line.IndexOf(d))
-        |> Array.choose(fun (value, idx) -> if idx < 0 then None else Some (value, idx))
+        |> Array.mapi(fun value digit -> value, line.IndexOf(digit), line.LastIndexOf(digit))
 
-      let words2 =
-        digitsAsWords
-        |> Array.mapi(fun value d -> value, line.LastIndexOf(d))
-        |> Array.choose(fun (value, idx) -> if idx < 0 then None else Some (value, idx))
+      let minWordValue, i2, _ =
+        indexes
+        |> Array.minBy(fun (_, idx, _) ->
+          if idx < 0 then Int32.MaxValue else idx
+        )
 
-      let i =
-        match words with
-        | [||] -> int(line[i] - '0')
-        | _ ->
-          let minValue, i2 = words |> Array.minBy snd
-          let min = if i >= 0 && i < i2 then int(line[i] - '0') else minValue
-          min
+      let minValue =
+        if i < 0 || (-1 < i2 && i2 < i)
+        then minWordValue
+        else int(line[i] - '0')
 
-      let j =
-        match words2 with
-        | [||] -> int(line[j] - '0')
-        | _ ->
-          let maxValue, j2 = words2 |> Array.maxBy snd
-          let max = if j >= 0 && j > j2 then int(line[j] - '0') else maxValue
-          max
-      10 * i + j
+      let maxWordValue, _, j2 = indexes |> Array.maxBy(fun (_, _, idx) -> idx)
 
+      let maxValue =
+        if j < 0 || (-1 < j2 && j2 > j)
+        then maxWordValue
+        else int(line[j] - '0')
+
+      10 * minValue + maxValue
     )
     =! expected
 
