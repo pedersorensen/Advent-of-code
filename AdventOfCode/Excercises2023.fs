@@ -112,11 +112,11 @@ module Day02 =
       let gameId = split[0].Substring(5) |> int
       let a =
         split
-        |> Array.skip 1
         |> Array.forall(fun l ->
           l.Split([| ',' ; ' ' |], StringSplitOptions.RemoveEmptyEntries)
           |> Array.chunkBySize 2
           |> Array.forall(fun a ->
+            if a[0] = "Game" then true else
             let color = a[1]
             let count = int a[0]
             count <= bag[color]
@@ -128,10 +128,30 @@ module Day02 =
      =! expected
 
   [<Theory>]
-  [<FileData(2023, 2, 0)>]
-  [<MemberData(nameof sample, 0)>]
+  [<FileData(2023, 2, 56322)>]
+  [<MemberData(nameof sample, 2286)>]
   let part2 (input: string []) expected =
-    0 =! expected
+    input
+    |> Array.sumBy(fun line ->
+      let rounds =
+        line.Split([| ':' ;  ';' ; ',' ; ' ' |], StringSplitOptions.RemoveEmptyEntries)
+        |> Array.chunkBySize 2
+
+      (rounds, Map.empty)
+      ||> Array.foldBack(fun a map ->
+        if a[0] = "Game" then map else
+
+        let color = a[1]
+        let count = int a[0]
+
+        map
+        |> Map.change color (function
+          | None -> Some count
+          | Some c -> Some (max c count)
+        )
+      )
+      |> Seq.fold(fun prod kvp -> prod * kvp.Value) 1
+    ) =! expected
 
 #if INTERACTIVE
 
