@@ -83,6 +83,56 @@ module Day01 =
     )
     =! expected
 
+module Day02 =
+
+  let input = [|
+    "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green"
+    "Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue"
+    "Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red"
+    "Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red"
+    "Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  let bag = Map [|
+    "red", 12
+    "green", 13
+    "blue", 14
+  |]
+
+  [<Theory>]
+  [<FileData(2023, 2, 2447)>]
+  [<MemberData(nameof sample, 8)>]
+  let part1 (input: string []) expected =
+    input
+    |> Array.sumBy(fun line ->
+      let split =
+        line.Split([| ':' ;  ';' |], StringSplitOptions.RemoveEmptyEntries)
+      let gameId = split[0].Substring(5) |> int
+      let a =
+        split
+        |> Array.skip 1
+        |> Array.forall(fun l ->
+          l.Split([| ',' ; ' ' |], StringSplitOptions.RemoveEmptyEntries)
+          |> Array.chunkBySize 2
+          |> Array.forall(fun a ->
+            let color = a[1]
+            let count = int a[0]
+            count <= bag[color]
+          )
+        )
+
+      if a then gameId else 0
+    )
+     =! expected
+
+  [<Theory>]
+  [<FileData(2023, 2, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string []) expected =
+    0 =! expected
+
 #if INTERACTIVE
 
 let makeTemplate day =
@@ -95,13 +145,13 @@ let makeTemplate day =
   let sample (result: int) = makeSample result input
 
   [<Theory>]
-  [<FileData(2022, %i, 0)>]
+  [<FileData(2023, %i, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 (input: string []) expected =
     0 =! expected
 
   [<Theory>]
-  [<FileData(2022, %i, 0)>]
+  [<FileData(2023, %i, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 (input: string []) expected =
     0 =! expected""" day day day
