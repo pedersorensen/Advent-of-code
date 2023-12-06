@@ -13,6 +13,62 @@ open System.Buffers
 open System.Text.RegularExpressions
 open System.Collections.Generic
 
+module Day04 =
+
+  let input = [|
+    "Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53"
+    "Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19"
+    "Card 3:  1 21 53 59 44 | 69 82 63 72 16 21 14  1"
+    "Card 4: 41 92 73 84 69 | 59 84 76 51 58  5 54 83"
+    "Card 5: 87 83 26 28 32 | 88 30 70 12 93 22 82 36"
+    "Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  [<Theory>]
+  [<FileData(2023, 4, 25183)>]
+  [<MemberData(nameof sample, 13)>]
+  let part1 (input: string []) expected =
+    input
+    |> Array.sumBy(fun line ->
+      match line.Split([| ':' ;  '|' |], StringSplitOptions.RemoveEmptyEntries) with
+      | [| _card ; winners ; numbers|] ->
+        let winners = winners.Split(' ', StringSplitOptions.RemoveEmptyEntries) |> Set
+        let numbers = numbers.Split(' ', StringSplitOptions.RemoveEmptyEntries) |> Set
+        let count = Set.intersect winners numbers |> Set.count
+        pown 2 (count - 1)
+      | _ -> failwithf ""
+    ) =! expected
+
+  [<Theory>]
+  [<FileData(2023, 4, 5667240)>]
+  [<MemberData(nameof sample, 30)>]
+  let part2 (input: string []) expected =
+    let cardsWon = Dictionary<string, int>()
+    let increment n card =
+      match cardsWon.TryGetValue(card) with
+      | true, count -> cardsWon.[card] <- count + n
+      | _ -> cardsWon.[card] <- n
+      cardsWon.[card]
+
+    input
+    |> Array.sumBy(fun line ->
+      match line.Split([| ':' ;  '|' |], StringSplitOptions.RemoveEmptyEntries) with
+      | [| card ; winners ; numbers|] ->
+        let cardId = card.Substring(5) |> int
+        let card = $"Card {cardId}"
+        let cardCount = increment 1 card
+        let winners = winners.Split(' ', StringSplitOptions.RemoveEmptyEntries) |> Set
+        let numbers = numbers.Split(' ', StringSplitOptions.RemoveEmptyEntries) |> Set
+        let count = Set.intersect winners numbers |> Set.count
+        for i = 1 to count do
+          let card = $"Card {cardId + i}"
+          increment cardCount card |> ignore
+        cardCount
+      | _ -> failwithf ""
+    ) =! expected
+
 module Day03 =
 
   let input = [|
