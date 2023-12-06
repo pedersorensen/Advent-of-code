@@ -10,6 +10,8 @@ namespace Excercises2023
 open Xunit
 open System
 open System.Buffers
+open System.Text.RegularExpressions
+open System.Collections.Generic
 
 module Day01 =
 
@@ -152,6 +154,77 @@ module Day02 =
       )
       |> Seq.fold(fun prod kvp -> prod * kvp.Value) 1
     ) =! expected
+
+module Day03 =
+
+  let input = [|
+    "467..114.."
+    "...*......"
+    "..35..633."
+    "......#..."
+    "617*......"
+    ".....+.58."
+    "..592....."
+    "......755."
+    "...$.*...."
+    ".664.598.."
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  let getNumbers input =
+    input
+    |> Array.mapi(fun i line -> [|
+        for m in Regex.Matches(line, "[0-9]+") do
+          let partNumberId = (i, m.Index)
+          let value = (Int32.Parse(m.ValueSpan), partNumberId)
+          for j = 0 to m.Length - 1 do
+            (i, m.Index + j), value
+      |]
+    )
+    |> Array.collect id
+    |> Map.ofArray
+
+  let allDirections = [|
+    (-1, -1); (-1, 0); (-1, 1)
+    ( 0, -1);          ( 0, 1)
+    ( 1, -1); ( 1, 0); ( 1, 1)
+  |]
+
+  [<Theory>]
+  [<FileData(2023, 3, 553079)>]
+  [<MemberData(nameof sample, 4361)>]
+  let part1 (input: string []) expected =
+    let numbers       = getNumbers input
+    let notPartNumber = SearchValues.Create("0123456789.")
+    let seen          = HashSet()
+    let mutable sum = 0
+    for i = 1 to input.Length - 2 do
+      for j = 1 to input.[i].Length - 2 do
+        if notPartNumber.Contains(input[i].[j]) |> not then
+          for (di, dj) in allDirections do
+            match numbers.TryFind(i + di, j + dj) with
+            | Some(value, partNumberId) when seen.Add(partNumberId) ->
+              sum <- sum + value
+            | _ -> ()
+    sum =! expected
+
+  [<Theory>]
+  [<FileData(2023, 3, 84363105)>]
+  [<MemberData(nameof sample, 467835)>]
+  let part2 (input: string []) expected =
+    let numbers     = getNumbers input
+    let mutable sum = 0
+    for i = 1 to input.Length - 2 do
+      for j = 1 to input.[i].Length - 2 do
+        if input[i].[j] = '*' then
+          allDirections
+          |> Array.choose(fun (di, dj) -> numbers.TryFind(i + di, j + dj))
+          |> Array.distinctBy snd
+          |> function
+          | [| (v1, _); (v2, _) |] -> sum <- sum + v1 * v2
+          | _ -> ()
+    sum =! expected
 
 #if INTERACTIVE
 
