@@ -13,6 +13,90 @@ open System.Buffers
 open System.Text.RegularExpressions
 open System.Collections.Generic
 
+module Day05 =
+
+  let input = [|
+    "seeds: 79 14 55 13"
+    ""
+    "seed-to-soil map:"
+    "50 98 2"
+    "52 50 48"
+    ""
+    "soil-to-fertilizer map:"
+    "0 15 37"
+    "37 52 2"
+    "39 0 15"
+    ""
+    "fertilizer-to-water map:"
+    "49 53 8"
+    "0 11 42"
+    "42 0 7"
+    "57 7 4"
+    ""
+    "water-to-light map:"
+    "88 18 7"
+    "18 25 70"
+    ""
+    "light-to-temperature map:"
+    "45 77 23"
+    "81 45 19"
+    "68 64 13"
+    ""
+    "temperature-to-humidity map:"
+    "0 69 1"
+    "1 0 69"
+    ""
+    "humidity-to-location map:"
+    "60 56 37"
+    "56 93 4"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  let parse input =
+    ((Array.empty, List.empty, List.empty), input)
+    ||> Array.fold(fun (seeds, maps, entries) (line: string) ->
+      match line.Split([| ':' ;  ' ' |], StringSplitOptions.RemoveEmptyEntries) with
+      | [||] -> (seeds, maps, entries)
+      | a when a[0] = "seeds" ->
+        let seeds = Array.skip 1 a |> Array.map int64
+        seeds, maps, entries
+      | [| _ ; "map" |] ->
+        let maps' = if entries.IsEmpty then maps else entries :: maps
+        seeds, maps', List.empty
+      | [| dst ; src ; range |] ->
+        seeds, maps, (int64 dst, int64 src, int64 range) :: entries
+      | a -> failwithf "%A" a
+    )
+    |> fun (seeds, maps, list) -> seeds, List.rev(list :: maps)
+
+  let findEntry n entries : int64 =
+    entries
+    |> List.tryPick(fun (dst, src, range) ->
+      let d = n - src
+      if src <= n && d < range then Some (d + dst) else None
+    )
+    |> Option.defaultValue n
+
+  [<Theory>]
+  [<FileData(2023, 5, 650599855)>]
+  [<MemberData(nameof sample, 35)>]
+  let part1 (input: string []) expected =
+    let seeds, maps = parse input
+    (Int64.MaxValue, seeds)
+    ||> Array.fold(fun i seed ->
+      (seed, maps)
+      ||> List.fold(fun src entries -> findEntry src entries)
+      |> min i
+    )
+    =! expected
+
+  [<Theory>]
+  [<FileData(2023, 5, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string []) expected =
+    0 =! expected
+
 module Day04 =
 
   let input = [|
@@ -305,6 +389,6 @@ let makeTemplate day =
   let part2 (input: string []) expected =
     0 =! expected""" day day day
 
-makeTemplate |> clip
+makeTemplate 5 |> clip
 
 #endif
