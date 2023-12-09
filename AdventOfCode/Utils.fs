@@ -3,6 +3,7 @@ module Utils
 
 open System
 open System.IO
+open System.Buffers
 open System.Collections.Generic
 open FSharp.Data
 open Xunit
@@ -43,6 +44,33 @@ let readAllInput (day: int) = File.ReadAllText(ensureExists Year day)
 
 let readsInts day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int
 let readsInt64s day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int64
+
+let digits = SearchValues.Create("0123456789")
+
+let tryParseSlice<'T when 'T :> ISpanParsable<'T>> (span: ReadOnlySpan<char> byref) (value: 'T byref) =
+  let mutable i = span.IndexOfAny(digits)
+  if i < 0 then false else
+
+  let j = span.Slice(i).IndexOfAnyExcept(digits)
+
+  let slice =
+    if j < 0
+    then span.Slice(i)
+    else span.Slice(i, j)
+
+  if j < 0
+  then span <- ReadOnlySpan.Empty
+  else span <- span.Slice(i + j)
+
+  'T.TryParse(slice, null, &value)
+
+let parseNumbers<'T when 'T :> ISpanParsable<'T>> (line: string) =
+  let results = ResizeArray<'T>()
+  let mutable span = line.AsSpan()
+  let mutable value = Unchecked.defaultof<_>
+  while tryParseSlice &span &value do
+    results.Add(value)
+  results.ToArray()
 
 /// Greatest Common Divisor
 let rec gcd a b = if b = 0 then a else gcd b (a % b)
