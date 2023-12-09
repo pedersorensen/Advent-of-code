@@ -83,9 +83,6 @@ let cons head tail = head :: tail
 
 module Seq =
 
-  let print (s : seq<_>) = s |> Seq.iter(printfn "%A")
-  let printS (s : seq<_>) = s |> Seq.iter(printfn "%s")
-
   let countTrue predicate source =
     source |> Seq.sumBy(fun x -> if predicate x then 1 else 0)
 

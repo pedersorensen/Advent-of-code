@@ -13,6 +13,96 @@ open System.Buffers
 open System.Text.RegularExpressions
 open System.Collections.Generic
 
+module Day07 =
+
+  let input = [|
+    "32T3K 765"
+    "T55J5 684"
+    "KK677 28"
+    "KTJJT 220"
+    "QQQJA 483"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  type Types =
+  | FiveOfAKind
+  | FourOfAKind
+  | FullHouse
+  | ThreeOfAKind
+  | TwoPair
+  | OnePair
+  | HighCard
+
+  let getType (hand: string) =
+    let counts = hand.ToCharArray() |> Array.countBy id |> Array.sortBy snd
+    match counts with
+    | [| (_, 1) ; (_, 1) ; (_, 1) ; (_, 1) ; (_, 1) |] -> HighCard
+    | [| (_, 1) ; (_, 1) ; (_, 1) ; (_, 2) |]          -> OnePair
+    | [| (_, 1) ; (_, 2) ; (_, 2) |]                   -> TwoPair
+    | [| (_, 1) ; (_, 1) ; (_, 3) |]                   -> ThreeOfAKind
+    | [| (_, 2) ; (_, 3) |]                            -> FullHouse
+    | [| (_, 1) ; (_, 4) |]                            -> FourOfAKind
+    | [| (_, 5) |]                                     -> FiveOfAKind
+    | _ -> failwithf "%A" counts
+
+  let cardRanks = Map [|
+    '2', 1
+    '3', 2
+    '4', 3
+    '5', 4
+    '6', 5
+    '7', 6
+    '8', 7
+    '9', 8
+    'T', 9
+    'J', 10
+    'Q', 11
+    'K', 12
+    'A', 13
+  |]
+
+  [<Theory>]
+  [<FileData(2023, 7, 248113761)>]
+  [<MemberData(nameof sample, 6440)>]
+  let part1 (input: string []) expected =
+    input
+    |> Array.map(fun line ->
+      let hand, bid =
+        match line.Split(' ', StringSplitOptions.RemoveEmptyEntries) with
+        | [| hand ; bid |] ->
+          hand, int bid
+        | _ -> failwithf "%A" line
+      hand, bid, getType hand
+    )
+    |> Array.sortWith(fun (hand1, _, type1) (hand2, _, type2) ->
+      let c = compare type1 type2
+
+      let compare (ch1: char) (ch2: char) =
+        compare cardRanks[ch1] cardRanks[ch2]
+
+      if c <> 0 then -c else
+        let c1 = compare hand1[0] hand2[0]
+        if c1 <> 0 then c1 else
+          let c2 = compare hand1[1] hand2[1]
+          if c2 <> 0 then c2 else
+            let c3 = compare hand1[2] hand2[2]
+            if c3 <> 0 then c3 else
+              let c4 = compare hand1[3] hand2[3]
+              if c4 <> 0 then c4 else
+                let c5 = compare hand1[4] hand2[4]
+                c5
+    )
+    |> Array.mapi(fun i (_, bid, _) -> (i + 1) * bid)
+    |> Array.sum
+    =! expected
+
+  [<Theory>]
+  [<FileData(2023, 7, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string []) expected =
+    0 =! expected
+
 module Day06 =
 
   let input = [|
