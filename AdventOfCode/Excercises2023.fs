@@ -13,6 +13,79 @@ open System.Buffers
 open System.Text.RegularExpressions
 open System.Collections.Generic
 
+module Day08 =
+
+  let input1 = [|
+    "RL"
+    ""
+    "AAA = (BBB, CCC)"
+    "BBB = (DDD, EEE)"
+    "CCC = (ZZZ, GGG)"
+    "DDD = (DDD, DDD)"
+    "EEE = (EEE, EEE)"
+    "GGG = (GGG, GGG)"
+    "ZZZ = (ZZZ, ZZZ)"
+  |]
+
+  let input2 = [|
+    "LLR"
+    ""
+    "AAA = (BBB, BBB)"
+    "BBB = (AAA, ZZZ)"
+    "ZZZ = (ZZZ, ZZZ)"
+  |]
+
+  let sample1 (result: int) = makeSample result input1
+  let sample2 (result: int) = makeSample result input2
+
+  let parseNodes (input: string array) =
+    input
+    |> Array.skip 2
+    |> Array.map(fun line ->
+      match line.Split([| '=' ; ',' ; ' ' ; '(' ; ')' |], StringSplitOptions.RemoveEmptyEntries) with
+      | [| name ; left ; right |] -> name, (left, right)
+      | _ -> failwithf "%A" line
+    )
+    |> Map.ofArray
+
+  let parseNodes2 (input: string array) =
+    let left, right =
+      input
+      |> Array.skip 2
+      |> Array.map(fun line ->
+        match line.Split([| '=' ; ',' ; ' ' ; '(' ; ')' |], StringSplitOptions.RemoveEmptyEntries) with
+        | [| name ; left ; right |] -> (name, left), (name, right)
+        | _ -> failwithf "%A" line
+      )
+      |> Array.unzip
+    Map.ofArray left, Map.ofArray right
+
+  [<Theory>]
+  [<FileData(2023, 8, 19241)>]
+  [<MemberData(nameof sample1, 2)>]
+  [<MemberData(nameof sample2, 6)>]
+  let part1 (input: string []) expected =
+    let instructions = input[0]
+    let left, right = parseNodes2 input
+
+    let rec loop (i: int) (node: string) =
+      let node =
+        match instructions[i % instructions.Length] with
+        | 'L' -> left[node]
+        | 'R' -> right[node]
+        | instruction -> failwithf "%A" instruction
+      if node = "ZZZ" then i else
+      loop (i + 1) node
+
+    loop 0 "AAA" + 1 =! expected
+
+  [<Theory>]
+  [<FileData(2023, 8, 0)>]
+  [<MemberData(nameof sample1, 0)>]
+  [<MemberData(nameof sample2, 0)>]
+  let part2 (input: string []) expected =
+    -1 =! expected
+
 module Day07 =
 
   let input = [|
@@ -509,13 +582,13 @@ let makeTemplate day =
   [<FileData(2023, %i, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 (input: string []) expected =
-    0 =! expected
+    -1 =! expected
 
   [<Theory>]
   [<FileData(2023, %i, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 (input: string []) expected =
-    0 =! expected""" day day day
+    -1 =! expected""" day day day
 
 makeTemplate |> clip
 
