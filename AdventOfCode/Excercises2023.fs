@@ -13,6 +13,44 @@ open System.Buffers
 open System.Text.RegularExpressions
 open System.Collections.Generic
 
+module Day06 =
+
+  let input = [|
+    "Time:      7  15   30"
+    "Distance:  9  40  200"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  let countDistances (totalTime: int64) record =
+    let mutable count = 0
+    for time = 0 to int totalTime - 1 do
+      let speed = int64 time
+      let distance = speed * (totalTime - int64 time)
+      if distance > record then count <- count + 1
+    count
+
+  [<Theory>]
+  [<FileData(2023, 6, 170000)>]
+  [<MemberData(nameof sample, 288)>]
+  let part1 (input: string []) expected =
+    let times   = parseNumbers input[0]
+    let records = parseNumbers input[1]
+
+    (times, records)
+    ||> Array.map2 countDistances
+    |> Array.reduce (*) =! expected
+
+  [<Theory>]
+  [<FileData(2023, 6, 20537782)>]
+  [<MemberData(nameof sample, 71503)>]
+  let part2 (input: string []) expected =
+    let times   = parseNumbers (input[0].Replace(" ", ""))
+    let records = parseNumbers (input[1].Replace(" ", ""))
+    (times, records)
+    ||> Array.map2 countDistances
+    |> Array.reduce (*) =! expected
+
 module Day05 =
 
   let input = [|
@@ -389,6 +427,6 @@ let makeTemplate day =
   let part2 (input: string []) expected =
     0 =! expected""" day day day
 
-makeTemplate 5 |> clip
+makeTemplate |> clip
 
 #endif
