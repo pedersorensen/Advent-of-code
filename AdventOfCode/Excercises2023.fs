@@ -13,6 +13,55 @@ open System.Buffers
 open System.Text.RegularExpressions
 open System.Collections.Generic
 
+module Day9 =
+
+  let input = [|
+    "0 3 6 9 12 15"
+    "1 3 6 10 15 21"
+    "10 13 16 21 30 45"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  [<Theory>]
+  [<FileData(2023, 9, 1853145119)>]
+  [<MemberData(nameof sample, 114)>]
+  let part1 (input: string []) expected =
+
+    let rec loop numbers =
+      let numbers' =
+        numbers
+        |> Array.windowed 2
+        |> Array.map(fun a -> a.[1] - a.[0])
+      if numbers' |> Array.forall(fun n -> n = 0)
+      then numbers[^0]
+      else numbers[^0] + loop numbers'
+
+    input
+    |> Array.sumBy(fun line -> line |> parseNumbers<int> |> loop )
+    =! expected
+
+  [<Theory>]
+  [<FileData(2023, 9, 923)>]
+  [<MemberData(nameof sample, 2)>]
+  let part2 (input: string []) expected =
+
+    let rec loop numbers =
+      let numbers' =
+        numbers
+        |> Array.windowed 2
+        |> Array.map(fun a -> a.[1] - a.[0])
+      if numbers' |> Array.forall(fun n -> n = 0)
+      then numbers[0]
+      else numbers[0] - loop numbers'
+
+    input
+    |> Array.sumBy(fun line ->
+      let numbers = line |> parseNumbers<int>
+      loop numbers
+    )
+    =! expected
+
 module Day08 =
 
   let input1 = [|
@@ -79,7 +128,7 @@ module Day08 =
 
     loop 0 "AAA" + 1 =! expected
 
-  [<Theory>]
+  [<Theory(Skip = "Not done yet")>]
   [<FileData(2023, 8, 0)>]
   [<MemberData(nameof sample1, 0)>]
   [<MemberData(nameof sample2, 0)>]
@@ -571,24 +620,29 @@ module Day01 =
 
 let makeTemplate day =
 
-  sprintf """module Day%02i =
+  let sample = paste().Trim().Replace("\r\n", "\"\r\n    \"")
+
+  $"""module Day%i{day} =
 
   let input = [|
+    "{sample}"
   |]
 
   let sample (result: int) = makeSample result input
 
   [<Theory>]
-  [<FileData(2023, %i, 0)>]
+  [<FileData(2023, %i{day}, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part1 (input: string []) expected =
     -1 =! expected
 
   [<Theory>]
-  [<FileData(2023, %i, 0)>]
+  [<FileData(2023, %i{day}, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 (input: string []) expected =
-    -1 =! expected""" day day day
+    -1 =! expected
+
+"""
 
 makeTemplate |> clip
 

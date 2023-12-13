@@ -45,7 +45,7 @@ let readAllInput (day: int) = File.ReadAllText(ensureExists Year day)
 let readsInts day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int
 let readsInt64s day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int64
 
-let digits = SearchValues.Create("0123456789")
+let digits = SearchValues.Create("-0123456789")
 
 let tryParseSlice<'T when 'T :> ISpanParsable<'T>> (span: ReadOnlySpan<char> byref) (value: 'T byref) =
   let mutable i = span.IndexOfAny(digits)
