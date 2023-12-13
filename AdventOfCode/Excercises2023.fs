@@ -13,6 +13,96 @@ open System.Buffers
 open System.Text.RegularExpressions
 open System.Collections.Generic
 
+module Day10 =
+
+  let input = [|
+    "-L|F7"
+    "7S-7|"
+    "L|7||"
+    "-L-J|"
+    "L|-JF"
+  |]
+
+  let input2 = [|
+    "7-F7-"
+    ".FJ|7"
+    "SJLL7"
+    "|F--J"
+    "LJ.LJ"
+  |]
+
+  let sample (result: int) = makeSample result input
+  let sample2 (result: int) = makeSample result input2
+
+  type Direction = Up | Down | Left | Right
+
+  [<NoEquality;NoComparison>]
+  type Automaton =
+    {
+      mutable x: int
+      mutable y: int
+      mutable direction: Direction
+      map: string array
+    }
+    static member Create(x, y, direction, map) =
+      {
+        x = x
+        y = y
+        direction = direction
+        map = map
+      }
+    member this.Location = this.x, this.y
+    member this.Char = this.map[this.x][this.y]
+    member this.Advance() =
+      this.direction <-
+        match this.direction with
+        | Up    -> this.x <- this.x - 1 ; match this.Char with 'F' -> Right | '7' -> Left | '|' -> Up    | _ -> failwithf "%A" this.Char
+        | Down  -> this.x <- this.x + 1 ; match this.Char with 'L' -> Right | 'J' -> Left | '|' -> Down  | _ -> failwithf "%A" this.Char
+        | Left  -> this.y <- this.y - 1 ; match this.Char with 'F' -> Down  | 'L' -> Up   | '-' -> Left  | _ -> failwithf "%A" this.Char
+        | Right -> this.y <- this.y + 1 ; match this.Char with '7' -> Down  | 'J' -> Up   | '-' -> Right | _ -> failwithf "%A" this.Char
+
+  let findStartPositionAndDirections (input: string []) =
+    let x = input |> Array.findIndex(fun line -> line.Contains('S'))
+    let y = input[x].IndexOf('S')
+    let directions =
+      [|
+        if x < input.Length - 1     then match input[x + 1][y] with | 'L' | 'J' | '|' -> Down  | _ -> ()
+        if x > 0                    then match input[x - 1][y] with | 'F' | '7' | '|' -> Up    | _ -> ()
+        if y < input.[x].Length - 1 then match input[x][y + 1] with | '7' | 'J' | '-' -> Right | _ -> ()
+        if y > 0                    then match input[x][y - 1] with | 'L' | 'F' | '-' -> Left  | _ -> ()
+      |]
+    let dir1, dir2 =
+      match directions with
+      | [| dir1 ; dir2 |] -> dir1, dir2
+      | _ -> failwithf "Expected exactly two directions, got: %A" directions
+    x, y, dir1, dir2
+
+  [<Theory>]
+  [<FileData(2023, 10, 6897)>]
+  [<MemberData(nameof sample, 4)>]
+  [<MemberData(nameof sample2, 8)>]
+  let part1 (input: string []) expected =
+    let x, y, dir1, dir2 = findStartPositionAndDirections input
+
+    let ant1 = Automaton.Create(x, y, dir1, input)
+    let ant2 = Automaton.Create(x, y, dir2, input)
+
+    ant1.Advance()
+    ant2.Advance()
+    let mutable count = 1
+    while ant1.Location <> ant2.Location do
+      ant1.Advance()
+      ant2.Advance()
+      count <- count + 1
+
+    count =! expected
+
+  [<Theory>]
+  [<FileData(2023, 10, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string []) expected =
+    -1 =! expected
+
 module Day9 =
 
   let input = [|
