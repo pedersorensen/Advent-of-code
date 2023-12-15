@@ -2,7 +2,6 @@
 #r "nuget: FSharp.Data"
 #r "nuget: XUnit"
 #load "Utils.fs"
-Year <- 2023
 #else
 namespace Excercises2023
 #endif
@@ -128,7 +127,28 @@ module Day9 =
       else numbers[^0] + loop numbers'
 
     input
-    |> Array.sumBy(fun line -> line |> parseNumbers<int> |> loop )
+    |> Array.sumBy(parseNumbers >> loop)
+    =! expected
+
+  [<Theory>]
+  [<FileData(2023, 9, 1853145119)>]
+  [<MemberData(nameof sample, 114)>]
+  let part1B (input: string []) expected =
+    let findNextNumber (numbers : _ array) =
+      let mutable max = numbers.Length - 2
+      let mutable keepGoing = true
+      let mutable sum = numbers[^0]
+      while keepGoing do
+        keepGoing <- false
+        for i = 0 to max do
+          numbers[i] <- numbers[i + 1] - numbers[i]
+          if numbers[i] <> 0 then keepGoing <- true
+        sum <- sum + numbers[max]
+        max <- max - 1
+      sum
+
+    input
+    |> Array.sumBy(parseNumbers >> findNextNumber)
     =! expected
 
   [<Theory>]
@@ -146,10 +166,27 @@ module Day9 =
       else numbers[0] - loop numbers'
 
     input
-    |> Array.sumBy(fun line ->
-      let numbers = line |> parseNumbers<int>
-      loop numbers
-    )
+    |> Array.sumBy(parseNumbers >> loop)
+    =! expected
+
+  [<Theory>]
+  [<FileData(2023, 9, 923)>]
+  [<MemberData(nameof sample, 2)>]
+  let part2B (input: string []) expected =
+
+    let findFirstNumber (numbers : _ array) =
+      let mutable min = 1
+      let mutable keepGoing = true
+      while keepGoing do
+        keepGoing <- false
+        for i = numbers.Length - 1 downto min do
+          numbers[i] <- numbers[i] - numbers[i - 1]
+          if numbers[i] <> 0 then keepGoing <- true
+        min <- min + 1
+      numbers |> Array.reduceBack (-)
+
+    input
+    |> Array.sumBy(parseNumbers >> findFirstNumber)
     =! expected
 
 module Day08 =
