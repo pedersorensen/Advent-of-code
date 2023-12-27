@@ -12,6 +12,96 @@ open System.Buffers
 open System.Text.RegularExpressions
 open System.Collections.Generic
 
+module Day11 =
+
+  let input = [|
+    "...#......"
+    ".......#.."
+    "#........."
+    ".........."
+    "......#..."
+    ".#........"
+    ".........#"
+    ".........."
+    ".......#.."
+    "#...#....."
+  |]
+
+  let sample (result: int64) = makeSample result input
+
+  let expand (input: string []) =
+    let noGalaxies =
+      input
+      |> Array.map(fun line -> line.ToCharArray())
+      |> Array.reduce(Array.map2 min)
+
+    let horizontalExpanded =
+      input
+      |> Array.map(fun line ->
+        (line.ToCharArray(), noGalaxies)
+        ||> Array.zip
+        |> Array.collect(fun (line, noGalaxies) ->
+          if line = '.' && noGalaxies = '.' then [| '.' ; '.' |] else [| line|]
+        ) |> String
+      )
+
+    [|
+      for line in horizontalExpanded do
+        line
+        if line.IndexOf('#') < 0 then line
+    |]
+
+  let getGalaxies (input: string array) =
+    input
+    |> Array.mapi(fun i line ->
+      line.ToCharArray() |> Seq.mapi(fun j ch -> (i, j), ch)
+    )
+    |> Seq.collect(Seq.filter(fun (_, ch) -> ch = '#'))
+    |> Seq.mapi(fun i (pos, _) -> i, pos)
+    |> Seq.toArray
+
+  [<Theory>]
+  [<FileData(2023, 11, 9724940L)>]
+  [<MemberData(nameof sample, 374L)>]
+  let part1 (input: string []) expected =
+    let galaxies = getGalaxies (expand input)
+
+    Array.allPairs galaxies galaxies
+    |> Array.filter(fun ((g1, _), (g2, _)) -> g1 < g2)
+    |> Array.sumBy(fun ((_, (x1, y1)), (_, (x2, y2))) -> abs(x2 - x1) + abs(y2 - y1))
+    =! expected
+
+  [<Theory>]
+  [<FileData(2023, 11, 569052586852L)>]
+  [<MemberData(nameof sample, 82000210L)>]
+  let part2 (input: string []) expected =
+
+    let noGalaxyColumns =
+      input
+      |> Array.map(fun line -> line.ToCharArray())
+      |> Array.reduce(Array.map2 min)
+      |> Array.indexed
+      |> Array.choose(fun (i, ch) -> if ch <> '#' then Some i else None)
+
+    let noGalaxyRows =
+      input
+      |> Array.indexed
+      |> Array.choose(fun (i, ch) -> if ch.Contains('#') then None else Some i)
+
+    let galaxies = getGalaxies input
+
+    let F1 = 1_000_000L - 1L
+
+    Array.allPairs galaxies galaxies
+    |> Array.filter(fun ((g1, _), (g2, _)) -> g1 < g2)
+    |> Array.sumBy(fun ((_, (x1, y1)), (_, (x2, y2))) ->
+      let fx = noGalaxyRows    |> Array.sumBy(fun x -> if (x1 < x && x < x2) || (x2 < x && x < x1) then F1 else 0L)
+      let fy = noGalaxyColumns |> Array.sumBy(fun y -> if (y1 < y && y < y2) || (y2 < y && y < y1) then F1 else 0L)
+      let dx = int64(abs(x2 - x1)) + fx
+      let dy = int64(abs(y2 - y1)) + fy
+      dx + dy
+    ) =! expected
+
 module Day10 =
 
   let input = [|
