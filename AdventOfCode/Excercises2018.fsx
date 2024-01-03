@@ -468,7 +468,7 @@ module Day7 =
     |> Array.groupBy(fun x -> x.Name)
     |> Array.map(fun (name, grp) -> { Name = name ; DependsOn = grp |> Array.collect(fun y -> y.DependsOn)})
     |> Array.sortBy(fun x -> x.Name)
-    |> TopologicalSort.getTopologicalSortOrderWith(fun x -> x.Name.ToString()) (fun x -> x.DependsOn |> Array.map string)
+    |> TopologicalSort.getTopologicalSortOrderWith(fun x -> x.Name) (fun x -> x.DependsOn)
     |> Array.rev
 
   let testOrder = getExecutionOrder testInput

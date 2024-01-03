@@ -60,18 +60,18 @@ type TopologicalSorter(size) =
       deleteVertex(currentVertex)
     sortedArray
 
-type Node =
-  { Name : string
-    Dependencies : string [] }
+type Node<'T> =
+  { Name : 'T
+    Dependencies : 'T [] }
   override this.ToString() =
     let deps =
       match this.Dependencies with
       | [||] -> "No dependencies"
       | deps -> String.Join(", ", deps)
-    this.Name + ": " + deps
+    $"{this.Name}: {deps}"
   static member Primitive name = { Name = name ; Dependencies = Array.Empty() }
 
-let getTopologicalSortOrder(nodes : Node[]) =
+let getTopologicalSortOrder(nodes : Node<_>[]) =
   let sorter = new TopologicalSorter(nodes.Length)
 
   let mutable vertexCounter = 0
@@ -96,11 +96,11 @@ let getTopologicalSortOrderWith nameSelector dependenciesSelector nodes =
   let sorter = new TopologicalSorter(Array.length nodes)
 
   let mutable vertexCounter = 0
-  let indexes = new Dictionary<string, int>()
+  let indexes = new Dictionary<_, int>()
   for node in nodes do
     let name = nameSelector node
     if indexes.ContainsKey name then
-      failwithf "A node with the name %s has already been added" name
+      failwithf $"A node with the name {name} has already been added"
     indexes.Add(name, sorter.AddVertex vertexCounter)
     vertexCounter <- vertexCounter + 1
 
@@ -109,7 +109,7 @@ let getTopologicalSortOrderWith nameSelector dependenciesSelector nodes =
       let end' =
         match indexes.TryGetValue d with
         | true, value -> value
-        | false, _ -> failwithf "The dependency '%s' could not be found" d
+        | false, _ -> failwithf $"The dependency '{d}' could not be found"
       sorter.AddEdge(vertex, end')
   sorter.Sort()
   |> Array.map(fun i -> nodes.[i])
@@ -121,9 +121,9 @@ let findCyclicDependencies initialIdentifier definitions =
     if seen.Add(identifier) then
       let found = definitions |> Map.find identifier |> Array.exists search
       if not found then
-        ignore <| seen.Remove(identifier)
+        seen.Remove(identifier) |> ignore
       found
     else identifier = initialIdentifier
 
-  ignore <| search initialIdentifier
+  search initialIdentifier |> ignore
   seen |> Seq.toArray
