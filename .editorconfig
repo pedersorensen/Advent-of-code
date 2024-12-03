@@ -1,0 +1,11 @@
+# Remove the line below if you want to inherit .editorconfig settings from higher directories
+root = true
+
+[*]
+#end_of_line should not be speciied in this file since any sane value is OS specific. This is better dealt with in gitconfig
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{fs,fsx}]
+indent_size = 2
+indent_style = space
