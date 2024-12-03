@@ -28,7 +28,7 @@ module Day3 =
   [<Theory>]
   [<FileData(2024, 3, 185797128)>]
   [<MemberData(nameof sample, 161)>]
-  let part1 (input: string []) expected =
+  let part1 (input: string array) expected =
     Regex.Matches(input[0], "mul\((?<d1>\d{1,3}),(?<d2>\d{1,3})\)")
     |> Seq.sumBy sumMatch
      =! expected
@@ -42,7 +42,7 @@ module Day3 =
   [<Theory>]
   [<FileData(2024, 3, 89798695)>]
   [<MemberData(nameof sample2, 48)>]
-  let part2 (input: string []) expected =
+  let part2 (input: string array) expected =
     ((0, true), Regex.Matches(input[0], "(mul\((?<d1>\d{1,3}),(?<d2>\d{1,3})\)|do\(\)|don't\(\))"))
     ||> Seq.fold(fun (sum, doIt) m ->
       if   m.Value = "do()"    then sum, true
@@ -68,7 +68,7 @@ module Day2 =
 
   let sample (result: int) = makeSample result input
 
-  let parse (input: string []) =
+  let parse (input: string array) =
     input
     |> Array.map (fun x ->
       x.Split(' ', StringSplitOptions.RemoveEmptyEntries)
@@ -84,7 +84,7 @@ module Day2 =
   [<Theory>]
   [<FileData(2024, 2, 356)>]
   [<MemberData(nameof sample, 2)>]
-  let part1 (input: string []) expected =
+  let part1 (input: string array) expected =
     parse input
     |> Array.countTrue isSafe
     =! expected
@@ -93,8 +93,8 @@ module Day2 =
     let l = Array.length array
     let result = Array.zeroCreate (l - 1)
     Array.Copy(array, 1, result, 0, l - 1)
-    let mutable x = array[0]
     yield result
+    let mutable x = array[0]
     for i = 0 to l - 2 do
       let temp = x
       x <- result[i]
@@ -105,7 +105,7 @@ module Day2 =
   [<Theory>]
   [<FileData(2024, 2, 413)>]
   [<MemberData(nameof sample, 4)>]
-  let part2 (input: string []) expected =
+  let part2 (input: string array) expected =
     parse input
     |> Array.countTrue(fun x -> isSafe x || dampen x |> Seq.exists isSafe)
     =! expected
@@ -123,7 +123,7 @@ module Day1 =
 
   let sample (result: int) = makeSample result input
 
-  let parse (input: string []) =
+  let parse (input: string array) =
     input
     |> Array.map (fun x ->
       match x.Split(' ', StringSplitOptions.RemoveEmptyEntries) with
@@ -135,7 +135,7 @@ module Day1 =
   [<Theory>]
   [<FileData(2024, 1, 2756096)>]
   [<MemberData(nameof sample, 11)>]
-  let part1 (input: string []) expected =
+  let part1 (input: string array) expected =
     let left, right = parse input
     Array.sortInPlace left
     Array.sortInPlace right
@@ -146,7 +146,7 @@ module Day1 =
   [<Theory>]
   [<FileData(2024, 1, 23117829)>]
   [<MemberData(nameof sample, 31)>]
-  let part2 (input: string []) expected =
+  let part2 (input: string array) expected =
     let left, right = parse input
     let map = right |> Array.countBy id |> Map.ofArray
     left
@@ -170,13 +170,13 @@ let makeTemplate day =
   [<Theory>]
   [<FileData(2024, %i{day}, 0)>]
   [<MemberData(nameof sample, 0)>]
-  let part1 (input: string []) expected =
+  let part1 (input: string array) expected =
     -1 =! expected
 
   [<Theory>]
   [<FileData(2024, %i{day}, 0)>]
   [<MemberData(nameof sample, 0)>]
-  let part2 (input: string []) expected =
+  let part2 (input: string array) expected =
     -1 =! expected
 
 """
