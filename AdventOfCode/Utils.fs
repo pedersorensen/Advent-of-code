@@ -138,6 +138,15 @@ module Array =
       result.Add(buffer.ToArray())
     result.ToArray()
 
+  let sumBy2 f (array1: _ array) (array2: _ array) =
+    if array1.Length <> array2.Length then
+      invalidArg "array2" "Arrays must have the same length"
+
+    let mutable sum = 0
+    for i in 0 .. array1.Length - 1 do
+      sum <- sum + f array1.[i] array2.[i]
+    sum
+
 module Tuple =
 
   let inline add (x1, y1) (x2, y2) = x1 + x2, y1 + y2
