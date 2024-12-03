@@ -49,7 +49,7 @@ module Day3 =
       elif m.Value = "don't()" then sum, false
       else
         if doIt
-        then sum + sumMatch m , doIt
+        then sum + sumMatch m, doIt
         else sum, doIt
     )
     |> fst
@@ -75,34 +75,40 @@ module Day2 =
       |> Array.map int
     )
 
+  let isSafe array =
+    let pairs = array |> Array.pairwise |> Array.map (fun (a, b) -> a - b)
+    (    pairs |> Array.forall (fun x -> x > 0)
+      || pairs |> Array.forall (fun x -> x < 0)
+    ) && pairs |> Array.forall (fun x -> abs x > 0 && abs x < 4)
+
   [<Theory>]
   [<FileData(2024, 2, 356)>]
   [<MemberData(nameof sample, 2)>]
   let part1 (input: string []) expected =
-    let parsed = parse input
-    let x = parsed[0]
-    let x2 = Array.zeroCreate<int> (x.Length - 1)
-    Array.Copy(x, 1, x2, 0, x.Length - 1)
-    x
-    x2
-
-    parsed
-    |> Array.countTrue(fun x ->
-      printfn "%A" x
-      let pairs = x |> Array.pairwise |> Array.map (fun (a, b) -> a - b)
-      (
-           pairs |> Array.forall (fun x -> x > 0)
-        || pairs |> Array.forall (fun x -> x < 0)
-      ) && pairs |> Array.forall (fun x -> abs x > 0 && abs x < 4)
-    )
+    parse input
+    |> Array.countTrue isSafe
     =! expected
 
-  [<Theory>]
-  [<FileData(2024, 2, 0)>]
-  [<MemberData(nameof sample, 0)>]
-  let part2 (input: string []) expected =
-    -1 =! expected
+  let dampen array = seq {
+    let l = Array.length array
+    let result = Array.zeroCreate (l - 1)
+    Array.Copy(array, 1, result, 0, l - 1)
+    let mutable x = array[0]
+    yield result
+    for i = 0 to l - 2 do
+      let temp = x
+      x <- result[i]
+      result[i] <- temp
+      yield result
+  }
 
+  [<Theory>]
+  [<FileData(2024, 2, 413)>]
+  [<MemberData(nameof sample, 4)>]
+  let part2 (input: string []) expected =
+    parse input
+    |> Array.countTrue(fun x -> isSafe x || dampen x |> Seq.exists isSafe)
+    =! expected
 
 module Day1 =
 
