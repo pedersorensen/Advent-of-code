@@ -83,6 +83,74 @@ module Day7 =
     |> Array.sumBy(fun line -> test line |> Option.defaultValue 0L)
     =! expected
 
+module Day6 =
+
+  let input = [|
+    "....#....."
+    ".........#"
+    ".........."
+    "..#......."
+    ".......#.."
+    ".........."
+    ".#..^....."
+    "........#."
+    "#........."
+    "......#..."
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  let getStartingPoint (input: string array) =
+    let x = input |> Array.findIndex(fun x -> x.Contains('^'))
+    let y = input[x].AsSpan().IndexOf('^')
+    x, y
+
+  let move (map: char array array) p0 =
+    let set = new HashSet<_>()
+    let rec loop direction (x, y) =
+      if set.Add(x, y, direction) then
+        map[x][y] <- 'X'
+        let x2, y2, direction2 =
+          match direction with
+          | 'u' -> x - 1, y, 'l'
+          | 'd' -> x + 1, y, 'r'
+          | 'l' -> x, y + 1, 'd'
+          | 'r' -> x, y - 1, 'u'
+          | _ -> failwith "Invalid direction"
+        if x2 >= 0 && x2 < map.Length && y2 >= 0 && y2 < map[0].Length then
+          if map[x2][y2] = '#'
+          then loop direction2 (x, y)
+          else loop direction (x2, y2)
+        else 0
+      else 1
+    loop 'u' p0
+
+  [<Theory>]
+  [<FileData(2024, 6, 4722)>]
+  [<MemberData(nameof sample, 41)>]
+  let part1 (input: string array) expected =
+    let map = input |> Array.map(fun x -> x.ToCharArray())
+    getStartingPoint input |> move map =! 0
+    map
+    |> Array.sumBy(Array.countTrue ((=) 'X'))
+    =! expected
+
+  [<Theory>]
+  [<FileData(2024, 6, 1602)>]
+  [<MemberData(nameof sample, 6)>]
+  let part2 (input: string array) expected =
+    let p0 = getStartingPoint input
+    let map0 = input |> Array.map(fun x -> x.ToCharArray())
+    move map0 p0 =! 0
+    let mutable count = 0
+    for i = 0 to input.Length - 1 do
+      for j = 0 to input[0].Length - 1 do
+        if input[i][j] = '.' && map0[i][j] = 'X' then
+          let map = input |> Array.map(fun x -> x.ToCharArray())
+          map[i][j] <- '#'
+          count <- count + move map p0
+    count =! expected
+
 module Day3 =
 
   let input = [|
