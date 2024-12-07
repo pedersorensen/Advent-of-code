@@ -12,6 +12,77 @@ open System.Buffers
 open System.Collections.Generic
 open System.Text.RegularExpressions
 
+module Day7 =
+
+  let input = [|
+    "190: 10 19"
+    "3267: 81 40 27"
+    "83: 17 5"
+    "156: 15 6"
+    "7290: 6 8 6 15"
+    "161011: 16 10 13"
+    "192: 17 8 14"
+    "21037: 9 7 18 13"
+    "292: 11 6 16 20"
+  |]
+
+  let sample (result: int64) = makeSample result input
+
+  let parse input =
+    input
+    |> Array.map(fun (x:string) ->
+      x.Split([| ' ' ; ':'|], StringSplitOptions.RemoveEmptyEntries)
+      |> Array.map int64
+    )
+
+  [<Theory>]
+  [<FileData(2024, 7, 6392012777720L)>]
+  [<MemberData(nameof sample, 3749L)>]
+  let part1 (input: string array) expected =
+
+    let test (line : _ array) =
+      let result = line[0]
+      let rec expand i acc = seq {
+        if i < line.Length && acc <= result then
+          let x = line[i]
+          let i = i + 1
+          yield! expand i (acc + x)
+          yield! expand i (acc * x)
+        else yield acc
+      }
+      expand 2 line[1]
+      |> Seq.tryFind ((=) result)
+
+    parse input
+    |> Array.sumBy(fun line -> test line |> Option.defaultValue 0L)
+    =! expected
+
+  [<Theory>]
+  [<FileData(2024, 7, 61561126043536L)>]
+  [<MemberData(nameof sample, 11387L)>]
+  let part2 (input: string array) expected =
+
+    let concat a b =
+      b + a * int64(Math.Pow(10, Math.Ceiling(Math.Log10(float b + 1.))))
+
+    let test (line : _ array) =
+      let result = line[0]
+      let rec expand i acc = seq {
+        if i < line.Length && acc <= result then
+          let x = line[i]
+          let i = i + 1
+          yield! expand i (acc + x)
+          yield! expand i (acc * x)
+          yield! expand i (concat acc x)
+        else yield acc
+      }
+      expand 2 line[1]
+      |> Seq.tryFind ((=) result)
+
+    parse input
+    |> Array.sumBy(fun line -> test line |> Option.defaultValue 0L)
+    =! expected
+
 module Day3 =
 
   let input = [|
