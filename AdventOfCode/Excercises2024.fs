@@ -12,6 +12,106 @@ open System.Buffers
 open System.Collections.Generic
 open System.Text.RegularExpressions
 
+module Day8 =
+
+  let input = [|
+    "............"
+    "........0..."
+    ".....0......"
+    ".......0...."
+    "....0......."
+    "......A....."
+    "............"
+    "............"
+    "........A..."
+    ".........A.."
+    "............"
+    "............"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  let getNodes (input: string array) =
+    let nodes = Dictionary<_, _>()
+    for i = 0 to input.Length - 1 do
+      for j = 0 to input[i].Length - 1 do
+        let ch = input[i][j]
+        if ch <> '.' then
+          let values =
+            match nodes.TryGetValue(ch) with
+            | true, values -> values
+            | false, _     -> [ ]
+          nodes[ch] <- (i, j) :: values
+    nodes
+
+  [<Theory>]
+  [<FileData(2024, 8, 423)>]
+  [<MemberData(nameof sample, 14)>]
+  let part1 (input: string array) expected =
+    getNodes input
+    |> Seq.collect(fun kvp ->
+      let n = kvp.Value
+      Seq.allPairs n n
+      |> Seq.collect(fun (p1, p2) ->
+        if p1 <= p2 then
+          Seq.empty
+        else
+          let x1, y1 = p1
+          let x2, y2 = p2
+          let dx = x2 - x1
+          let dy = y2 - y1
+          [|
+            x1 - dx, y1 - dy
+            x2 + dx, y2 + dy
+          |]
+      )
+      |> Seq.filter(fun (x, y) ->
+        x >= 0 && x < input.Length && y >= 0 && y < input[0].Length
+      )
+    )
+    |> Seq.distinct
+    |> Seq.toArray
+    |> Seq.length
+    =! expected
+
+  [<Theory>]
+  [<FileData(2024, 8, 1287)>]
+  [<MemberData(nameof sample, 34)>]
+  let part2 (input: string array) expected =
+    getNodes input
+    |> Seq.collect(fun kvp ->
+      let n = kvp.Value
+      Seq.allPairs n n
+      |> Seq.collect(fun (p1, p2) ->
+        if p1 <= p2 then
+          Seq.empty
+        else
+          let x1, y1 = p1
+          let x2, y2 = p2
+          let dx = x2 - x1
+          let dy = y2 - y1
+          let a =
+            Seq.initInfinite (fun i ->
+              x1 - dx * i, y1 - dy * i
+            )
+            |> Seq.takeWhile(fun (x, y) ->
+              x >= 0 && x < input.Length && y >= 0 && y < input[0].Length
+            )
+          let b =
+            Seq.initInfinite (fun i ->
+              x1 + dx * i, y1 + dy * i
+            )
+            |> Seq.takeWhile(fun (x, y) ->
+              x >= 0 && x < input.Length && y >= 0 && y < input[0].Length
+            )
+          Seq.append a b
+      )
+    )
+    |> Seq.distinct
+    |> Seq.toArray
+    |> Seq.length
+    =! expected
+
 module Day7 =
 
   let input = [|
