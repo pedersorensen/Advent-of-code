@@ -232,6 +232,71 @@ module Day6 =
           count <- count + move map p0
     count =! expected
 
+module Day4 =
+
+  let input = [|
+    "MMMSXXMASM"
+    "MSAMXMSMSA"
+    "AMXSXMAAMM"
+    "MSAMASMSMX"
+    "XMASAMXAMM"
+    "XXAMMXXAMA"
+    "SMSMSASXSS"
+    "SAXAMASAAA"
+    "MAMMMXMMMM"
+    "MXMXAXMASX"
+  |]
+
+  let directions = [|
+    0,  1
+    1,  1
+    1,  0
+    1, -1
+    0, -1
+    -1, -1
+    -1,  0
+    -1,  1
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  [<Theory>]
+  [<FileData(2024, 4, 2496)>]
+  [<MemberData(nameof sample, 18)>]
+  let part1 (input: string array) expected =
+    let mutable count = 0
+    for i = 0 to input.Length - 1 do
+      for j = 0 to input[i].Length - 1 do
+        if input[i][j] = 'X' then
+          let subCount =
+            directions
+            |> Array.countTrue(fun (dx, dy) ->
+              try  input[i + 1 * dx][j + 1 * dy] = 'M'
+                && input[i + 2 * dx][j + 2 * dy] = 'A'
+                && input[i + 3 * dx][j + 3 * dy] = 'S'
+              with :? IndexOutOfRangeException -> false
+            )
+          count <- count + subCount
+    count =! expected
+
+  [<Theory>]
+  [<FileData(2024, 4, 1967)>]
+  [<MemberData(nameof sample, 9)>]
+  let part2 (input: string array) expected =
+    let mutable count = 0
+    for i = 0 to input.Length - 1 do
+      for j = 0 to input[i].Length - 1 do
+        if input[i][j] = 'A' then
+          try
+            let xp, xm = input[i + 1], input[i - 1]
+            let ch1, ch2  = xp[j + 1], xm[j - 1]
+            if (ch1 = 'M' && ch2 = 'S') || (ch1 = 'S' && ch2 = 'M') then
+              let ch3, ch4  = xm[j + 1], xp[j - 1]
+              if (ch3 = 'M' && ch4 = 'S') || (ch3 = 'S' && ch4 = 'M') then
+                count <- count + 1
+          with :? IndexOutOfRangeException -> ()
+    count =! expected
+
 module Day3 =
 
   let input = [|
