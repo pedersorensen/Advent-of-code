@@ -29,7 +29,6 @@ type FileDataAttribute(year, day, result: obj) =
     let path = ensureExists year day
     [| [| File.ReadAllLines(path) |> box ; result |] |]
 
-
 let (|Ints|) (data: string[]) = data |> Array.map int
 let (|SingeLineInts|) (data: string[]) = (Array.exactlyOne data).Split(',') |> Array.map int
 
@@ -93,6 +92,10 @@ module Seq =
       then fst init, accumulator state acc
       else combiner line state, acc)
     |> fun (set, count) -> accumulator set count
+
+  let countDistinct (input: _ seq) =
+    let set = HashSet()
+    input |> countTrue set.Add
 
 [<RequireQualifiedAccess>]
 module Array =
@@ -173,4 +176,33 @@ type IDictionary<'TKey, 'TValue> with
     | true, value -> Some value
     | _ -> None
 
+[<StructuredFormatDisplay("({X}, {Y})")>]
+type Point(x: int, y: int) =
+  member _.X = x
+  member _.Y = y
 
+  static member (+) (p1: Point, p2: Point) = Point(p1.X + p2.X, p1.Y + p2.Y)
+  static member (-) (p1: Point, p2: Point) = Point(p1.X - p2.X, p1.Y - p2.Y)
+  static member (*) (p: Point, f: int) = Point(p.X * f, p.Y * f)
+  static member (*) (f: int, p: Point) = Point(p.X * f, p.Y * f)
+
+  override _.Equals(other: obj) =
+    match other with
+    | :? Point as other -> x = other.X && y = other.Y
+    | _ -> false
+
+  override _.GetHashCode() = HashCode.Combine(x, y)
+
+  member _.CompareTo (other: Point) =
+    let c1 = x.CompareTo(other.X)
+    if c1 > 0 then
+      c1
+    else
+      let c2 = y.CompareTo(other.Y)
+      max c1 c2
+
+  interface IComparable with
+    member this.CompareTo (other: obj) =
+      match other with
+      | :? Point as other -> this.CompareTo(other)
+      | _ -> failwith "Invalid type"

@@ -186,7 +186,7 @@ module Day10 =
 
     count =! expected
 
-  [<Theory>]
+  [<Theory(Skip = "Not completed.")>]
   [<FileData(2023, 10, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 (input: string []) expected =

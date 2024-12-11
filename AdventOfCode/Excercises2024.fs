@@ -32,84 +32,65 @@ module Day8 =
   let sample (result: int) = makeSample result input
 
   let getNodes (input: string array) =
-    let nodes = Dictionary<_, _>()
+    let nodes = Dictionary()
     for i = 0 to input.Length - 1 do
-      for j = 0 to input[i].Length - 1 do
-        let ch = input[i][j]
+      let line = input[i]
+      for j = 0 to line.Length - 1 do
+        let ch = line[j]
         if ch <> '.' then
           let values =
             match nodes.TryGetValue(ch) with
             | true, values -> values
             | false, _     -> [ ]
-          nodes[ch] <- (i, j) :: values
-    nodes
+          nodes[ch] <- Point(i, j) :: values
+    nodes.Values
 
   [<Theory>]
   [<FileData(2024, 8, 423)>]
   [<MemberData(nameof sample, 14)>]
   let part1 (input: string array) expected =
+    let min, max = Point(0, 0), Point(input.Length, input[0].Length)
     getNodes input
-    |> Seq.collect(fun kvp ->
-      let n = kvp.Value
-      Seq.allPairs n n
+    |> Seq.collect(fun nodes ->
+      Seq.allPairs nodes nodes
       |> Seq.collect(fun (p1, p2) ->
         if p1 <= p2 then
           Seq.empty
         else
-          let x1, y1 = p1
-          let x2, y2 = p2
-          let dx = x2 - x1
-          let dy = y2 - y1
+          let dx = p2 - p1
           [|
-            x1 - dx, y1 - dy
-            x2 + dx, y2 + dy
+            p1 - dx
+            p2 + dx
           |]
       )
-      |> Seq.filter(fun (x, y) ->
-        x >= 0 && x < input.Length && y >= 0 && y < input[0].Length
-      )
     )
-    |> Seq.distinct
-    |> Seq.toArray
-    |> Seq.length
+    |> Seq.filter(fun p -> min <= p && p < max)
+    |> Seq.countDistinct
     =! expected
 
   [<Theory>]
   [<FileData(2024, 8, 1287)>]
   [<MemberData(nameof sample, 34)>]
   let part2 (input: string array) expected =
+    let min, max = Point(0, 0), Point(input.Length, input[0].Length)
     getNodes input
-    |> Seq.collect(fun kvp ->
-      let n = kvp.Value
-      Seq.allPairs n n
+    |> Seq.collect(fun nodes ->
+      Seq.allPairs nodes nodes
       |> Seq.collect(fun (p1, p2) ->
         if p1 <= p2 then
           Seq.empty
         else
-          let x1, y1 = p1
-          let x2, y2 = p2
-          let dx = x2 - x1
-          let dy = y2 - y1
-          let a =
-            Seq.initInfinite (fun i ->
-              x1 - dx * i, y1 - dy * i
-            )
-            |> Seq.takeWhile(fun (x, y) ->
-              x >= 0 && x < input.Length && y >= 0 && y < input[0].Length
-            )
-          let b =
-            Seq.initInfinite (fun i ->
-              x1 + dx * i, y1 + dy * i
-            )
-            |> Seq.takeWhile(fun (x, y) ->
-              x >= 0 && x < input.Length && y >= 0 && y < input[0].Length
-            )
-          Seq.append a b
+          let dx = p2 - p1
+          let first =
+            Seq.initInfinite (fun i -> p1 - i * dx)
+            |> Seq.takeWhile(fun p -> min <= p && p < max)
+          let second =
+            Seq.initInfinite (fun i -> p2 + i * dx)
+            |> Seq.takeWhile(fun p -> min <= p && p < max)
+          Seq.append first second
       )
     )
-    |> Seq.distinct
-    |> Seq.toArray
-    |> Seq.length
+    |> Seq.countDistinct
     =! expected
 
 module Day7 =
@@ -206,7 +187,7 @@ module Day6 =
     x, y
 
   let move (map: char array array) p0 =
-    let set = new HashSet<_>()
+    let set = HashSet()
     let rec loop direction (x, y) =
       if set.Add(x, y, direction) then
         map[x][y] <- 'X'
