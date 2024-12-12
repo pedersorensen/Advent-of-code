@@ -232,6 +232,104 @@ module Day6 =
           count <- count + move map p0
     count =! expected
 
+module Day5 =
+
+  let input = [|
+    "47|53"
+    "97|13"
+    "97|61"
+    "97|47"
+    "75|29"
+    "61|13"
+    "75|53"
+    "29|13"
+    "97|29"
+    "53|29"
+    "61|53"
+    "97|53"
+    "61|29"
+    "47|13"
+    "75|47"
+    "97|75"
+    "47|61"
+    "75|61"
+    "47|29"
+    "75|13"
+    "53|13"
+    ""
+    "75,47,61,53,29"
+    "97,61,53,29,13"
+    "75,29,13"
+    "75,97,47,61,53"
+    "61,13,29"
+    "97,13,75,29,47"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  let parse (input: string array) =
+    let rules, updates =
+      input
+      |> Array.map parseNumbers<int>
+      |> Array.partition(fun a -> a.Length = 2)
+    let postRules = rules |> Array.groupBy(Array.item 0) |> Array.map(fun (ch, grp) -> ch, grp |> Array.map(Array.item 1) |> Set.ofArray) |> Map.ofArray
+    let preRules  = rules |> Array.groupBy(Array.item 1) |> Array.map(fun (ch, grp) -> ch, grp |> Array.map(Array.item 0) |> Set.ofArray) |> Map.ofArray
+    preRules, postRules, updates
+
+  let (|||) option defaultValue = option |> Option.defaultValue defaultValue
+
+  [<Theory>]
+  [<FileData(2024, 5, 5732)>]
+  [<MemberData(nameof sample, 143)>]
+  let part1 (input: string array) expected =
+    let preRules, postRules, updates = parse input
+    updates
+    |> Array.sumBy(fun update ->
+      let isValid =
+        update.Length > 0 &&
+        update
+        |> Array.indexed
+        |> Array.forall(fun (i, ch) ->
+          let preRule  =  preRules.TryFind(ch) ||| Set.empty
+          let postRule = postRules.TryFind(ch) ||| Set.empty
+          Seq.init update.Length id
+          |> Seq.forall(fun j ->
+               i = j
+            || j < i &&  preRule.Contains(update[j])
+            || j > i && postRule.Contains(update[j])
+          )
+        )
+      if isValid then update[update.Length / 2] else 0
+    ) =! expected
+
+  [<Theory>]
+  [<FileData(2024, 5, 4716)>]
+  [<MemberData(nameof sample, 123)>]
+  let part2 (input: string array) expected =
+    let preRules, postRules, updates = parse input
+    updates
+    |> Array.sumBy(fun update ->
+      let isValid =
+        update
+        |> Array.indexed
+        |> Array.forall(fun (i, ch) ->
+          let preRule  =  preRules.TryFind(ch) ||| Set.empty
+          let postRule = postRules.TryFind(ch) ||| Set.empty
+          Seq.init update.Length id
+          |> Seq.forall(fun j ->
+            i = j
+            || j < i &&  preRule.Contains(update[j])
+            || j > i && postRule.Contains(update[j])
+          )
+        )
+      if isValid then 0 else
+        update
+        |> Array.sortInPlaceWith(fun a b ->
+          if (postRules.TryFind(a) ||| Set.empty).Contains(b) && (preRules.TryFind(b) ||| Set.empty).Contains(a) then -1 else 1
+        )
+        update[update.Length / 2]
+    ) =! expected
+
 module Day4 =
 
   let input = [|
@@ -466,6 +564,6 @@ let makeTemplate day =
 
 """
 
-makeTemplate 3 |> clip
+makeTemplate 8 |> clip
 
 #endif
