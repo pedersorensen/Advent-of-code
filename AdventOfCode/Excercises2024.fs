@@ -12,6 +12,68 @@ open System.Buffers
 open System.Collections.Generic
 open System.Text.RegularExpressions
 
+module Day10 =
+
+  let input = [|
+    "89010123"
+    "78121874"
+    "87430965"
+    "96549874"
+    "45678903"
+    "32019012"
+    "01329801"
+    "10456732"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  let directions = [|
+    1,   0
+    0,  -1
+    -1,  0
+    0,   1
+  |]
+
+  let get (input: string array) (i, j) = directions |> Array.choose(fun (dx, dy) ->
+    let one = '1' - '0'
+    try
+      let i', j' = i + dx, j + dy
+      if input[i'][j'] - input[i][j] = one
+      then Some(i', j')
+      else None
+    with :? IndexOutOfRangeException -> None
+  )
+
+  let run distinct (input: string array) =
+    let mutable sum = 0
+    for i = 0 to input.Length - 1 do
+      let line = input[i]
+      for j = 0 to line.Length - 1 do
+        if line[j] = '0' then
+          let rec loop p = seq {
+            for p in get input p do
+              yield p
+              yield! loop p
+          }
+          let count =
+            loop (i, j)
+            |> fun path -> if distinct then path |> Seq.distinct else path
+            |> Seq.countTrue(fun (i, j) -> input[i][j]  = '9')
+          sum <- sum + count
+    sum
+
+  [<Theory>]
+  [<FileData(2024, 10, 816)>]
+  [<MemberData(nameof sample, 36)>]
+  let part1 (input: string array) expected =
+    run true input=! expected
+
+  [<Theory>]
+  [<FileData(2024, 10, 1960)>]
+  [<MemberData(nameof sample, 81)>]
+  let part2 (input: string array) expected =
+    run false input=! expected
+
 module Day8 =
 
   let input = [|
