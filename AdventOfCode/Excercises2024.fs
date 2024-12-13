@@ -74,7 +74,7 @@ module Day10 =
   let part2 (input: string array) expected =
     run false input=! expected
 
-module Day8 =
+module Day08 =
 
   let input = [|
     "............"
@@ -155,7 +155,7 @@ module Day8 =
     |> Seq.countDistinct
     =! expected
 
-module Day7 =
+module Day07 =
 
   let input = [|
     "190: 10 19"
@@ -226,7 +226,7 @@ module Day7 =
     |> Array.sumBy(fun line -> test line |> Option.defaultValue 0L)
     =! expected
 
-module Day6 =
+module Day06 =
 
   let input = [|
     "....#....."
@@ -294,7 +294,7 @@ module Day6 =
           count <- count + move map p0
     count =! expected
 
-module Day5 =
+module Day05 =
 
   let input = [|
     "47|53"
@@ -392,7 +392,7 @@ module Day5 =
         update[update.Length / 2]
     ) =! expected
 
-module Day4 =
+module Day04 =
 
   let input = [|
     "MMMSXXMASM"
@@ -457,7 +457,7 @@ module Day4 =
           with :? IndexOutOfRangeException -> ()
     count =! expected
 
-module Day3 =
+module Day03 =
 
   let input = [|
     "xmul(2,4)%&mul[3,7]!@^do_not_mul(5,5)+mul(32,64]then(mul(11,8)mul(8,5))"
@@ -500,7 +500,7 @@ module Day3 =
     |> fst
      =! expected
 
-module Day2 =
+module Day02 =
 
   let input = [|
     "7 6 4 2 1"
@@ -555,7 +555,7 @@ module Day2 =
     |> Array.countTrue(fun x -> isSafe x || dampen x |> Seq.exists isSafe)
     =! expected
 
-module Day1 =
+module Day01 =
 
   let input = [|
     "3   4"
@@ -604,7 +604,7 @@ let makeTemplate day =
 
   let sample = paste().Trim().Replace("\r\n", "\"\r\n    \"")
 
-  $"""module Day%i{day} =
+  $"""module Day%02i{day} =
 
   let input = [|
     "{sample}"
