@@ -213,6 +213,7 @@ type Point(x: int, y: int) =
 
   static member (+) (p1: Point, p2: Point) = Point(p1.X + p2.X, p1.Y + p2.Y)
   static member (-) (p1: Point, p2: Point) = Point(p1.X - p2.X, p1.Y - p2.Y)
+  static member (%) (p1: Point, p2: Point) = Point(p1.X % p2.X, p1.Y % p2.Y)
   static member (*) (p: Point, f: int) = Point(p.X * f, p.Y * f)
   static member (*) (f: int, p: Point) = Point(p.X * f, p.Y * f)
 
