@@ -8,6 +8,36 @@ open System.Collections.Generic
 open FSharp.Data
 open Xunit
 
+#if INTERACTIVE
+
+let makeTemplate year day =
+
+  let sample = paste().Trim().Replace("\r\n", "\"\r\n    \"")
+
+  $"""
+module Day%02i{day} =
+
+  let input = [|
+    "{sample}"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  [<Theory>]
+  [<FileData(%i{year}, %i{day}, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
+    -1 =! expected
+
+  [<Theory>]
+  [<FileData(%i{year}, %i{day}, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    -1 =! expected
+"""
+
+#endif
+
 let ensureExists (year: int) (day: int) =
   let path = $"input{year}/day{day}.txt"
   if File.Exists path |> not then

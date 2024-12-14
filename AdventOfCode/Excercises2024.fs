@@ -12,6 +12,10 @@ open System.Buffers
 open System.Collections.Generic
 open System.Text.RegularExpressions
 
+#if INTERACTIVE
+makeTemplate 2024 14 |> clip
+#endif
+
 module Day13 =
 
   let input = [|
