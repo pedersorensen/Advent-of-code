@@ -12,6 +12,62 @@ open System.Buffers
 open System.Collections.Generic
 open System.Text.RegularExpressions
 
+module Day13 =
+
+  let input = [|
+    "Button A: X+94, Y+34"
+    "Button B: X+22, Y+67"
+    "Prize: X=8400, Y=5400"
+    ""
+    "Button A: X+26, Y+66"
+    "Button B: X+67, Y+21"
+    "Prize: X=12748, Y=12176"
+    ""
+    "Button A: X+17, Y+86"
+    "Button B: X+84, Y+37"
+    "Prize: X=7870, Y=6450"
+    ""
+    "Button A: X+69, Y+23"
+    "Button B: X+27, Y+71"
+    "Prize: X=18641, Y=10279"
+  |]
+
+  let sample (result: float) = makeSample result input
+
+  let solveLinearEquations (A: float) (B: float) (C: float) (D: float) (X: float) (Y: float) =
+    let determinant = A * D - B * C
+    if determinant = 0.0 then
+      failwith "No unique solution exists"
+    else
+      let t1 = (X * D - B * Y) / determinant
+      let t2 = (Y * A - C * X) / determinant
+      (t1, t2)
+
+  let solve offset input =
+    input
+    |> Array.chunkBy(String.IsNullOrEmpty)
+    |> Array.sumBy(fun chunk ->
+      let parsed = chunk |> Array.map parseNumbers<float>
+      let a, b, p = parsed[0], parsed[1], parsed[2]
+      let ax, ay = a[0], a[1]
+      let bx, by = b[0], b[1]
+      let px, py = p[0] + offset, p[1] + offset
+      let (t1, t2) = solveLinearEquations ax bx ay by px py
+      if Math.Round(t1) = t1 && Math.Round(t2) = t2 then 3. * t1 + t2 else 0.
+    )
+
+  [<Theory>]
+  [<FileData(2024, 13, 34787.)>]
+  [<MemberData(nameof sample, 480.)>]
+  let part1 (input: string array) expected =
+    solve 0. input =! expected
+
+  [<Theory>]
+  [<FileData(2024, 13, 85644161121698.)>]
+  [<MemberData(nameof sample, 875318608908.)>]
+  let part2 (input: string array) expected =
+    solve 10000000000000. input =! expected
+
 module Day10 =
 
   let input = [|
