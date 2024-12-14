@@ -12,6 +12,10 @@ open System.Buffers
 open System.Collections.Generic
 open System.Text.RegularExpressions
 
+#if INTERACTIVE
+makeTemplate 2024 14 |> clip
+#endif
+
 module Day13 =
 
   let input = [|
@@ -653,35 +657,3 @@ module Day01 =
     left
     |> Array.sumBy(fun x -> x * (map.TryGetValue(x) |> snd) )
     =! expected
-
-#if INTERACTIVE
-
-let makeTemplate day =
-
-  let sample = paste().Trim().Replace("\r\n", "\"\r\n    \"")
-
-  $"""module Day%02i{day} =
-
-  let input = [|
-    "{sample}"
-  |]
-
-  let sample (result: int) = makeSample result input
-
-  [<Theory>]
-  [<FileData(2024, %i{day}, 0)>]
-  [<MemberData(nameof sample, 0)>]
-  let part1 (input: string array) expected =
-    -1 =! expected
-
-  [<Theory>]
-  [<FileData(2024, %i{day}, 0)>]
-  [<MemberData(nameof sample, 0)>]
-  let part2 (input: string array) expected =
-    -1 =! expected
-
-"""
-
-makeTemplate 8 |> clip
-
-#endif
