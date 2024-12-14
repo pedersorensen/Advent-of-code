@@ -16,6 +16,67 @@ open System.Text.RegularExpressions
 makeTemplate 2024 14 |> clip
 #endif
 
+module Day14 =
+
+  let input = [|
+    "p=0,4 v=3,-3"
+    "p=6,3 v=-1,-3"
+    "p=10,3 v=-1,2"
+    "p=2,0 v=2,-1"
+    "p=0,0 v=1,3"
+    "p=3,0 v=-2,-2"
+    "p=7,6 v=-1,-3"
+    "p=3,0 v=-1,-2"
+    "p=9,3 v=2,3"
+    "p=7,3 v=-1,2"
+    "p=2,4 v=2,-3"
+    "p=9,5 v=-3,-3"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  let printPoints w h ps =
+    for y = 0 to h - 1 do
+      for x = 0 to w - 1 do
+        let c = ps |> Array.countTrue((=) (Point(x, y)))
+        printf "%s" (if c > 0 then c.ToString() else ".")
+      printfn ""
+
+  [<Theory>]
+  [<FileData(2024, 14, 216027840)>]
+  [<MemberData(nameof sample, 12)>]
+  let part1 (input: string array) expected =
+    let w, h = if expected = 12 then 7, 11 else 101, 103
+    let m = Point(w, h)
+    let parsed =
+      input
+      |> Array.map(fun line ->
+        let values = parseNumbers<int> line
+        let p = Point(values[0], values[1])
+        let v = Point(values[2], values[3]) + m
+        (p + 100 * v) % m
+      )
+    parsed |> printPoints w h
+
+    let getQuadrant (p: Point) =
+      if p.X < w / 2 && p.Y < h / 2 then 0
+      elif p.X >= w / 2 && p.Y < h / 2 then 1
+      elif p.X < w / 2 && p.Y >= h / 2 then 2
+      else 3
+
+    parsed
+    |> Array.filter(fun p -> p.X <> w / 2 && p.Y <> h / 2)
+    |> Array.countBy getQuadrant
+    |> Array.map snd
+    |> Array.reduce (*)
+    =! expected
+
+  [<Theory>]
+  [<FileData(2024, 14, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    -1 =! expected
+
 module Day13 =
 
   let input = [|
