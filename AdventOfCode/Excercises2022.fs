@@ -2,7 +2,6 @@
 #r "nuget: FSharp.Data"
 #r "nuget: XUnit"
 #load "Utils.fs"
-Year <- 2022
 #else
 namespace Excercises2022
 #endif
@@ -13,327 +12,112 @@ open System.Text
 open System.Collections.Generic
 open System.Text.RegularExpressions
 
-module Day01 =
+#if NTERACTIVE
+makeTemplate 2022 14 |> clip
+#endif
 
-  let sample (result: int) = makeSample result [|
-    "1000"
-    "2000"
-    "3000"
-    ""
-    "4000"
-    ""
-    "5000"
-    "6000"
-    ""
-    "7000"
-    "8000"
-    "9000"
-    ""
-    "10000"
+module Day08 =
+
+  let input = [|
+    "30373"
+    "25512"
+    "65332"
+    "33549"
+    "35390"
   |]
 
+  let sample (result: int) = makeSample result input
+
+  let buildHeightMap input =
+    input
+    |> Array.map(fun (line: string) ->
+      Array.init line.Length (fun i -> int line[i] - int '0')
+    )
+
+  let [<Literal>] SeenFlag = 1000
+
+  let notSeen h = h < SeenFlag
+
+  let printMap heightsMap =
+    heightsMap
+    |> Array.map(Array.map(fun (i: int) -> i.ToString("D4")) >> String.concat "|")
+    |> String.concat "\r\n"
+    |> printfn "%s"
+
   [<Theory>]
-  [<FileData(2022, 1, 67_450)>]
-  [<MemberData(nameof sample, 24_000)>]
+  [<FileData(2022, 8, 1708)>]
+  [<MemberData(nameof sample, 21)>]
   let part1 (input: string []) expected =
-    input
-    |> Array.chunkBy(String.IsNullOrWhiteSpace)
-    |> Array.map(Array.sumBy int)
-    |> Array.max
-    =! expected
+    let heightsMap = buildHeightMap input
+
+    let width = heightsMap[0].Length
+    let height = heightsMap.Length
+
+    let mutable count = 0
+    let mutable maxHeight = -1
+
+    let check i j =
+      let value = &heightsMap[i][j]
+      let height = value % SeenFlag
+      if notSeen value then
+        if height > maxHeight then
+          value <- value + SeenFlag
+          count <- count + 1
+      maxHeight <- max maxHeight height
+
+    // Rows
+    for i = 0 to height - 1 do
+      // Left to right
+      maxHeight <- -1 ; for j = 0 to width - 1 do check i j
+      // Right to left
+      maxHeight <- -1 ; for j = width - 1 downto 0 do check i j
+
+    // Columns
+    for j = 0 to width - 1 do
+      // Left to right
+      maxHeight <- -1 ; for i = 0 to height - 1 do check i j
+      // Right to left
+      maxHeight <- -1 ; for i = height - 1 downto 0 do check i j
+
+    count =! expected
 
   [<Theory>]
-  [<FileData(2022, 1, 199357)>]
-  [<MemberData(nameof sample, 45_000)>]
+  [<FileData(2022, 8, 504000)>]
+  [<MemberData(nameof sample, 8)>]
   let part2 (input: string []) expected =
-    input
-    |> Array.chunkBy(String.IsNullOrWhiteSpace)
-    |> Array.map(Array.sumBy int)
-    |> Array.sortDescending
-    |> Array.take 3
-    |> Array.sum
-    =! expected
+    let heightsMap = buildHeightMap input
 
-module Day02 =
+    let width = heightsMap[0].Length
+    let height = heightsMap.Length
 
-  let sample (result: int) = makeSample result [|
-    "A Y"
-    "B X"
-    "C Z"
-  |]
+    let getScenicScore i j =
 
-  type Hand = Rock | Paper | Scissor
+      let mutable m_one = 0
+      let mutable (u, d, l, r) = 0, 0, 0, 0
 
-  let mapHand =
-    function
-    | "A" | "X" -> Rock
-    | "B" | "Y" -> Paper
-    | "C" | "Z" -> Scissor
-    | _ -> invalidOp ""
+      let h0 = heightsMap[i][j]
 
-  let evaluate =
-    function
-    | Rock, Rock -> 3 + 1
-    | Rock, Paper -> 6 + 2
-    | Rock, Scissor -> 0 + 3
-    | Paper, Rock -> 0 + 1
-    | Paper, Paper -> 3 + 2
-    | Paper, Scissor -> 6 + 3
-    | Scissor, Rock -> 6 + 1
-    | Scissor, Paper -> 0 + 2
-    | Scissor, Scissor -> 3 + 3
+      let dist i j =
+        let one = m_one
+        if heightsMap[i][j] >= h0 then m_one <- 0
+        one
 
-  [<Theory>]
-  [<FileData(2022, 2, 10404)>]
-  [<MemberData(nameof sample, 15)>]
-  let part1 (input: string []) expected =
-    input
-    |> Array.map(fun s ->
-      match s.Split(' ') with
-      | [|a ; b|] -> mapHand a, mapHand b
-      | _ -> invalidOp ""
-    )
-    |> Array.sumBy evaluate
-    =! expected
+      m_one <- 1 ; for i = i - 1 downto 0      do u <- u + dist i j
+      m_one <- 1 ; for i = i + 1 to height - 1 do d <- d + dist i j
+      m_one <- 1 ; for j = j - 1 downto 0      do l <- l + dist i j
+      m_one <- 1 ; for j = j + 1 to width - 1  do r <- r + dist i j
 
-  let mapSnd =
-    function
-    | Rock, "X" -> Scissor
-    | Rock, "Y" -> Rock
-    | Rock, "Z" -> Paper
-    | Paper, "X" -> Rock
-    | Paper, "Y" -> Paper
-    | Paper, "Z" -> Scissor
-    | Scissor, "X" -> Paper
-    | Scissor, "Y" -> Scissor
-    | Scissor, "Z" -> Rock
-    | _ -> invalidOp ""
+      u * l * d * r
 
-  [<Theory>]
-  [<FileData(2022, 2, 10334)>]
-  [<MemberData(nameof sample, 12)>]
-  let part2 (input: string []) expected =
-    input
-    |> Array.map(fun s ->
-      match s.Split(' ') with
-      | [|a ; b|] ->
-        let a = mapHand a
-        a, mapSnd (a, b)
-      | _ -> invalidOp ""
-    )
-    |> Array.sumBy evaluate
-    =! expected
+    let mutable maxScore = 0
 
-module Day03 =
+    for i = 1 to height - 2 do
+      for j = 1 to width - 2 do
+        let score = getScenicScore i j
+        if score > maxScore then
+          maxScore <- score
 
-  let sample (result: int) = makeSample result [|
-    "vJrwpWtwJgWrhcsFMMfFFhFp"
-    "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL"
-    "PmmdzqPrVvPwwTWBwg"
-    "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn"
-    "ttgJtRGJQctTZtZT"
-    "CrZsJsPPZsGzwwsLwLmpwMDw"
-  |]
-
-  let getPriority (ch: Char) =
-    let a = int 'a'
-    let z = int 'z'
-    let A = int 'A'
-    let Z = int 'Z'
-    let i = int ch
-    if a <= i && i <= z then i - a + 1
-    elif A <= i && i <= Z then i - A + 27
-    else raise(ArgumentOutOfRangeException(nameof ch, ch, "Invalid value."))
-
-  [<Theory>]
-  [<FileData(2022, 3, 7990)>]
-  [<MemberData(nameof sample, 157)>]
-  let part1 (input: string []) expected =
-    input
-    |> Seq.collect(fun s ->
-      let midpoint = s.Length / 2
-      let set = HashSet(Seq.take midpoint s)
-      set.IntersectWith(Seq.skip midpoint s)
-      set
-    )
-    |> Seq.sumBy getPriority
-    =! expected
-
-  [<Theory>]
-  [<FileData(2022, 3, 2602)>]
-  [<MemberData(nameof sample, 70)>]
-  let part2 (input: string []) expected =
-    input
-    |> Array.chunkBySize 3
-    |> Seq.collect (fun chunk ->
-      let set = HashSet(chunk[0])
-      set.IntersectWith(chunk[1])
-      set.IntersectWith(chunk[2])
-      set
-    )
-    |> Seq.sumBy getPriority
-    =! expected
-
-module Day04 =
-
-  let sample (result: int) = makeSample result [|
-    "2-4,6-8"
-    "2-3,4-5"
-    "5-7,7-9"
-    "2-8,3-7"
-    "6-6,4-6"
-    "2-6,4-8"
-  |]
-
-  [<Theory>]
-  [<FileData(2022, 4, 573)>]
-  [<MemberData(nameof sample, 2)>]
-  let part1 (input: string []) expected =
-    input
-    |> Array.countTrue(fun s ->
-      match s.Split([|',' ; '-'|]) with
-      | [| a ; b ; c ; d |] ->
-        let a, b, c, d = int a, int b, int c, int d
-        (a >=c && b <= d) || (a <=c && b >= d)
-      | _ -> failwith "Bad format"
-    )
-    =! expected
-
-  [<Theory>]
-  [<FileData(2022, 4, 867)>]
-  [<MemberData(nameof sample, 4)>]
-  let part2 (input: string []) expected =
-    input
-    |> Array.countTrue(fun s ->
-      match s.Split([|',' ; '-'|]) with
-      | [|a;b;c;d|] ->
-        let a, b, c, d = int a, int b, int c, int d
-        (b >= c && a < d) || (d >= a && c < b)
-      | _ -> failwith "Bad format"
-    )
-    =! expected
-
- module Day05 =
-
-  let sample (result: string) = makeSample result [|
-    "    [D]    "
-    "[N] [C]    "
-    "[Z] [M] [P]"
-    "1   2   3 "
-    ""
-    "move 1 from 2 to 1"
-    "move 3 from 1 to 3"
-    "move 2 from 2 to 1"
-    "move 1 from 1 to 2"
-  |]
-
-  let getStacks sep input =
-    input
-    |> Seq.take (sep - 1)
-    |> Seq.collect(fun line ->
-      Regex.Matches(line, "\w")
-      |> Seq.map(fun m -> m.Index, m.Value)
-      |> Seq.toArray
-    )
-    |> Seq.groupBy(fst)
-    |> Seq.sortBy fst
-    |> Seq.map(fun (_, grp) -> grp |> Seq.map snd |> Seq.rev |> Stack)
-    |> Seq.toArray
-
-  let getInstructions sep input =
-    input
-    |> Array.skip(sep + 1)
-    |> Array.map(fun line ->
-      let m = Regex.Matches(line, "\d+")
-      int m[0].Value, int m[1].Value, int m[2].Value
-    )
-
-  let move (stacks: Stack<_> []) (count, source, dest) =
-    let source = stacks[source - 1]
-    let dest = stacks[dest - 1]
-    for _ = 0 to count - 1 do
-      dest.Push(source.Pop())
-
-  [<Theory>]
-  [<FileData(2022, 05, "VPCDMSLWJ")>]
-  [<MemberData(nameof sample, "CMZ")>]
-  let part1 (input: string []) expected =
-    let sep = Array.IndexOf(input, "")
-    let stacks = getStacks sep input
-    getInstructions sep input |> Array.iter(move stacks)
-    String.Join("", stacks |> Array.map Seq.head) =! expected
-
-  let move2 (stacks: Stack<_> []) (count, source, dest) =
-    let source = stacks[source - 1]
-    let dest = stacks[dest - 1]
-    let temp = Stack()
-    for _ = 0 to count - 1 do
-      temp.Push(source.Pop())
-    let mutable item = Unchecked.defaultof<_>
-    while temp.TryPop(&item) do
-      dest.Push(item)
-
-  [<Theory>]
-  [<FileData(2022, 05, "TPWCGNCCG")>]
-  [<MemberData(nameof sample, "MCD")>]
-  let part2 (input: string []) expected =
-    let sep = Array.IndexOf(input, "")
-    let stacks = getStacks sep input
-    getInstructions sep input |> Array.iter(move2 stacks)
-    String.Join("", stacks |> Array.map Seq.head) =! expected
-
- module Day06 =
-
-  let sample (result: int) = makeSample result [|
-    "mjqjpqmgbljsphdztnvjfqwrcgsmlb" // first marker after character 7
-    "bvwbjplbgvbhsrlpgdmjqwftvncz" // first marker after character 5
-    "nppdvjthqldpwncqszvftbrmjlhg" // first marker after character 6
-    "nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg" // first marker after character 10
-    "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw" // first marker after character 11
-  |]
-
-  let findStartOfPacket (s: string) =
-    let rec loop1 a b c d i =
-      if
-        a <> b && a <> c && a <> d &&
-        b <> c && b <> d &&
-        c <> d
-      then i else
-        loop1 b c d s[i] (i + 1)
-
-    loop1 s[0] s[1] s[2] s[3] 4
-
-  let findStartOfPacket2 count (s: string) =
-    let queue = Queue(Seq.take count s)
-    let rec loop i =
-      if queue |> Seq.distinct |> Seq.length = count
-      then i else
-        queue.Dequeue() |> ignore
-        queue.Enqueue(s[i])
-        loop (i + 1)
-    loop count
-
-  [<Theory>]
-  [<FileData(2022, 6, 1920)>]
-  [<MemberData(nameof sample, 7)>]
-  let part1 (input: string []) expected =
-    findStartOfPacket2 4 input[0] =! expected
-
-  let findStartOfMessage (s: string) =
-    let rec loop a b c d i =
-      if
-        a <> b && a <> c && a <> d &&
-        b <> c && b <> d &&
-        c <> d
-      then i else loop b c d s[i] (i + 1)
-
-    loop s[0] s[1] s[2] s[3] 4
-
-  [<Theory>]
-  [<FileData(2022, 6, 2334)>]
-  [<MemberData(nameof sample, 19)>]
-  let part2 (input: string []) expected =
-    findStartOfPacket2 14 input[0] =! expected
+    maxScore =! expected
 
 module Day07 =
 
@@ -461,132 +245,324 @@ module Day07 =
       if size > free && size < total then size else total
     ) =! expected
 
-module Day08 =
+module Day06 =
 
-  let input = [|
-    "30373"
-    "25512"
-    "65332"
-    "33549"
-    "35390"
+  let sample (result: int) = makeSample result [|
+    "mjqjpqmgbljsphdztnvjfqwrcgsmlb" // first marker after character 7
+    "bvwbjplbgvbhsrlpgdmjqwftvncz" // first marker after character 5
+    "nppdvjthqldpwncqszvftbrmjlhg" // first marker after character 6
+    "nznrnfrfntjfmvfwmzdfjlvtqnbhcprsg" // first marker after character 10
+    "zcfzfwzzqfrljwzlrfnpqdbhtmscgvjw" // first marker after character 11
   |]
 
-  let sample (result: int) = makeSample result input
+  let findStartOfPacket (s: string) =
+    let rec loop1 a b c d i =
+      if
+        a <> b && a <> c && a <> d &&
+        b <> c && b <> d &&
+        c <> d
+      then i else
+        loop1 b c d s[i] (i + 1)
 
-  let buildHeightMap input =
+    loop1 s[0] s[1] s[2] s[3] 4
+
+  let findStartOfPacket2 count (s: string) =
+    let queue = Queue(Seq.take count s)
+    let rec loop i =
+      if queue |> Seq.distinct |> Seq.length = count
+      then i else
+        queue.Dequeue() |> ignore
+        queue.Enqueue(s[i])
+        loop (i + 1)
+    loop count
+
+  [<Theory>]
+  [<FileData(2022, 6, 1920)>]
+  [<MemberData(nameof sample, 7)>]
+  let part1 (input: string []) expected =
+    findStartOfPacket2 4 input[0] =! expected
+
+  let findStartOfMessage (s: string) =
+    let rec loop a b c d i =
+      if
+        a <> b && a <> c && a <> d &&
+        b <> c && b <> d &&
+        c <> d
+      then i else loop b c d s[i] (i + 1)
+
+    loop s[0] s[1] s[2] s[3] 4
+
+  [<Theory>]
+  [<FileData(2022, 6, 2334)>]
+  [<MemberData(nameof sample, 19)>]
+  let part2 (input: string []) expected =
+    findStartOfPacket2 14 input[0] =! expected
+
+module Day05 =
+
+  let sample (result: string) = makeSample result [|
+    "    [D]    "
+    "[N] [C]    "
+    "[Z] [M] [P]"
+    "1   2   3 "
+    ""
+    "move 1 from 2 to 1"
+    "move 3 from 1 to 3"
+    "move 2 from 2 to 1"
+    "move 1 from 1 to 2"
+  |]
+
+  let getStacks sep input =
     input
-    |> Array.map(fun (line: string) ->
-      Array.init line.Length (fun i -> int line[i] - int '0')
+    |> Seq.take (sep - 1)
+    |> Seq.collect(fun line ->
+      Regex.Matches(line, "\w")
+      |> Seq.map(fun m -> m.Index, m.Value)
+      |> Seq.toArray
+    )
+    |> Seq.groupBy(fst)
+    |> Seq.sortBy fst
+    |> Seq.map(fun (_, grp) -> grp |> Seq.map snd |> Seq.rev |> Stack)
+    |> Seq.toArray
+
+  let getInstructions sep input =
+    input
+    |> Array.skip(sep + 1)
+    |> Array.map(fun line ->
+      let m = Regex.Matches(line, "\d+")
+      int m[0].Value, int m[1].Value, int m[2].Value
     )
 
-  let [<Literal>] SeenFlag = 1000
-
-  let notSeen h = h < SeenFlag
-
-  let printMap heightsMap =
-    heightsMap
-    |> Array.map(Array.map(fun (i: int) -> i.ToString("D4")) >> String.concat "|")
-    |> String.concat "\r\n"
-    |> printfn "%s"
+  let move (stacks: Stack<_> []) (count, source, dest) =
+    let source = stacks[source - 1]
+    let dest = stacks[dest - 1]
+    for _ = 0 to count - 1 do
+      dest.Push(source.Pop())
 
   [<Theory>]
-  [<FileData(2022, 8, 1708)>]
-  [<MemberData(nameof sample, 21)>]
+  [<FileData(2022, 05, "VPCDMSLWJ")>]
+  [<MemberData(nameof sample, "CMZ")>]
   let part1 (input: string []) expected =
-    let heightsMap = buildHeightMap input
+    let sep = Array.IndexOf(input, "")
+    let stacks = getStacks sep input
+    getInstructions sep input |> Array.iter(move stacks)
+    String.Join("", stacks |> Array.map Seq.head) =! expected
 
-    let width = heightsMap[0].Length
-    let height = heightsMap.Length
-
-    let mutable count = 0
-    let mutable maxHeight = -1
-
-    let check i j =
-      let value = &heightsMap[i][j]
-      let height = value % SeenFlag
-      if notSeen value then
-        if height > maxHeight then
-          value <- value + SeenFlag
-          count <- count + 1
-      maxHeight <- max maxHeight height
-
-    // Rows
-    for i = 0 to height - 1 do
-      // Left to right
-      maxHeight <- -1 ; for j = 0 to width - 1 do check i j
-      // Right to left
-      maxHeight <- -1 ; for j = width - 1 downto 0 do check i j
-
-    // Columns
-    for j = 0 to width - 1 do
-      // Left to right
-      maxHeight <- -1 ; for i = 0 to height - 1 do check i j
-      // Right to left
-      maxHeight <- -1 ; for i = height - 1 downto 0 do check i j
-
-    count =! expected
+  let move2 (stacks: Stack<_> []) (count, source, dest) =
+    let source = stacks[source - 1]
+    let dest = stacks[dest - 1]
+    let temp = Stack()
+    for _ = 0 to count - 1 do
+      temp.Push(source.Pop())
+    let mutable item = Unchecked.defaultof<_>
+    while temp.TryPop(&item) do
+      dest.Push(item)
 
   [<Theory>]
-  [<FileData(2022, 8, 504000)>]
-  [<MemberData(nameof sample, 8)>]
+  [<FileData(2022, 05, "TPWCGNCCG")>]
+  [<MemberData(nameof sample, "MCD")>]
   let part2 (input: string []) expected =
-    let heightsMap = buildHeightMap input
+    let sep = Array.IndexOf(input, "")
+    let stacks = getStacks sep input
+    getInstructions sep input |> Array.iter(move2 stacks)
+    String.Join("", stacks |> Array.map Seq.head) =! expected
 
-    let width = heightsMap[0].Length
-    let height = heightsMap.Length
+module Day04 =
 
-    let getScenicScore i j =
-
-      let mutable m_one = 0
-      let mutable (u, d, l, r) = 0, 0, 0, 0
-
-      let h0 = heightsMap[i][j]
-
-      let dist i j =
-        let one = m_one
-        if heightsMap[i][j] >= h0 then m_one <- 0
-        one
-
-      m_one <- 1 ; for i = i - 1 downto 0      do u <- u + dist i j
-      m_one <- 1 ; for i = i + 1 to height - 1 do d <- d + dist i j
-      m_one <- 1 ; for j = j - 1 downto 0      do l <- l + dist i j
-      m_one <- 1 ; for j = j + 1 to width - 1  do r <- r + dist i j
-
-      u * l * d * r
-
-    let mutable maxScore = 0
-
-    for i = 1 to height - 2 do
-      for j = 1 to width - 2 do
-        let score = getScenicScore i j
-        if score > maxScore then
-          maxScore <- score
-
-    maxScore =! expected
-
-#if INTERACTIVE
-
-let makeTemplate day =
-
-  sprintf """module Day%02i =
-
-  let input = [|
+  let sample (result: int) = makeSample result [|
+    "2-4,6-8"
+    "2-3,4-5"
+    "5-7,7-9"
+    "2-8,3-7"
+    "6-6,4-6"
+    "2-6,4-8"
   |]
 
-  let sample (result: int) = makeSample result input
-
   [<Theory>]
-  [<FileData(2022, %i, 0)>]
-  [<MemberData(nameof sample, 0)>]
+  [<FileData(2022, 4, 573)>]
+  [<MemberData(nameof sample, 2)>]
   let part1 (input: string []) expected =
-    0 =! expected
+    input
+    |> Array.countTrue(fun s ->
+      match s.Split([|',' ; '-'|]) with
+      | [| a ; b ; c ; d |] ->
+        let a, b, c, d = int a, int b, int c, int d
+        (a >=c && b <= d) || (a <=c && b >= d)
+      | _ -> failwith "Bad format"
+    )
+    =! expected
 
   [<Theory>]
-  [<FileData(2022, %i, 0)>]
-  [<MemberData(nameof sample, 0)>]
+  [<FileData(2022, 4, 867)>]
+  [<MemberData(nameof sample, 4)>]
   let part2 (input: string []) expected =
-    0 =! expected""" day day day
+    input
+    |> Array.countTrue(fun s ->
+      match s.Split([|',' ; '-'|]) with
+      | [|a;b;c;d|] ->
+        let a, b, c, d = int a, int b, int c, int d
+        (b >= c && a < d) || (d >= a && c < b)
+      | _ -> failwith "Bad format"
+    )
+    =! expected
 
-makeTemplate |> clip
+module Day03 =
 
-#endif
+  let sample (result: int) = makeSample result [|
+    "vJrwpWtwJgWrhcsFMMfFFhFp"
+    "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL"
+    "PmmdzqPrVvPwwTWBwg"
+    "wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn"
+    "ttgJtRGJQctTZtZT"
+    "CrZsJsPPZsGzwwsLwLmpwMDw"
+  |]
+
+  let getPriority (ch: Char) =
+    let a = int 'a'
+    let z = int 'z'
+    let A = int 'A'
+    let Z = int 'Z'
+    let i = int ch
+    if a <= i && i <= z then i - a + 1
+    elif A <= i && i <= Z then i - A + 27
+    else raise(ArgumentOutOfRangeException(nameof ch, ch, "Invalid value."))
+
+  [<Theory>]
+  [<FileData(2022, 3, 7990)>]
+  [<MemberData(nameof sample, 157)>]
+  let part1 (input: string []) expected =
+    input
+    |> Seq.collect(fun s ->
+      let midpoint = s.Length / 2
+      let set = HashSet(Seq.take midpoint s)
+      set.IntersectWith(Seq.skip midpoint s)
+      set
+    )
+    |> Seq.sumBy getPriority
+    =! expected
+
+  [<Theory>]
+  [<FileData(2022, 3, 2602)>]
+  [<MemberData(nameof sample, 70)>]
+  let part2 (input: string []) expected =
+    input
+    |> Array.chunkBySize 3
+    |> Seq.collect (fun chunk ->
+      let set = HashSet(chunk[0])
+      set.IntersectWith(chunk[1])
+      set.IntersectWith(chunk[2])
+      set
+    )
+    |> Seq.sumBy getPriority
+    =! expected
+
+module Day02 =
+
+  let sample (result: int) = makeSample result [|
+    "A Y"
+    "B X"
+    "C Z"
+  |]
+
+  type Hand = Rock | Paper | Scissor
+
+  let mapHand =
+    function
+    | "A" | "X" -> Rock
+    | "B" | "Y" -> Paper
+    | "C" | "Z" -> Scissor
+    | _ -> invalidOp ""
+
+  let evaluate =
+    function
+    | Rock, Rock -> 3 + 1
+    | Rock, Paper -> 6 + 2
+    | Rock, Scissor -> 0 + 3
+    | Paper, Rock -> 0 + 1
+    | Paper, Paper -> 3 + 2
+    | Paper, Scissor -> 6 + 3
+    | Scissor, Rock -> 6 + 1
+    | Scissor, Paper -> 0 + 2
+    | Scissor, Scissor -> 3 + 3
+
+  [<Theory>]
+  [<FileData(2022, 2, 10404)>]
+  [<MemberData(nameof sample, 15)>]
+  let part1 (input: string []) expected =
+    input
+    |> Array.map(fun s ->
+      match s.Split(' ') with
+      | [|a ; b|] -> mapHand a, mapHand b
+      | _ -> invalidOp ""
+    )
+    |> Array.sumBy evaluate
+    =! expected
+
+  let mapSnd =
+    function
+    | Rock, "X" -> Scissor
+    | Rock, "Y" -> Rock
+    | Rock, "Z" -> Paper
+    | Paper, "X" -> Rock
+    | Paper, "Y" -> Paper
+    | Paper, "Z" -> Scissor
+    | Scissor, "X" -> Paper
+    | Scissor, "Y" -> Scissor
+    | Scissor, "Z" -> Rock
+    | _ -> invalidOp ""
+
+  [<Theory>]
+  [<FileData(2022, 2, 10334)>]
+  [<MemberData(nameof sample, 12)>]
+  let part2 (input: string []) expected =
+    input
+    |> Array.map(fun s ->
+      match s.Split(' ') with
+      | [|a ; b|] ->
+        let a = mapHand a
+        a, mapSnd (a, b)
+      | _ -> invalidOp ""
+    )
+    |> Array.sumBy evaluate
+    =! expected
+
+module Day01 =
+
+  let sample (result: int) = makeSample result [|
+    "1000"
+    "2000"
+    "3000"
+    ""
+    "4000"
+    ""
+    "5000"
+    "6000"
+    ""
+    "7000"
+    "8000"
+    "9000"
+    ""
+    "10000"
+  |]
+
+  [<Theory>]
+  [<FileData(2022, 1, 67_450)>]
+  [<MemberData(nameof sample, 24_000)>]
+  let part1 (input: string []) expected =
+    input
+    |> Array.chunkBy(String.IsNullOrWhiteSpace)
+    |> Array.map(Array.sumBy int)
+    |> Array.max
+    =! expected
+
+  [<Theory>]
+  [<FileData(2022, 1, 199357)>]
+  [<MemberData(nameof sample, 45_000)>]
+  let part2 (input: string []) expected =
+    input
+    |> Array.chunkBy(String.IsNullOrWhiteSpace)
+    |> Array.map(Array.sumBy int)
+    |> Array.sortDescending
+    |> Array.take 3
+    |> Array.sum
+    =! expected
