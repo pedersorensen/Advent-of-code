@@ -12,6 +12,10 @@ open System.Buffers
 open System.Text.RegularExpressions
 open System.Collections.Generic
 
+#if INTERACTIVE
+makeTemplate 2023 k4 |> clip
+#endif
+
 module Day11 =
 
   let input = [|
@@ -832,35 +836,3 @@ module Day01 =
       10 * minValue + maxValue
     )
     =! expected
-
-#if INTERACTIVE
-
-let makeTemplate day =
-
-  let sample = paste().Trim().Replace("\r\n", "\"\r\n    \"")
-
-  $"""module Day%i{day} =
-
-  let input = [|
-    "{sample}"
-  |]
-
-  let sample (result: int) = makeSample result input
-
-  [<Theory>]
-  [<FileData(2023, %i{day}, 0)>]
-  [<MemberData(nameof sample, 0)>]
-  let part1 (input: string []) expected =
-    -1 =! expected
-
-  [<Theory>]
-  [<FileData(2023, %i{day}, 0)>]
-  [<MemberData(nameof sample, 0)>]
-  let part2 (input: string []) expected =
-    -1 =! expected
-
-"""
-
-makeTemplate |> clip
-
-#endif

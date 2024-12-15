@@ -1,7 +1,6 @@
 ﻿#if INTERACTIVE
 #r "nuget: FSharp.Data"
 #load "Utils.fs"
-Year <- 2021
 #else
 namespace Excercises2021
 #endif
@@ -12,6 +11,10 @@ open System.IO
 open System.Text
 open System.Collections.Generic
 open System.Runtime.InteropServices
+
+#if NTERACTIVE
+makeTemplate 2021 14 |> clip
+#endif
 
 module Day01 =
 
@@ -839,7 +842,6 @@ module Day16 =
   [<MemberData(nameof sample, 0)>]
   let part2 input expected =
     ()
-
 
 module Day17 =
 
