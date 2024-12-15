@@ -1,4 +1,5 @@
 ﻿#if INTERACTIVE
+#r "nuget: System.Drawing.Common"
 #r "nuget: FSharp.Data"
 #r "nuget: XUnit"
 #load "Utils.fs"
@@ -42,21 +43,22 @@ module Day14 =
         printf "%s" (if c > 0 then c.ToString() else ".")
       printfn ""
 
+  let parse input max =
+    input
+    |> Array.map(fun line ->
+      let values = parseNumbers<int> line
+      let p = Point(values[0], values[1])
+      let v = Point(values[2], values[3]) + max
+      p, v
+    )
+    |> Array.unzip
+
   [<Theory>]
   [<FileData(2024, 14, 216027840)>]
   [<MemberData(nameof sample, 12)>]
   let part1 (input: string array) expected =
     let w, h = if expected = 12 then 7, 11 else 101, 103
-    let m = Point(w, h)
-    let parsed =
-      input
-      |> Array.map(fun line ->
-        let values = parseNumbers<int> line
-        let p = Point(values[0], values[1])
-        let v = Point(values[2], values[3]) + m
-        (p + 100 * v) % m
-      )
-    parsed |> printPoints w h
+    let max = Point(w, h)
 
     let getQuadrant (p: Point) =
       if p.X < w / 2 && p.Y < h / 2 then 0
@@ -64,18 +66,32 @@ module Day14 =
       elif p.X < w / 2 && p.Y >= h / 2 then 2
       else 3
 
-    parsed
+    parse input max
+    ||>Array.map2 (fun p v -> (p + 100 * v) % max)
     |> Array.filter(fun p -> p.X <> w / 2 && p.Y <> h / 2)
     |> Array.countBy getQuadrant
-    |> Array.map snd
-    |> Array.reduce (*)
+    |> Array.fold(fun acc (_, count) -> acc * count) 1
     =! expected
 
-  [<Theory>]
-  [<FileData(2024, 14, 0)>]
-  [<MemberData(nameof sample, 0)>]
+  [<Theory(Skip = "Creates pictures when run")>]
+  [<FileData(2024, 14, 6876)>]
+  //[<MemberData(nameof sample, 0)>] // Does not apply to the sample
   let part2 (input: string array) expected =
-    -1 =! expected
+    let max = Point(101, 103)
+    let w, h = 100, 100
+    let w_count, h_count, d = 30, 30, 10
+    let points, velocities = parse input max
+    for i = 0 to 7 do
+      use bm = new Drawing.Bitmap(w_count * (w + d), h_count * (h + d))
+      use g = Drawing.Graphics.FromImage(bm)
+      g.Clear(Drawing.Color.RebeccaPurple)
+      for i = 0 to w_count * h_count - 1 do
+        (points, velocities) ||> Array.iteri2(fun i p v -> points[i] <- (p + v) % max )
+        let dx, dy = (w + d) * (i % w_count), (h + d) * (i / w_count)
+        for p in points do
+          g.FillRectangle(Drawing.Brushes.White, dx + p.X, dy + p.Y, 1, 1)
+      bm.Save(@$"C:\temp\test_{i}.bmp")
+    7 * 900 + 19 * 30 + 6 =! expected
 
 module Day13 =
 
