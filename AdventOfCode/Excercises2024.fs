@@ -211,6 +211,102 @@ module Day10 =
   let part2 (input: string array) expected =
     run false input=! expected
 
+module Day09 =
+
+  let input = [|
+    "2333133121414131402"
+  |]
+
+  let sample (result: int64) = makeSample result input
+
+  let parse (input: string array) =
+    input
+    |> Array.exactlyOne
+    |> Seq.mapi(fun i ch ->
+      let fileId = if i % 2 = 0 then int64 i / 2L else -1L
+      let count = int ch - int '0'
+      Seq.init count (fun _ -> fileId)
+    )
+    |> Seq.collect id
+    |> Seq.toArray
+
+  let checksum expanded =
+    let mutable i = -1L
+    expanded
+    |> Array.sumBy(fun x ->
+      i <- i + 1L
+      if x > -1L then x * i else 0L
+    )
+
+  let compact disk =
+    let empty = -1L
+    let mutable hole = Array.IndexOf(disk, empty)
+
+    let span = disk.AsSpan()
+    let mutable file = span.LastIndexOfAnyExcept(empty)
+
+    while hole < file do
+      disk[hole] <- disk[file]
+      disk[file] <- empty
+      hole <- Array.IndexOf(disk, empty, hole + 1)
+      file <- span.LastIndexOfAnyExcept(empty)
+    disk
+
+  [<Theory>]
+  [<FileData(2024, 9, 6359213660505L)>]
+  [<MemberData(nameof sample, 1928L)>]
+  let part1 (input: string array) expected =
+    parse input
+    |> compact
+    |> checksum
+    =! expected
+
+  let compact2 (disk: int64 array) =
+    let empty = -1L
+
+    let rec run length =
+      let mutable span = disk.AsSpan(0, length)
+
+      let fileStart, fileEnd =
+        let fileEnd = span.LastIndexOfAnyExcept(empty)
+        if fileEnd < 0
+        then -1, 1
+        else span.Slice(0, fileEnd).LastIndexOfAnyExcept(span[fileEnd]) + 1, fileEnd + 1
+
+      let fileSize = fileEnd - fileStart
+      if fileSize > 0 then
+        let fileSpan = span.Slice(fileStart, fileSize)
+
+        let mutable holeStart, holeEnd = span.IndexOf(empty), 0
+
+        while 0 < holeStart && holeEnd < fileStart do
+          holeEnd <- holeStart + span.Slice(holeStart).IndexOfAnyExcept(empty)
+          let freeSpace = holeEnd - holeStart
+          if freeSpace > 0 then
+            if fileSize <= freeSpace then
+              fileSpan.CopyTo(span.Slice(holeStart))
+              fileSpan.Fill(empty)
+              holeEnd <- fileStart
+            else
+              span <- span.Slice(holeEnd)
+            holeStart <- span.IndexOf(empty)
+          else
+            holeStart <- 0
+
+      if fileStart > 0 then run fileStart
+
+    run disk.Length
+    disk
+
+  [<Theory>]
+  [<FileData(2024, 9, 6381624803796L)>]
+  [<MemberData(nameof sample, 2858L)>]
+  let part2 (input: string array) expected =
+    parse input
+    |> compact2
+    |> checksum
+     =! expected
+
 module Day08 =
 
   let input = [|
