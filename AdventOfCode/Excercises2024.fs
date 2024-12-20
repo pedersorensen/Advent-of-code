@@ -73,24 +73,26 @@ module Day14 =
     |> Array.fold(fun acc (_, count) -> acc * count) 1
     =! expected
 
-  [<Theory(Skip = "Creates pictures when run")>]
+  [<Theory(
+    Skip = "Unskip to write images to disk"
+  )>]
   [<FileData(2024, 14, 6876)>]
   //[<MemberData(nameof sample, 0)>] // Does not apply to the sample
   let part2 (input: string array) expected =
     let max = Point(101, 103)
-    let w, h = 100, 100
     let w_count, h_count, d = 30, 30, 10
+    let wd, hd = max.X + d, max.Y + d
     let points, velocities = parse input max
     for i = 0 to 7 do
-      use bm = new Drawing.Bitmap(w_count * (w + d), h_count * (h + d))
-      use g = Drawing.Graphics.FromImage(bm)
-      g.Clear(Drawing.Color.RebeccaPurple)
-      for i = 0 to w_count * h_count - 1 do
-        (points, velocities) ||> Array.iteri2(fun i p v -> points[i] <- (p + v) % max )
-        let dx, dy = (w + d) * (i % w_count), (h + d) * (i / w_count)
-        for p in points do
-          g.FillRectangle(Drawing.Brushes.White, dx + p.X, dy + p.Y, 1, 1)
-      bm.Save(@$"C:\temp\test_{i}.bmp")
+      use bitmap = new Drawing.Bitmap(w_count * wd, h_count * hd)
+      use graphics = Drawing.Graphics.FromImage(bitmap)
+      for dy = 0 to w_count - 1 do
+        for dx = 0 to h_count - 1 do
+          (points, velocities) ||> Array.iteri2(fun i p v -> points[i] <- (p + v) % max)
+          let dx, dy = wd * dx, hd * dy
+          for p in points do
+            graphics.FillRectangle(Drawing.Brushes.White, p.X + dx, p.Y + dy, 1, 1)
+      bitmap.Save(@$"C:\temp\day_14_{i}.bmp")
     7 * 900 + 19 * 30 + 6 =! expected
 
 module Day13 =
