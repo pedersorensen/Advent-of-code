@@ -17,6 +17,138 @@ open System.Text.RegularExpressions
 makeTemplate 2024 14 |> clip
 #endif
 
+module Day15 =
+
+  let input = [|
+    "##########"
+    "#..O..O.O#"
+    "#......O.#"
+    "#.OO..O.O#"
+    "#..O@..O.#"
+    "#O#..O...#"
+    "#O..O..O.#"
+    "#.OO.O.OO#"
+    "#....O...#"
+    "##########"
+    ""
+    "<vv>^<v^>v>^vv^v>v<>v^v<v<^vv<<<^><<><>>v<vvv<>^v^>^<<<><<v<<<v^vv^v>^"
+    "vvv<<^>^v^^><<>>><>^<<><^vv^^<>vvv<>><^^v>^>vv<>v<<<<v<^v>^<^^>>>^<v<v"
+    "><>vv>v^v^<>><>>>><^^>vv>v<^^^>>v^v^<^^>v^^>v^<^v>v<>>v^v^<v>v^^<^^vv<"
+    "<<v<^>>^^^^>>>v^<>vvv^><v<<<>^^^vv^<vvv>^>v<^^^^v<>^>vvvv><>>v^<<^^^^^"
+    "^><^><>>><>^^<<^^v>>><^<v>^<vv>>v>>>^v><>^v><<<<v>>v<v<v>vvv>^<><<>^><"
+    "^>><>^v<><^vvv<^^<><v<<<<<><^v<<<><<<^^<v<^^^><^>>^<v^><<<^>>^v<v^v<v^"
+    ">^>>^v>vv>^<<^v<>><<><<v<<v><>v<^vv<<<>^^v^>^^>>><<^v>>v^v><^^>>^<>vv^"
+    "<><^^>^^^<><vvvvv^v<v<<>^v<v>v<<^><<><<><<<^^<<<^<<>><<><^^^>^^<>^>v<>"
+    "^^>vv<^v^v<vv>^<><v<^v>^^^>>>^^vvv^>vvv<>>>^<^>>>>>^<<^v>^vvv<>^<><<v>"
+    "v^^>>><<^^<>>^v^<v^vv<>v^<<>^<^v^v><^<<<><<^<v><v<>vv>>v><v^<vv<>v^<<^"
+  |]
+
+  let input2 = [|
+    "########"
+    "#..O.O.#"
+    "##@.O..#"
+    "#...O..#"
+    "#.#.O..#"
+    "#...O..#"
+    "#......#"
+    "########"
+    ""
+    "<^^>>>vv<v>>v<<"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  let parse (input: string array) =
+    let split =
+      input
+      |> Array.chunkBy(String.IsNullOrEmpty)
+    split[0] |> Array.map(fun s -> s.ToCharArray()), String.Concat split[1]
+
+  let printMap (map: char array array) =
+    for line in map do
+      for ch in line do
+        printf "%c" ch
+      printfn ""
+
+  let getStartingPoint (map: char array array) =
+    let x = map |> Array.findIndex(fun i -> i |> Array.contains '@')
+    let y = Array.IndexOf(map[x], '@')
+    x, y
+
+  [<Theory>]
+  [<FileData(2024, 15, 1421727)>]
+  [<MemberData(nameof sample, 10092)>]
+  let part1 (input: string array) expected =
+
+    let tryPush (x, y) direction (map : char array array ) =
+      let dx, dy =
+        match direction with
+        | '^' -> -1, 0
+        | 'v' -> +1, 0
+        | '<' ->  0, -1
+        | '>' ->  0, +1
+        | _ -> failwith "Invalid direction"
+      if map[x + dx][y + dy] <> 'O' then failwith "Invalid move"
+      (x, y)
+      |> Seq.unfold(fun (x, y) ->
+        let x2, y2 = x + dx, y + dy
+        if x2 >= 1 && x2 < map.Length - 1 && y2 >= 1 && y2 < map[0].Length - 1 && map[x2][y2] <> '#' then
+          Some((x2, y2), (x2, y2))
+        else
+          None
+      )
+      |> Seq.exists(fun (x2, y2) ->
+        if map[x2][y2] = '.' then
+          map[x][y]           <- '.'
+          map[x2][y2]         <- 'O'
+          map[x + dx][y + dy] <- '@'
+          true
+        else
+          false
+      )
+
+    let map, moves = parse input
+    printMap map
+
+    (getStartingPoint map, moves)
+    ||> Seq.fold(fun (x, y) move ->
+      let x2, y2 =
+        match move with
+        | '^' -> x - 1, y
+        | 'v' -> x + 1, y
+        | '<' -> x, y - 1
+        | '>' -> x, y + 1
+        | _ -> failwith "Invalid move"
+      if x2 >= 1 && x2 < map.Length - 1 && y2 >= 1 && y2 < map[0].Length - 1 then
+        let ch = map[x2][y2]
+        if ch = '#' then
+          x, y
+        elif ch = '.' then
+          map[x][y] <- '.'
+          map[x2][y2] <- '@'
+          x2, y2
+        elif ch = 'O' && tryPush (x, y) move map then
+          x2, y2
+        else x, y
+      else x, y
+    )
+    |> ignore
+
+    let mutable sum = 0
+    for i = 0 to map.Length - 1 do
+      let line = map[i]
+      for j = 0 to line.Length - 1 do
+        if line[j] = 'O' then
+          sum <- sum + 100 * i + j
+
+    sum =! expected
+
+  [<Theory>]
+  [<FileData(2024, 15, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    -1 =! expected
+
 module Day14 =
 
   let input = [|
