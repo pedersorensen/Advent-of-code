@@ -17,6 +17,85 @@ open System.Text.RegularExpressions
 makeTemplate 2024 14 |> clip
 #endif
 
+module Day22 =
+
+  let input = [|
+    "1"
+    "10"
+    "100"
+    "2024"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  let mix secret value = value ^^^ secret
+  let prune value = value % 16777216L
+
+  let evolve secret =
+    let secret =
+      secret * 64L
+      |> mix secret
+      |> prune
+    let secret = secret / 32L |> mix secret |> prune
+    secret * 2048L |> mix secret |> prune
+
+  let rec evolveN n secret =
+    if n = 0 then secret
+    else
+      let secret = evolve secret
+      evolveN (n - 1) secret
+
+  [<Theory>]
+  [<FileData(2024, 22, 15335183969L)>]
+  [<MemberData(nameof sample, 37327623)>]
+  let part1 (input: string array) expected =
+    input
+    |> Array.sumBy(int64 >> evolveN 2000)
+    =! expected
+
+  let input2 = [|
+    "1"
+    "2"
+    "3"
+    "2024"
+  |]
+
+  let sample2 (result: int) = makeSample result input2
+
+  [<Theory>]
+  [<FileData(2024, 22, 1696)>]
+  [<MemberData(nameof sample2, 23)>]
+  let part2 (input: string array) expected =
+    let counts = Dictionary<_, int64>()
+    input
+    |> Array.iteri(fun buyer secret ->
+      let secret = int64 secret
+      (secret, secret % 10L)
+      |> Seq.unfold(fun (i, d) ->
+        let i2 = evolve i
+        let d2 = i2 % 10L
+        Some((d2, d2 - d), (i2, d2))
+      )
+      |> Seq.take 2000
+      |> Seq.windowed 4
+      |> Seq.iter(fun window ->
+        let count = fst window[3]
+        let window = snd window[0], snd window[1], snd window[2], snd window[3]
+        let key    = buyer, window
+        if counts.ContainsKey(key) |> not then
+          counts[key] <- count
+      )
+    )
+
+    counts
+    |> Seq.groupBy(fun kvp -> snd kvp.Key)
+    |> Seq.map(fun (window, bananaCount) ->
+      window, bananaCount |> Seq.sumBy(fun kvp -> kvp.Value)
+    )
+    |> Seq.maxBy(fun kvp -> snd kvp)
+    |> snd
+    =! expected
+
 module Day15 =
 
   let input = [|
