@@ -9,9 +9,9 @@ namespace Excercises2024
 
 open Xunit
 open System
-open System.Buffers
 open System.Collections.Generic
 open System.Text.RegularExpressions
+open System.Runtime.InteropServices
 
 #if INTERACTIVE
 makeTemplate 2024 14 |> clip
@@ -66,35 +66,42 @@ module Day22 =
   [<FileData(2024, 22, 1696)>]
   [<MemberData(nameof sample2, 23)>]
   let part2 (input: string array) expected =
-    let counts = Dictionary<_, int64>()
-    input
-    |> Array.iteri(fun buyer secret ->
-      let secret = int64 secret
-      (secret, secret % 10L)
-      |> Seq.unfold(fun (i, d) ->
-        let i2 = evolve i
-        let d2 = i2 % 10L
-        Some((d2, d2 - d), (i2, d2))
+    let counts =
+      input
+      |> Array.map(fun secret ->
+        let counts = Dictionary<_, int64>()
+        let rec loop i s1 s2 s3 d3 secret3 =
+          let secret4 = evolve secret3
+          let d4 = secret4 % 10L
+          let s4 = d4 - d3
+          let window = struct(s1, s2, s3, s4)
+          counts.TryAdd(window, d4) |> ignore
+          if i < 0 then counts else
+            loop (i - 1) s2 s3 s4 d4 secret4
+        let secret0 = int64 secret
+        let secret1 = evolve secret0
+        let secret2 = evolve secret1
+        let secret3 = evolve secret2
+        let d0 = secret0 % 10L
+        let d1 = secret1 % 10L
+        let d2 = secret2 % 10L
+        let d3 = secret3 % 10L
+        let s1 = d1 - d0
+        let s2 = d2 - d1
+        let s3 = d3 - d2
+        loop (2000 - 3) s1 s2 s3 d3 secret3
       )
-      |> Seq.take 2000
-      |> Seq.windowed 4
-      |> Seq.iter(fun window ->
-        let count = fst window[3]
-        let window = snd window[0], snd window[1], snd window[2], snd window[3]
-        let key    = buyer, window
-        if counts.ContainsKey(key) |> not then
-          counts[key] <- count
-      )
-    )
+    let total = counts[0]
+    let mutable result = 0L
+    for i = 1 to counts.Length - 1 do
+      for kvp in counts[i] do
+        let mutable exists = false
+        let mutable valueRef = &CollectionsMarshal.GetValueRefOrAddDefault(total, kvp.Key, &exists)
+        let value = valueRef + kvp.Value
+        valueRef <- value
+        result <- max result value
+    result =! expected
 
-    counts
-    |> Seq.groupBy(fun kvp -> snd kvp.Key)
-    |> Seq.map(fun (window, bananaCount) ->
-      window, bananaCount |> Seq.sumBy(fun kvp -> kvp.Value)
-    )
-    |> Seq.maxBy(fun kvp -> snd kvp)
-    |> snd
-    =! expected
 
 module Day15 =
 
