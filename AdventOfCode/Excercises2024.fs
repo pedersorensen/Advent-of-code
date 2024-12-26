@@ -369,6 +369,70 @@ module Day13 =
   let part2 (input: string array) expected =
     solve 10000000000000. input =! expected
 
+module Day11 =
+
+  let input = [|
+    "125 17"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  let hasEvenNumberOfDigits (value: int64) =
+    let mutable count = 0
+    let mutable value = value
+    while value > 0 do
+      count <- count + 1
+      value <- value / 10L
+    count
+
+  let splitEvenDigitsIntoPairs count (value: int64) (left: outref<int64>) (right: outref<int64>) =
+    left <- value
+    right <- 0L
+    let mutable rem   = 0L
+    let mutable tens  = 1L
+    let mutable count = count
+    while count > 0 do
+      left  <- Math.DivRem(left, 10L, &rem)
+      right <- tens * rem + right
+      tens  <- tens * 10L
+      count <- count - 1
+
+  let trySplit(value: int64) (left: outref<int64>) (right: outref<int64>) =
+    let count = hasEvenNumberOfDigits value
+    if count % 2 = 0 then
+      splitEvenDigitsIntoPairs (count / 2) value &left &right
+      true
+    else false
+
+  let applyRule (value: int64) = [|
+    let mutable left, right = 0L, 0L
+    if value = 0L
+    then 1L
+    elif trySplit value &left &right then
+      left
+      right
+    else value * 2024L
+  |]
+
+  [<Theory>]
+  [<FileData(2024, 11, 199753)>]
+  [<MemberData(nameof sample, 55312)>]
+  let part1 (input: string array) expected =
+    let mutable stones = Seq.empty
+    stones <- input |> Array.exactlyOne |> parseNumbers<int64>
+    for _ = 1 to 25 do
+      stones <- stones |> Seq.collect(applyRule)
+    Seq.length stones =! expected
+
+  [<Theory>]
+  [<FileData(2024, 11, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    let mutable stones = input |> Array.exactlyOne |> parseNumbers<int64>
+    //for _ = 1 to 35 do
+      //stones <- stones |> Array.collect(applyRule)
+    stones.Length =! expected
+
 module Day10 =
 
   let input = [|
