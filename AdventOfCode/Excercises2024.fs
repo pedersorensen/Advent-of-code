@@ -424,14 +424,37 @@ module Day11 =
       stones <- stones |> Seq.collect(applyRule)
     Seq.length stones =! expected
 
+  let rec countAfterN (cache: Dictionary<_, _>) n value =
+    if n < 1 then
+      1L
+    else
+      applyRule value
+      |> Array.sumBy(fun value ->
+        let mutable count = 0L
+        if cache.TryGetValue((n - 1, value), &count) then
+          count
+        else
+          let count = countAfterN cache (n - 1) value
+          cache.Add((n - 1, value), count)
+          count
+      )
+
   [<Theory>]
-  [<FileData(2024, 11, 0)>]
-  [<MemberData(nameof sample, 0)>]
+  [<FileData(2024, 11, 199753)>]
+  [<MemberData(nameof sample, 55312)>]
+  let part1_optimized (input: string array) expected =
+    let cache = Dictionary()
+    input
+    |> Array.sumBy(parseNumbers >> Array.sumBy(countAfterN cache 25))
+    =! int64 expected
+
+  [<Theory>]
+  [<FileData(2024, 11, 239413123020116L)>]
   let part2 (input: string array) expected =
-    let mutable stones = input |> Array.exactlyOne |> parseNumbers<int64>
-    //for _ = 1 to 35 do
-      //stones <- stones |> Array.collect(applyRule)
-    stones.Length =! expected
+    let cache = Dictionary()
+    input
+    |> Array.sumBy(parseNumbers >> Array.sumBy(countAfterN cache 75))
+    =! expected
 
 module Day10 =
 
