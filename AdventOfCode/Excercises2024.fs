@@ -14,7 +14,7 @@ open System.Text.RegularExpressions
 open System.Runtime.InteropServices
 
 #if INTERACTIVE
-makeTemplate 2024 14 |> clip
+makeTemplate 2024 25 |> clip
 #endif
 
 module Day22 =

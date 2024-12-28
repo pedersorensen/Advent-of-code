@@ -10,9 +10,28 @@ open Xunit
 
 #if INTERACTIVE
 
-let makeTemplate year day =
+open System.Text.RegularExpressions
 
-  let sample = paste().Trim().Replace("\r\n", "\"\r\n    \"")
+let getHtml (year: int) (day: int) =
+  let cookie =
+    if File.Exists("cookie.txt")
+    then File.ReadAllText("cookie.txt")
+    else Environment.GetEnvironmentVariable("cookie")
+  let cookies = [| "session", cookie |]
+  Directory.CreateDirectory($"input{year}") |> ignore
+  let url = $"https://adventofcode.com/{year}/day/{day}"
+  Http.RequestString(url, cookies = cookies)
+
+let extractSamples (html: string) =
+  let regex = Regex(@"<pre><code>(?<sample>[\s\S]*?)</code></pre>", RegexOptions.Multiline)
+  regex.Matches(html)
+  |> Seq.cast<Match>
+  |> Seq.map(fun m -> m.Groups.["sample"].Value)
+
+let makeTemplate year day =
+  let html   = getHtml year day
+  let sample = extractSamples html |> Seq.tryHead |> Option.defaultValue "Sample not found"
+  let sample = sample.Trim().Replace("\n", "\"\n    \"").Replace("&gt;", ">")
 
   $"""
 module Day%02i{day} =
