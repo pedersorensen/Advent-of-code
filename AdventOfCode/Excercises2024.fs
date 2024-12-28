@@ -102,6 +102,105 @@ module Day22 =
         result <- max result value
     result =! expected
 
+module Day17 =
+
+  let input = [|
+    "Register A: 729"
+    "Register B: 0"
+    "Register C: 0"
+    ""
+    "Program: 0,1,5,4,3,0"
+  |]
+
+  let sample (result: string) = makeSample result input
+
+  let parse (input: string array) =
+      let parsed = input |> Array.map parseNumbers<int>
+      parsed[0] |> Array.exactlyOne
+    , parsed[1] |> Array.exactlyOne
+    , parsed[2] |> Array.exactlyOne
+    , parsed[4]
+
+  let rec run a b c (program: int array) ip out stopCondition =
+
+    let combo() =
+      let o = program[ip + 1]
+      match o with
+      | 0
+      | 1
+      | 2
+      | 3 -> o
+      | 4 -> a
+      | 5 -> b
+      | 6 -> c
+      | 7 -> failwith "reserved"
+      | _ -> failwith "Invalid instruction"
+
+    let div a =
+      let denom = Math.Pow(2., combo())
+      a / int denom
+
+    match stopCondition ip out with
+    | Some v -> v
+    | None ->
+      match program[ip] with
+      | 0 -> run (div a) b c program (ip + 2) out stopCondition
+      | 6 -> run a (div a) c program (ip + 2) out stopCondition
+      | 7 -> run a b (div a) program (ip + 2) out stopCondition
+      | 1 ->
+        let b = b ^^^ program[ip + 1]
+        run a b c program (ip + 2) out stopCondition
+      | 2 -> run a (combo() % 8) c program (ip + 2) out stopCondition
+      | 3 ->
+        if a = 0 then
+          run a b c program (ip + 2) out stopCondition
+        else
+          let ip' = program[ip + 1]
+          let ip = if ip = ip' then ip + 2 else ip'
+          run a b c program ip out stopCondition
+      | 4 -> run a (b ^^^ c) c program (ip + 2) out stopCondition
+      | 5 -> run a b c program (ip + 2) (combo() % 8 :: out) stopCondition
+      | _ -> failwith "Invalid instruction"
+
+  [<Theory>]
+  [<FileData(2024, 17, "6,4,6,0,4,5,7,2,7")>]
+  [<MemberData(nameof sample, "4,6,3,5,6,3,5,2,1,0")>]
+  let part1 (input: string array) expected =
+    let a, b, c, program = parse input
+    run a b c program 0 [] (fun ip out ->
+      if ip > program.Length - 1
+      then Some(String.Join(',', List.rev out))
+      else None
+    )
+    =! expected
+
+  let input2 = [|
+    "Register A: 729"
+    "Register B: 0"
+    "Register C: 0"
+    ""
+    "Program: 0,3,5,4,3,0"
+  |]
+
+  let sample2 (result: int) = makeSample result input2
+
+  [<Theory>]
+  //[<FileData(2024, 17, 0)>]
+  [<MemberData(nameof sample2, 117440)>]
+  let part2 (input: string array) expected =
+    let a, b, c, program = parse input2
+    let self = program |> List.ofArray |> List.rev
+
+    Seq.initInfinite id
+    |> Seq.tryFind(fun a ->
+      run a b c program 0 [] (fun ip out ->
+        if ip >= program.Length
+        then Some out
+        else None
+      ) = self
+    )
+    =! Some expected
+
 
 module Day15 =
 
