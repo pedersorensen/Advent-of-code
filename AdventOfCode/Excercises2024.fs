@@ -103,6 +103,8 @@ module Day22 =
     result =! expected
 
 module Day17 =
+  open System.Threading
+  open System.Net.Http.Headers
 
   let input = [|
     "Register A: 729"
@@ -115,61 +117,163 @@ module Day17 =
   let sample (result: string) = makeSample result input
 
   let parse (input: string array) =
-      let parsed = input |> Array.map parseNumbers<int>
-      parsed[0] |> Array.exactlyOne
-    , parsed[1] |> Array.exactlyOne
-    , parsed[2] |> Array.exactlyOne
+      let parsed = input |> Array.map parseNumbers<int64>
+      Array.exactlyOne parsed[0]
+    , Array.exactlyOne parsed[1]
+    , Array.exactlyOne parsed[2]
     , parsed[4]
 
-  let rec run a b c (program: int array) ip out stopCondition =
+  let run a0 b0 c0 (program: int64 array) stopCondition =
 
-    let combo() =
-      let o = program[ip + 1]
-      match o with
-      | 0
-      | 1
-      | 2
-      | 3 -> o
-      | 4 -> a
-      | 5 -> b
-      | 6 -> c
-      | 7 -> failwith "reserved"
+    let combo a b c ip =
+      match program[ip + 1] with
+      | 0L
+      | 1L
+      | 2L
+      | 3L as l -> l
+      | 4L -> a
+      | 5L -> b
+      | 6L -> c
+      | 7L -> failwith "reserved"
       | _ -> failwith "Invalid instruction"
 
-    let div a =
-      let denom = Math.Pow(2., combo())
-      a / int denom
+    let div a b c ip =
+      let denom = Math.Pow(2., combo a b c ip |> float)
+      a / int64 denom
 
-    match stopCondition ip out with
-    | Some v -> v
-    | None ->
+    let rec loop ip out test a b c =
+      match stopCondition ip out test with
+      | Some result -> result
+      | None ->
+        match program[ip] with
+        | 0L -> loop (ip + 2) out false (div a b c ip) b c
+        | 6L -> loop (ip + 2) out false a (div a b c ip) c
+        | 7L -> loop (ip + 2) out false a b (div a b c ip)
+        | 1L -> loop (ip + 2) out false a (b ^^^ program[ip + 1]) c
+        | 2L -> loop (ip + 2) out false a (combo a b c ip % 8L) c
+        | 3L ->
+          let ip = if a = 0 then ip + 2 else program[ip + 1] |> int
+          //let ip =
+          //  if a = 0 then ip + 2
+          //  else
+          //    let ip' = program[ip + 1]
+          //    if ip = ip' then ip + 2 else ip'
+          loop ip out false a b c
+        | 4L -> loop (ip + 2) out false a (b ^^^ c) c
+        | 5L -> loop (ip + 2) (combo a b c ip % 8L :: out) true a b c
+        | _ -> failwith "Invalid instruction"
+    loop 0 [] false a0 b0 c0
+
+  let run2 a0 b0 c0 (program : int64 array) stopCondition =
+    let combo a b c ip =
+      match program[ip + 1] with
+      | 0L
+      | 1L
+      | 2L
+      | 3L as l -> l
+      | 4L -> a
+      | 5L -> b
+      | 6L -> c
+      | 7L -> failwith "reserved"
+      | _ -> failwith "Invalid instruction"
+
+    let div a b c ip =
+      let denom = Math.Pow(2., combo a b c ip |> float)
+      a / int64 denom
+
+    let mutable out = []
+    let mutable result = None
+    let mutable test = false
+    let mutable a, b, c, ip = a0, b0, c0, 0
+
+    while result.IsNone do
+      test <- false
       match program[ip] with
-      | 0 -> run (div a) b c program (ip + 2) out stopCondition
-      | 6 -> run a (div a) c program (ip + 2) out stopCondition
-      | 7 -> run a b (div a) program (ip + 2) out stopCondition
-      | 1 ->
-        let b = b ^^^ program[ip + 1]
-        run a b c program (ip + 2) out stopCondition
-      | 2 -> run a (combo() % 8) c program (ip + 2) out stopCondition
-      | 3 ->
-        if a = 0 then
-          run a b c program (ip + 2) out stopCondition
-        else
-          let ip' = program[ip + 1]
-          let ip = if ip = ip' then ip + 2 else ip'
-          run a b c program ip out stopCondition
-      | 4 -> run a (b ^^^ c) c program (ip + 2) out stopCondition
-      | 5 -> run a b c program (ip + 2) (combo() % 8 :: out) stopCondition
+      | 0L ->
+        a <- div a b c ip
+        ip <- ip + 2
+      | 6L ->
+        b <- div a b c ip
+        ip <- ip + 2
+      | 7L ->
+        c <- div a b c ip
+        ip <- ip + 2
+      | 1L ->
+        b <- (b ^^^ program[ip + 1])
+        ip <- ip + 2
+      | 2L ->
+        b <- combo a b c ip % 8L
+        ip <- ip + 2
+      | 3L ->
+        ip <- if a = 0 then ip + 2 else program[ip + 1] |> int
+      | 4L ->
+        b <- b ^^^ c
+        ip <- ip + 2
+      | 5L ->
+        out <- combo a b c ip % 8L :: out
+        test <- true
+        ip <- ip + 2
       | _ -> failwith "Invalid instruction"
+      result <- stopCondition ip out test
+    result.Value
+
+  let run3 a0 b0 c0 stopCondition =
+    let mutable o = []
+    let mutable r = None
+    let mutable a, b, c = a0, b0, c0
+    while r.IsNone do
+      (*
+      2,4 b <- a % 8
+      1,1 b <- b ^^^ 1
+      7,5 c <- a / 2 ^ b
+      1,5 b <- b ^^^ 5
+      4,0 b <- b ^^^ c
+      0,3 a <- a / 2 ^ 3
+      5,5 out <- b % 8
+      3,0 jump to 0 if a > 0
+      *)
+      b <- a &&& 7L
+      b <- b ^^^ 1L
+      c <- a >>> int b
+      b <- b ^^^ 5L
+      b <- b ^^^ c
+      a <- a >>> 3
+      o <- (b &&& 7L) :: o
+      r <- stopCondition a o
+    r |> Option.defaultValue Unchecked.defaultof<_>
 
   [<Theory>]
   [<FileData(2024, 17, "6,4,6,0,4,5,7,2,7")>]
   [<MemberData(nameof sample, "4,6,3,5,6,3,5,2,1,0")>]
-  let part1 (input: string array) expected =
+  let part1A (input: string array) expected =
     let a, b, c, program = parse input
-    run a b c program 0 [] (fun ip out ->
+    run a b c program (fun ip out _ ->
+      if ip >= program.Length - 1
+      then Some(String.Join(',', List.rev out))
+      else None
+    )
+    =! expected
+
+  [<Theory>]
+  [<FileData(2024, 17, "6,4,6,0,4,5,7,2,7")>]
+  //[<MemberData(nameof sample, "4,6,3,5,6,3,5,2,1,0")>]
+  let part1B (input: string array) expected =
+    let a, b, c, program = parse input
+    run2 a b c program (fun ip out _ ->
       if ip > program.Length - 1
       then Some(String.Join(',', List.rev out))
+      else None
+    )
+    =! expected
+
+  [<Theory>]
+  [<FileData(2024, 17, "6,4,6,0,4,5,7,2,7")>]
+  //[<MemberData(nameof sample, "4,6,3,5,6,3,5,2,1,0")>]
+  let part1C (input: string array) expected =
+    let a, b, c, program = parse input
+    run3 a b c (fun a out ->
+      if a <= 0L
+      then Some (String.Join(',', List.rev out))
       else None
     )
     =! expected
@@ -182,24 +286,72 @@ module Day17 =
     "Program: 0,3,5,4,3,0"
   |]
 
-  let sample2 (result: int) = makeSample result input2
+  let sample2 (result: int64) = makeSample result input2
 
   [<Theory>]
-  //[<FileData(2024, 17, 0)>]
-  [<MemberData(nameof sample2, 117440)>]
-  let part2 (input: string array) expected =
-    let a, b, c, program = parse input2
-    let self = program |> List.ofArray |> List.rev
+  [<FileData(2024, 17, 0L)>]
+  //[<MemberData(nameof sample2, 117440L)>]
+  let part2B (input: string array) expected =
+    let input = [|
+      "Register A: 64196994"
+      "Register B: 0"
+      "Register C: 0"
+      ""
+      "Program: 2,4,1,1,7,5,1,5,4,0,0,3,5,5,3,0"
+    |]
 
+    let _a, b, c, program = parse input
+    let cts = new CancellationTokenSource(300)
     Seq.initInfinite id
-    |> Seq.tryFind(fun a ->
-      run a b c program 0 [] (fun ip out ->
-        if ip >= program.Length
-        then Some out
-        else None
-      ) = self
+    |> Seq.find(fun a ->
+      let mutable i = 0
+      if a % 1000000 = 0 then
+        printfn  "%i" a
+        cts.Token.ThrowIfCancellationRequested()
+      run3 a b c (fun a out ->
+        //printfn "%i %A" a out
+        if a <= 0 then
+          Some false
+        else
+          if List.head out = program[i] then
+            i <- i + 1
+            if i = program.Length
+            then Some true
+            else None
+          else
+            Some false
+      )
     )
-    =! Some expected
+    =! expected
+
+  [<Theory>]
+  //[<FileData(2024, 17, 0L)>]
+  [<MemberData(nameof sample2, 117440L)>]
+  let part2 (input: string array) expected =
+    let _a, b, c, program = parse input
+    //let self = program |> List.ofArray
+    //let a = 117435
+    //Seq.init 10 (fun i -> a + i)
+    Seq.initInfinite id
+    |> Seq.find(fun a ->
+      let mutable i = 0
+      run2 a b c program (fun ip out test ->
+        if ip >= program.Length then
+          Some false
+        else
+          if test then
+            if List.head out = program[i] then
+              i <- i + 1
+              if i = program.Length
+              then Some true
+              else None
+            else
+              Some false
+          else None
+      )
+    )
+    =! expected
+
 
 
 module Day15 =
