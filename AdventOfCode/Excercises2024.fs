@@ -620,6 +620,101 @@ module Day13 =
   let part2 (input: string array) expected =
     solve 10000000000000. input =! expected
 
+module Day12 =
+
+  let input1 = [|
+    "AAAA"
+    "BBCD"
+    "BBCC"
+    "EEEC"
+  |]
+
+  let input2 = [|
+    "OOOOO"
+    "OXOXO"
+    "OOOOO"
+    "OXOXO"
+    "OOOOO"
+  |]
+
+  let input3 = [|
+    "RRRRIICCFF"
+    "RRRRIICCCF"
+    "VVRRRCCFFF"
+    "VVRCCCJFFF"
+    "VVVVCJJCFE"
+    "VVIVCCJJEE"
+    "VVIIICJJEE"
+    "MIIIIIJJEE"
+    "MIIISIJEEE"
+    "MMMISSJEEE"
+  |]
+
+  let to2DArray(input: string array) =
+    let w, h = input.Length, input[0].Length
+    Array2D.init w h (fun i j -> input[i][j])
+
+  let circumferences (array: char array2d) =
+    let oneIfDifferent ch (i, j) =
+      try if array[i, j] = ch then 0 else 1
+      with :? IndexOutOfRangeException -> 1
+    let getCirc i j =
+      let ch    = array[i, j]
+      let above = oneIfDifferent ch (i - 1, j    )
+      let below = oneIfDifferent ch (i + 1, j    )
+      let left  = oneIfDifferent ch (i    , j - 1)
+      let right = oneIfDifferent ch (i    , j + 1)
+      above + below + left + right
+    Array2D.init (array.GetLength(0)) (array.GetLength(1)) getCirc
+
+  let regions (array: char array2d) =
+    let w, h = array.GetLength(0), array.GetLength(1)
+    let regionMap = Array2D.zeroCreate w h
+    let regions = Dictionary()
+    let mutable regionId = 0
+    for i = 0 to w - 1 do
+      for j = 0 to h - 1 do
+        if regionMap[i, j] = 0 then
+          let set = HashSet()
+          regionId <- regionId + 1
+          regions.Add(regionId, set)
+          let rec fill (i, j) ch =
+            if i >= 0 && i < w && j >= 0 && j < h && array[i, j] = ch && set.Add((i, j)) then
+              regionMap[i, j] <- regionId
+              fill (i - 1, j) ch
+              fill (i + 1, j) ch
+              fill (i, j - 1) ch
+              fill (i, j + 1) ch
+          fill (i, j) array[i, j]
+    regions.Values
+
+  let sample1 (result: int) = makeSample result input1
+  let sample2 (result: int) = makeSample result input2
+  let sample3 (result: int) = makeSample result input3
+
+  [<Theory>]
+  [<FileData(2024, 12, 1471452)>]
+  [<MemberData(nameof sample1, 140)>]
+  [<MemberData(nameof sample2, 772)>]
+  [<MemberData(nameof sample3, 1930)>]
+  let part1 (input: string array) expected =
+    let array = to2DArray input
+    let circ  = circumferences array
+    regions array
+    |> Seq.sumBy(fun set ->
+      let circ = set |> Seq.sumBy(fun (i, j) -> circ[i, j])
+      set.Count * circ
+    )
+    =! expected
+
+  [<Theory>]
+  [<FileData(2024, 12, 0)>]
+  [<MemberData(nameof sample1, 0)>]
+  [<MemberData(nameof sample2, 0)>]
+  [<MemberData(nameof sample3, 0)>]
+  let part2 (input: string array) expected =
+    -1 =! expected
+
 module Day11 =
 
   let input = [|
