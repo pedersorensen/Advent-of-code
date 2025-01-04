@@ -26,7 +26,7 @@ let extractSamples (html: string) =
   let regex = Regex(@"<pre><code>(?<sample>[\s\S]*?)</code></pre>", RegexOptions.Multiline)
   regex.Matches(html)
   |> Seq.cast<Match>
-  |> Seq.map(fun m -> m.Groups.["sample"].Value)
+  |> Seq.map(fun m -> m.Groups["sample"].Value)
 
 let makeTemplate year day =
   let html   = getHtml year day
@@ -190,13 +190,28 @@ module Array =
       result.Add(buffer.ToArray())
     result.ToArray()
 
+  /// Splits the collection into chunks when the given condition returns 'true'.
+  let chunkWhen condition (array: _ array) =
+    let result = ResizeArray()
+    let buffer = ResizeArray()
+    for item in array do
+      if buffer.Count = 0 || condition buffer[buffer.Count - 1] item then
+        buffer.Add(item)
+      else
+        result.Add(buffer.ToArray())
+        buffer.Clear()
+        buffer.Add(item)
+    if buffer.Count > 0 then
+      result.Add(buffer.ToArray())
+    result.ToArray()
+
   let sumBy2 f (array1: _ array) (array2: _ array) =
     if array1.Length <> array2.Length then
       invalidArg "array2" "Arrays must have the same length"
 
     let mutable sum = 0
     for i in 0 .. array1.Length - 1 do
-      sum <- sum + f array1.[i] array2.[i]
+      sum <- sum + f array1[i] array2[i]
     sum
 
 module Tuple =

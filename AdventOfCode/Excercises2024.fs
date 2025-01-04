@@ -655,22 +655,25 @@ module Day12 =
     Array2D.init w h (fun i j -> input[i][j])
 
   let circumferences (array: char array2d) =
+    let p0   = Point(0, 0)
+    let pMax = Point(array.GetLength(0), array.GetLength(1))
     let oneIfDifferent ch (i, j) =
-      try if array[i, j] = ch then 0 else 1
-      with :? IndexOutOfRangeException -> 1
-    let getCirc i j =
-      let ch    = array[i, j]
+      let p = Point(i, j)
+      if p0 <= p && p < pMax && array[i, j] = ch then 0 else 1
+    array
+    |> Array2D.mapi(fun i j ch ->
       let above = oneIfDifferent ch (i - 1, j    )
       let below = oneIfDifferent ch (i + 1, j    )
       let left  = oneIfDifferent ch (i    , j - 1)
       let right = oneIfDifferent ch (i    , j + 1)
       above + below + left + right
-    Array2D.init (array.GetLength(0)) (array.GetLength(1)) getCirc
+    )
 
   let regions (array: char array2d) =
-    let w, h = array.GetLength(0), array.GetLength(1)
+    let w, h      = array.GetLength(0), array.GetLength(1)
+    let p0, pMax  = Point(0, 0), Point(w, h)
+    let regions   = Dictionary()
     let regionMap = Array2D.zeroCreate w h
-    let regions = Dictionary()
     let mutable regionId = 0
     for i = 0 to w - 1 do
       for j = 0 to h - 1 do
@@ -679,7 +682,8 @@ module Day12 =
           regionId <- regionId + 1
           regions.Add(regionId, set)
           let rec fill (i, j) ch =
-            if i >= 0 && i < w && j >= 0 && j < h && array[i, j] = ch && set.Add((i, j)) then
+            let p = Point(i, j)
+            if p0 <= p && p < pMax && array[i, j] = ch && set.Add((i, j)) then
               regionMap[i, j] <- regionId
               fill (i - 1, j) ch
               fill (i + 1, j) ch
@@ -707,13 +711,66 @@ module Day12 =
     )
     =! expected
 
+  let input4 = [|
+    "EEEEE"
+    "EXXXX"
+    "EEEEE"
+    "EXXXX"
+    "EEEEE"
+  |]
+
+  let input5 = [|
+    "AAAAAA"
+    "AAABBA"
+    "AAABBA"
+    "ABBAAA"
+    "ABBAAA"
+    "AAAAAA"
+  |]
+
+  let sample4 (result: int) = makeSample result input4
+  let sample5 (result: int) = makeSample result input5
+
   [<Theory>]
-  [<FileData(2024, 12, 0)>]
-  [<MemberData(nameof sample1, 0)>]
-  [<MemberData(nameof sample2, 0)>]
-  [<MemberData(nameof sample3, 0)>]
+  [<FileData(2024, 12, 863366)>]
+  [<MemberData(nameof sample1, 80)>]
+  [<MemberData(nameof sample2, 436)>]
+  [<MemberData(nameof sample4, 236)>]
+  [<MemberData(nameof sample5, 368)>]
   let part2 (input: string array) expected =
-    -1 =! expected
+    let array = to2DArray input
+
+    let aboveBelow i di js (set: HashSet<_>) =
+      js
+      |> Array.filter(fun j -> set.Contains(i + di, j) |> not)
+      |> Array.chunkWhen(fun a b -> b = a + 1)
+      |> Array.length
+
+    let leftRight j dj is (set: HashSet<_>)=
+      is
+      |> Array.filter(fun i -> set.Contains(i, j + dj) |> not)
+      |> Array.chunkWhen(fun a b -> b = a + 1)
+      |> Array.length
+
+    regions array
+    |> Seq.sumBy(fun set ->
+      let values = Seq.toArray set
+      let aboveBelow =
+        values
+        |> Array.groupBy fst
+        |> Array.sumBy(fun (i, row) ->
+          let js = row |> Array.map snd |> Array.sort
+          aboveBelow i -1 js set + aboveBelow i 1 js set
+        )
+      let leftRight =
+        values
+        |> Array.groupBy snd
+        |> Array.sumBy(fun (j, col) ->
+          let is = col |> Array.map fst |> Array.sort
+          leftRight j -1 is set + leftRight j 1 is set
+        )
+      values.Length * (aboveBelow + leftRight)
+    ) =! expected
 
 module Day11 =
 
