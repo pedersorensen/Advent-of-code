@@ -28,22 +28,18 @@ module Day22 =
 
   let sample (result: int) = makeSample result input
 
-  let mix secret value = value ^^^ secret
-  let prune value = value % 16777216L
+  let mixAndPrune secret value = (value ^^^ secret) % 16777216L
 
   let evolve secret =
-    let secret =
-      secret * 64L
-      |> mix secret
-      |> prune
-    let secret = secret / 32L |> mix secret |> prune
-    secret * 2048L |> mix secret |> prune
+    let secret = secret * 64L   |> mixAndPrune secret
+    let secret = secret / 32L   |> mixAndPrune secret
+    let secret = secret * 2048L |> mixAndPrune secret
+    secret
 
   let rec evolveN n secret =
-    if n = 0 then secret
-    else
-      let secret = evolve secret
-      evolveN (n - 1) secret
+    if n = 0
+    then secret
+    else evolveN (n - 1) (evolve secret)
 
   [<Theory>]
   [<FileData(2024, 22, 15335183969L)>]
@@ -69,7 +65,7 @@ module Day22 =
     let counts =
       input
       |> Array.map(fun secret ->
-        let counts = Dictionary<_, int64>()
+        let counts = Dictionary()
         let rec loop i s1 s2 s3 d3 secret3 =
           let secret4 = evolve secret3
           let d4 = secret4 % 10L
@@ -650,27 +646,19 @@ module Day12 =
     "MMMISSJEEE"
   |]
 
-  let to2DArray(input: string array) =
-    let w, h = input.Length, input[0].Length
-    Array2D.init w h (fun i j -> input[i][j])
-
-  let circumferences (array: char array2d) =
-    let p0   = Point(0, 0)
-    let pMax = Point(array.GetLength(0), array.GetLength(1))
-    let oneIfDifferent ch (i, j) =
-      let p = Point(i, j)
-      if p0 <= p && p < pMax && array[i, j] = ch then 0 else 1
-    array
-    |> Array2D.mapi(fun i j ch ->
-      let above = oneIfDifferent ch (i - 1, j    )
-      let below = oneIfDifferent ch (i + 1, j    )
-      let left  = oneIfDifferent ch (i    , j - 1)
-      let right = oneIfDifferent ch (i    , j + 1)
+  let circumference (points: HashSet<_>) =
+    let oneIfDifferent p = if points.Contains(p) then 0 else 1
+    points
+    |> Seq.sumBy(fun (i, j) ->
+      let above = oneIfDifferent (i - 1, j    )
+      let below = oneIfDifferent (i + 1, j    )
+      let left  = oneIfDifferent (i    , j - 1)
+      let right = oneIfDifferent (i    , j + 1)
       above + below + left + right
     )
 
-  let regions (array: char array2d) =
-    let w, h      = array.GetLength(0), array.GetLength(1)
+  let regions (array: string array) =
+    let w, h      = array.Length, array[0].Length
     let p0, pMax  = Point(0, 0), Point(w, h)
     let regions   = Dictionary()
     let regionMap = Array2D.zeroCreate w h
@@ -683,13 +671,13 @@ module Day12 =
           regions.Add(regionId, set)
           let rec fill (i, j) ch =
             let p = Point(i, j)
-            if p0 <= p && p < pMax && array[i, j] = ch && set.Add((i, j)) then
+            if p0 <= p && p < pMax && array[i][j] = ch && set.Add((i, j)) then
               regionMap[i, j] <- regionId
               fill (i - 1, j) ch
               fill (i + 1, j) ch
               fill (i, j - 1) ch
               fill (i, j + 1) ch
-          fill (i, j) array[i, j]
+          fill (i, j) (array[i][j])
     regions.Values
 
   let sample1 (result: int) = makeSample result input1
@@ -702,13 +690,8 @@ module Day12 =
   [<MemberData(nameof sample2, 772)>]
   [<MemberData(nameof sample3, 1930)>]
   let part1 (input: string array) expected =
-    let array = to2DArray input
-    let circ  = circumferences array
-    regions array
-    |> Seq.sumBy(fun set ->
-      let circ = set |> Seq.sumBy(fun (i, j) -> circ[i, j])
-      set.Count * circ
-    )
+    regions input
+    |> Seq.sumBy(fun set -> set.Count * circumference set)
     =! expected
 
   let input4 = [|
@@ -731,6 +714,12 @@ module Day12 =
   let sample4 (result: int) = makeSample result input4
   let sample5 (result: int) = makeSample result input5
 
+  let countSegments points contains =
+    points
+    |> Array.filter(contains >> not)
+    |> Array.chunkWhen(fun a b -> b = a + 1)
+    |> Array.length
+
   [<Theory>]
   [<FileData(2024, 12, 863366)>]
   [<MemberData(nameof sample1, 80)>]
@@ -738,36 +727,24 @@ module Day12 =
   [<MemberData(nameof sample4, 236)>]
   [<MemberData(nameof sample5, 368)>]
   let part2 (input: string array) expected =
-    let array = to2DArray input
-
-    let aboveBelow i di js (set: HashSet<_>) =
-      js
-      |> Array.filter(fun j -> set.Contains(i + di, j) |> not)
-      |> Array.chunkWhen(fun a b -> b = a + 1)
-      |> Array.length
-
-    let leftRight j dj is (set: HashSet<_>)=
-      is
-      |> Array.filter(fun i -> set.Contains(i, j + dj) |> not)
-      |> Array.chunkWhen(fun a b -> b = a + 1)
-      |> Array.length
-
-    regions array
-    |> Seq.sumBy(fun set ->
-      let values = Seq.toArray set
+    regions input
+    |> Seq.sumBy(fun points ->
+      let values = Seq.toArray points
       let aboveBelow =
         values
         |> Array.groupBy fst
         |> Array.sumBy(fun (i, row) ->
           let js = row |> Array.map snd |> Array.sort
-          aboveBelow i -1 js set + aboveBelow i 1 js set
+          + countSegments js (fun j -> points.Contains(i + 1, j))
+          + countSegments js (fun j -> points.Contains(i - 1, j))
         )
       let leftRight =
         values
         |> Array.groupBy snd
         |> Array.sumBy(fun (j, col) ->
           let is = col |> Array.map fst |> Array.sort
-          leftRight j -1 is set + leftRight j 1 is set
+          + countSegments is (fun i -> points.Contains(i, j + 1))
+          + countSegments is (fun i -> points.Contains(i, j - 1))
         )
       values.Length * (aboveBelow + leftRight)
     ) =! expected
