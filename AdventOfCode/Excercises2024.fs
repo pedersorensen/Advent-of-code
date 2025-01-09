@@ -1394,7 +1394,7 @@ module Day03 =
   [<FileData(2024, 3, 185797128)>]
   [<MemberData(nameof sample, 161)>]
   let part1 (input: string array) expected =
-    Regex.Matches(input[0], "mul\((?<d1>\d{1,3}),(?<d2>\d{1,3})\)")
+    Regex.Matches(String.Concat input, "mul\((?<d1>\d{1,3}),(?<d2>\d{1,3})\)")
     |> Seq.sumBy sumMatch
      =! expected
 
@@ -1408,7 +1408,7 @@ module Day03 =
   [<FileData(2024, 3, 89798695)>]
   [<MemberData(nameof sample2, 48)>]
   let part2 (input: string array) expected =
-    ((0, true), Regex.Matches(input[0], "(mul\((?<d1>\d{1,3}),(?<d2>\d{1,3})\)|do\(\)|don't\(\))"))
+    ((0, true), Regex.Matches(String.Concat input, "(mul\((?<d1>\d{1,3}),(?<d2>\d{1,3})\)|do\(\)|don't\(\))"))
     ||> Seq.fold(fun (sum, doIt) m ->
       if   m.Value = "do()"    then sum, true
       elif m.Value = "don't()" then sum, false
