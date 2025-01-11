@@ -240,6 +240,7 @@ type IDictionary<'TKey, 'TValue> with
     | true, value -> Some value
     | _ -> None
 
+[<Struct;CustomComparison;CustomEquality>]
 [<StructuredFormatDisplay("({X}, {Y})")>]
 type Point(x: int, y: int) =
   member _.X = x

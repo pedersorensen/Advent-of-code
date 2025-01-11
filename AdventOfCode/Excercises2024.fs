@@ -98,6 +98,107 @@ module Day22 =
         result <- max result value
     result =! expected
 
+module Day18 =
+
+  let input = [|
+    "5,4"
+    "4,2"
+    "4,5"
+    "3,0"
+    "2,1"
+    "6,3"
+    "2,4"
+    "1,5"
+    "0,6"
+    "3,3"
+    "2,6"
+    "5,1"
+    "1,2"
+    "5,5"
+    "2,5"
+    "6,5"
+    "1,4"
+    "0,4"
+    "6,4"
+    "1,1"
+    "6,1"
+    "1,0"
+    "0,5"
+    "1,6"
+    "2,0"
+  |]
+
+  let sample  (result: int) = makeSample result input
+  let sampleS (result: string) = makeSample result input
+
+  let directions = [| Point(0, 1); Point(1, 0); Point(0, -1); Point(-1, 0) |]
+
+  let bfs (grid: char[,]) (start: Point) (end': Point) =
+    let p0, pMax = Point(0, 0), Point(grid.GetLength(0), grid.GetLength(1))
+
+    let isValid (point: Point) =
+      p0.CompareTo(point) <= 0 && point.CompareTo(pMax) < 0 && grid[point.X, point.Y] <> '#'
+
+    let queue   = Queue<Point * int>()
+    let visited = HashSet<Point>([|start|])
+    queue.Enqueue((start, 0))
+    let mutable ret = None
+    let mutable pair = Unchecked.defaultof<_>
+
+    while queue.TryDequeue(&pair) && ret.IsNone do
+      let (current, distance) = pair
+      if current.Equals(end') then
+        ret <- Some distance
+
+      for dx in directions do
+        let next = current + dx
+        if isValid next && visited.Add(next) then
+          queue.Enqueue((next, distance + 1))
+    ret
+
+  let parse input =
+    input
+    |> Array.map(fun line ->
+      match parseNumbers<int> line with
+      | [| x; y |] -> x, y
+      | _ -> failwith "Invalid input"
+    )
+
+  [<Theory>]
+  [<FileData(2024, 18, 260)>]
+  [<MemberData(nameof sample, 22)>]
+  let part1 (input: string array) expected =
+    let positions = parse input
+    let size, take = if expected = 22 then 6, 12 else 70, 1024
+    let grid = Array2D.init (size+1) (size+1) (fun _ _ -> '.')
+    positions |> Array.take take |> Array.iter(fun (y, x) -> grid[x, y] <- '#')
+
+    let start, end' = Point(0, 0), Point(size, size)
+    bfs grid start end' =! Some expected
+
+  [<Theory>]
+  [<FileData(2024, 18, "(24, 48)")>]
+  [<MemberData(nameof sampleS, "(6, 1)")>]
+  let part2 (input: string array) expected =
+    let positions = parse input
+    let size, take = if expected = "(6, 1)" then 6, 12 else 70, 1024
+    let grid = Array2D.init (size+1) (size+1) (fun _ _ -> '.')
+
+    let start, end' = Point(0, 0), Point(size, size)
+    let mutable skip = take
+
+    positions
+    |> Array.find(fun (y, x) ->
+      grid[x, y] <- '#'
+      if skip > 0 then
+        skip <- skip - 1
+        false
+      else
+        bfs grid start end' |> Option.isNone
+    )
+    |> string
+    =! expected
+
 module Day17 =
   open System.Threading
   open System.Net.Http.Headers
