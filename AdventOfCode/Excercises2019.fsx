@@ -1,9 +1,9 @@
-#load "Utils.fsx"
+#r "nuget: XUnit"
+#r "nuget: FSharp.Data"
+#load "Utils.fs"
 
 open Utils
 open System
-
-Year <- 2019
 
 module List =
 
@@ -108,7 +108,7 @@ module Day1 =
   getFuel 100756
 
   let totalFuel =
-    readInput 1
+    readInput 2019 1
     |> Array.sumBy(int >> getFuel)
 
   // Part 2
@@ -124,7 +124,7 @@ module Day1 =
   getFuel' 100756
 
   let totalFuel' =
-    readInput 1
+    readInput 2019 1
     |> Array.sumBy(int >> getFuel')
 
 module Day2 =
@@ -217,7 +217,7 @@ module Day3 =
 
   // Part 1
   let (input1, input2) =
-    match readInput 3 with
+    match readInput 2019 3 with
     | [|input1 ; input2 |] -> input1, input2
     | _ -> failwith "Invalid input"
 
@@ -346,7 +346,7 @@ module Day6 =
     helper 0 tree
   fsi.AddPrinter printTree
 
-  let input = readInput 6
+  let input = readInput 2019 6
   let example = [| "COM)B" ; "B)C" ; "C)D" ; "D)E" ; "E)F" ; "B)G" ; "G)H" ; "D)I" ; "E)J" ; "J)K" ; "K)L" |]
 
   let buildMap (input : string[]) =
@@ -431,7 +431,7 @@ module Day7 =
   output
 
 module Day8 =
-  let input, w, h = readInput 8 |> Array.exactlyOne, 25, 6
+  let input, w, h = readInput 2019 8 |> Array.exactlyOne, 25, 6
   // Part 1
   let result =
     input
@@ -542,7 +542,7 @@ module Day10 =
         "#.#.#.#####.####.###"
         "###.##.####.##.#..##"
       |]
-      readInput 10
+      readInput 2019 10
     |]
     |> Array.map getAsteroids
 
@@ -681,7 +681,7 @@ module Day12 =
        "<x=2, y=-7, z=3>"
        "<x=9, y=-8, z=-3>"|]
     |> parsePositions
-  let positions = readInput 12 |> parsePositions
+  let positions = readInput 2019 12 |> parsePositions
 
   positions1
   |> apply 1000 advance
@@ -701,7 +701,7 @@ module Day12 =
   let answer = lcm64(lcm64 c1 c2) c3 // 428576638953552L
 
 module Day13 =
-  let input = readInput 13
+  let input = readInput 2019 13
 
 module Day14 =
   open System.Collections.Generic
@@ -789,7 +789,7 @@ module Day14 =
         "7 XCVML => 6 RJRHP"
         "5 BHXH, 4 VRPVC => 5 LTCX"
       |]
-      readInput 14
+      readInput 2019 14
     |]
     |> Array.map(Array.map Reaction.Parse)
 

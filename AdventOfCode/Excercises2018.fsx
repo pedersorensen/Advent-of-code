@@ -1,12 +1,12 @@
-﻿#load "Utils.fsx"
+﻿#r "nuget: XUnit"
+#r "nuget: FSharp.Data"
+#load "Utils.fs"
 #load "TopologicalSort.fs"
 
 open Utils
 open System
 open System.Text
 open System.Collections.Generic
-
-Year <- 2018
 
 //https://adventofcode.com/2018
 
@@ -28,7 +28,7 @@ module Tuple =
     | _ -> invalidArg "array" "Must contain five elements"
 
 module Day1 =
-  let changes = readInput 1 |> Array.map int
+  let changes = readInput 2018 1 |> Array.map int
 
   let repeatedValues seed (changes : int []) =
     let frequencies = new HashSet<_>()
@@ -73,7 +73,7 @@ module Day2 =
     "ababab" // contains three a and three b, but it only counts once.
   |]
 
-  let input = readInput 2
+  let input = readInput 2018 2
 
   checkSum testInput
   checkSum input
@@ -141,7 +141,7 @@ module Day3 =
   fsi.AddPrinter <| print<int> string
   fsi.AddPrinter <| print<char> string
 
-  let input = readInput 3 |> Array.map Claim.Parse
+  let input = readInput 2018 3 |> Array.map Claim.Parse
 
   let testInput =
     [|
@@ -225,7 +225,7 @@ module Day4 =
     |> Array.map parse
     |> List.ofArray
 
-  let input = readInput 4 |> Array.map parse |> Array.sortBy fst |> List.ofArray
+  let input = readInput 2018 4 |> Array.map parse |> Array.sortBy fst |> List.ofArray
 
   let groupWhen predicate list =
     match list with
@@ -312,7 +312,7 @@ module Day4 =
   |> fun (a, b, _) -> (a.Substring(1) |> int) * b
 
 module Day5 =
-  let input = readInput 5 |> Array.exactlyOne
+  let input = readInput 2018 5 |> Array.exactlyOne
   let testInput = "dabAcCaCBAcCcaDA"
 
   module Char =
@@ -374,7 +374,7 @@ module Day6 =
 
   fsi.AddPrinter <| print<char*int> (fun (ch, _) -> ch.ToString())
 
-  let input = readInput 6 |> Array.map parse
+  let input = readInput 2018 6 |> Array.map parse
   let testInput = [| "1, 1" ; "1, 6" ; "8, 3" ; "3, 4" ; "5, 5" ; "8, 9" |] |> Array.map parse
 
   let input' = input
@@ -446,7 +446,7 @@ module Day7 =
     |> fun free -> Array.concat [| input ; free |]
 
   let input =
-    readInput 7
+    readInput 2018 7
     |> Array.map Step.Parse
     |> addFreeSteps
 
@@ -487,7 +487,7 @@ module Day7 =
   let toDo = testOrder |> Array.map WorkItem.OfStep
 
 module Day8 =
-  let input = readInput 8 |> Array.exactlyOne |> fun s -> s.Split(' ') |> Array.map int |> List.ofArray
+  let input = readInput 2018 8 |> Array.exactlyOne |> fun s -> s.Split(' ') |> Array.map int |> List.ofArray
   let testInput = [2;3;0;3;10;11;12;1;1;0;1;99;2;1;1;2]
 
   type Node = Node of int * meta : int list * children : Node list
@@ -546,7 +546,7 @@ module Day8 =
   getNodeValue node
 
 module Day9 =
-  let input = readInput 9 |> Array.exactlyOne
+  let input = readInput 2018 9 |> Array.exactlyOne
 
   fsi.AddPrinter <| fun (marbles : ResizeArray<int>, current : int) ->
     marbles
@@ -559,7 +559,7 @@ module Day9 =
   let mutable c = 0
 
 module Day10 =
-  let input = readInput 10
+  let input = readInput 2018 10
 
   let testInput = [|
     "position=< 9,  1> velocity=< 0,  2>"
@@ -630,7 +630,7 @@ module Day10 =
   map.Width
 
 module Day12 =
-  let input = readInput 12
+  let input = readInput 2018 12
   let initial = input.[0].Substring(15)
   let rules =
     input

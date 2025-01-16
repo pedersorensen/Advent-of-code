@@ -1,13 +1,13 @@
-﻿#load "Utils.fsx"
+﻿#r "nuget: XUnit"
+#r "nuget: FSharp.Data"
+#load "Utils.fs"
 
 open Utils
 open System
 open System.Collections.Generic
 
-Year <- 2020
-
 module Day1 =
-  let input = readInput 1 |> Array.map int |> set
+  let input = readInput 2020 1 |> Array.map int |> set
 
   let tryFindMatch sum s1 =
     let s2 = s1 |> Set.map(fun i -> sum - i)
@@ -33,7 +33,7 @@ module Day1 =
         printfn "Product: %i * %i * %i : %i" i a b (i * a * b))
 
 module Day2 =
-  let input = readInput 2
+  let input = readInput 2020 2
 
   let parsed =
     input
@@ -84,7 +84,7 @@ module Day3 =
     |> Seq.countTrue(fun (x, y) -> input.[y].[x % w] = TreeMarker)
     |> int64
 
-  let input = readInput 3
+  let input = readInput 2020 3
 
   let sample = [|
     "..##......."
@@ -172,8 +172,8 @@ module Day4 =
     //"cid", fun _ -> true
   |]
 
-  let input = readInput 4 |> parse |> Seq.toList
-  let input2 = readInput 4 |> parse2
+  let input = readInput 2020 4 |> parse |> Seq.toList
+  let input2 = readInput 2020 4 |> parse2
 
   // 242
   let part1() =
@@ -232,7 +232,7 @@ module Day4 =
     countValid input
 
 module Day5 =
-  let input = readInput 5
+  let input = readInput 2020 5
 
   let find low high input =
     ((low, high), input)
@@ -300,9 +300,9 @@ module Day5 =
     |> (+) 1
 
 module Day6 =
-  let input = (readAllInput 6).Split([|"\n\n"|], StringSplitOptions.RemoveEmptyEntries)
+  let input = (readAllInput 2020 6).Split([|"\n\n"|], StringSplitOptions.RemoveEmptyEntries)
 
-  let input' = readInput 6
+  let input' = readInput 2020 6
 
   // 6549
   let part1() =
@@ -341,7 +341,7 @@ module Day6 =
     (([], 0), input') ||> Seq.batchOnNewline (Set >> cons) (Set.intersectMany >> Set.count >> (+))
 
 module Day7 =
-  let input = readInput 7
+  let input = readInput 2020 7
 
   let parse input =
     input
@@ -419,7 +419,7 @@ module Day7 =
     loop "shiny gold" - 1
 
 module Day8 =
-  let input = readInput 8
+  let input = readInput 2020 8
 
   let sample = [|
     "nop +0"
@@ -485,7 +485,7 @@ module Day8 =
     parse input |> fix
 
 module Day9 =
-  let input = readInput 9 |> Array.map int64
+  let input = readInput 2020 9 |> Array.map int64
 
   let sample = [|
     35L
@@ -553,7 +553,7 @@ module Day9 =
     part1() |> snd |> findWeakness input
 
 module Day10 =
-  let input = readInput 10 |> Array.map int |> Array.sort
+  let input = readInput 2020 10 |> Array.map int |> Array.sort
 
   let sample1 = [|
     1
@@ -635,7 +635,7 @@ module Day10 =
     countArrangements input
 
 module Day11 =
-  let input = readInput 11
+  let input = readInput 2020 11
 
   let sample = [|
     "L.LL.LL.LL"
@@ -764,7 +764,7 @@ module Day11 =
     stableOccupation2 input
 
 module Day12 =
-  let input = readInput 12
+  let input = readInput 2020 12
 
   let sample = [|
     "F10"
@@ -843,7 +843,7 @@ module Day12 =
 
 module Day13 =
 
-  let input = readInput 13
+  let input = readInput 2020 13
 
   let sample = [|
     "939"
@@ -930,7 +930,7 @@ module Day13 =
 
 module Day14 =
 
-  let input = readInput 14
+  let input = readInput 2020 14
 
   let sample = [|
     "mask = XXXXXXXXXXXXXXXXXXXXXXXXXXXXX1XXXX0X"
@@ -1073,7 +1073,7 @@ module Day14 =
 
 module Day15 =
 
-  let input = (readInput 15).[0].Split(',') |> Array.map int
+  let input = (readInput 2020 15).[0].Split(',') |> Array.map int
 
   let sample = [| 0 ; 3 ; 6 |]
 
@@ -1131,7 +1131,7 @@ module Day15 =
 module Day16 =
   open System.Text.RegularExpressions
 
-  let input = readInput 16
+  let input = readInput 2020 16
 
   let sample = [|
     "class: 1-3 or 5-7"
@@ -1254,10 +1254,10 @@ module Day16 =
     |> List.reduce (*)
 
 //module Day17 =
-//  let input = readInput 17
+//  let input = readInput 2020 17
 
 module Day18 =
-  let input = readInput 18
+  let input = readInput 2020 18
 
   let cint64 (ch: char) =
     if Char.IsNumber ch |> not then
@@ -1353,10 +1353,10 @@ module Day18 =
     input |> Array.sumBy eval3
 
 //module Day19 =
-//  let input = readInput 19
+//  let input = readInput 2020 19
 
 module Day20 =
-  let input = readInput 20
+  let input = readInput 2020 20
 
   let sample = [|
     "Tile 2311:"
@@ -1538,10 +1538,10 @@ module Day20 =
     parse input |> getCorners |> Seq.reduce (*)
 
 //module Day21 =
-//  let input = readInput 21
+//  let input = readInput 2020 21
 
 module Day22 =
-  let input = readInput 22
+  let input = readInput 2020 22
 
   let sample = [|
     "Player 1:"
@@ -1665,7 +1665,7 @@ module Day22 =
     parse input |> play2 |> score
 
 module Day23 =
-  let input = readInput 23 |> Array.exactlyOne
+  let input = readInput 2020 23 |> Array.exactlyOne
 
   let sample = "389125467"
 
@@ -1764,7 +1764,7 @@ module Day23 =
     parse input |> play2 maxCups rounds
 
 module Day24 =
-  let input = readInput 24
+  let input = readInput 2020 24
 
   let sample = [|
     "sesenwnenenewseeswwswswwnenewsewsw"
@@ -1869,4 +1869,4 @@ module Day24 =
     run 100 input
 
 //module Day25 =
-//  let input = readInput 25
+//  let input = readInput 2020 25

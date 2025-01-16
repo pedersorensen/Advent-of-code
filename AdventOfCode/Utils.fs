@@ -85,13 +85,11 @@ let makeSample result (data: string []) = [| [| box data ; box result |] |]
 
 let inline (=!) (actual : 'T) (expected : 'T) = Assert.Equal<'T>(expected, actual)
 
-let mutable Year = 0
+let readInput year (day: int) = File.ReadAllLines(ensureExists year day)
+let readAllInput year (day: int) = File.ReadAllText(ensureExists year day)
 
-let readInput (day: int) = File.ReadAllLines(ensureExists Year day)
-let readAllInput (day: int) = File.ReadAllText(ensureExists Year day)
-
-let readsInts day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int
-let readsInt64s day = (readInput day |> Array.exactlyOne).Split(',') |> Array.map int64
+let readsInts year day = (readInput year day |> Array.exactlyOne).Split(',') |> Array.map int
+let readsInt64s year day = (readInput year day |> Array.exactlyOne).Split(',') |> Array.map int64
 
 let digits = SearchValues.Create("-0123456789")
 
