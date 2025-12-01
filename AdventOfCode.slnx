@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/SolutionItems/">
+    <File Path=".github/workflows/buildAndTest.yml" />
+  </Folder>
+  <Project Path="AdventOfCode/AdventOfCode.fsproj" />
+</Solution>
