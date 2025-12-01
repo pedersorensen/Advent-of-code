@@ -64,6 +64,8 @@ let ensureExists (year: int) (day: int) =
       if File.Exists("cookie.txt")
       then File.ReadAllText("cookie.txt")
       else Environment.GetEnvironmentVariable("cookie")
+    if String.IsNullOrWhiteSpace cookie then
+      failwithf $"Cookie not found {Environment.CurrentDirectory}"
     let cookies = [| "session", cookie |]
     Directory.CreateDirectory($"input{year}") |> ignore
     printfn $"Input for day {day} does not exists, downloading file {path}."
