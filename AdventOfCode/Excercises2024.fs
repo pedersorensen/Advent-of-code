@@ -17,6 +17,64 @@ open System.Runtime.InteropServices
 makeTemplate 2024 25 |> clip
 #endif
 
+module Day25 =
+
+  let input = [|
+    "#####"
+    ".####"
+    ".####"
+    ".####"
+    ".#.#."
+    ".#..."
+    "....."
+    ""
+    "#####"
+    "##.##"
+    ".#.##"
+    "...##"
+    "...#."
+    "...#."
+    "....."
+    ""
+    "....."
+    "#...."
+    "#...."
+    "#...#"
+    "#.#.#"
+    "#.###"
+    "#####"
+    ""
+    "....."
+    "....."
+    "#.#.."
+    "###.."
+    "###.#"
+    "###.#"
+    "#####"
+    ""
+    "....."
+    "....."
+    "....."
+    "#...."
+    "#.#.."
+    "#.#.#"
+    "#####"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  [<Theory>]
+  [<FileData(2024, 25, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
+    -1 =! expected
+
+  [<Theory>]
+  [<FileData(2024, 25, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    -1 =! expected
+
 module Day24 =
 
   let input = [|
@@ -139,6 +197,77 @@ module Day24 =
   let part2 (input: string array) expected =
     -1 =! expected
 
+module Day23 =
+
+  let input = [|
+    "kh-tc"
+    "qp-kh"
+    "de-cg"
+    "ka-co"
+    "yn-aq"
+    "qp-ub"
+    "cg-tb"
+    "vc-aq"
+    "tb-ka"
+    "wh-tc"
+    "yn-cg"
+    "kh-ub"
+    "ta-co"
+    "de-co"
+    "tc-td"
+    "tb-wq"
+    "wh-td"
+    "ta-ka"
+    "td-qp"
+    "aq-cg"
+    "wq-ub"
+    "ub-vc"
+    "de-ta"
+    "wq-aq"
+    "wq-vc"
+    "wh-yn"
+    "ka-de"
+    "kh-ta"
+    "co-tc"
+    "wh-qp"
+    "tb-vc"
+    "td-yn"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  let parse (input: string array) =
+    input
+    |> Array.map(fun line ->
+      match line.Split('-') with
+      | [| a; b |] -> a, b
+      | _ -> failwith "Invalid input"
+    )
+
+  [<Theory>]
+  [<FileData(2024, 23, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
+    let connections = parse input
+    let aToB =
+      connections
+      |> Array.groupBy(fst)
+      |> Array.map(fun (k, v) -> k, v |> Array.map snd)
+      |> Map.ofArray
+    let bToA =
+      connections
+      |> Array.groupBy(snd)
+      |> Array.map(fun (k, v) -> k, v |> Array.map fst)
+      |> Map.ofArray
+
+    -1 =! expected
+
+  [<Theory>]
+  [<FileData(2024, 23, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    -1 =! expected
+
 module Day22 =
 
   let input = [|
@@ -184,41 +313,132 @@ module Day22 =
   [<FileData(2024, 22, 1696)>]
   [<MemberData(nameof sample2, 23)>]
   let part2 (input: string array) expected =
-    let counts =
-      input
-      |> Array.map(fun secret ->
-        let counts = Dictionary()
-        let rec loop i s1 s2 s3 d3 secret3 =
+    let total = Dictionary()
+    let mutable result = 0L
+    let mutable exists = false
+
+    let counts = Dictionary()
+    for secret in input do
+      counts.Clear()
+      let rec loop i s1 s2 s3 d3 secret3 =
+        if i > 0 then
           let secret4 = evolve secret3
           let d4 = secret4 % 10L
           let s4 = d4 - d3
           let window = struct(s1, s2, s3, s4)
           counts.TryAdd(window, d4) |> ignore
-          if i < 0 then counts else
-            loop (i - 1) s2 s3 s4 d4 secret4
-        let secret0 = int64 secret
-        let secret1 = evolve secret0
-        let secret2 = evolve secret1
-        let secret3 = evolve secret2
-        let d0 = secret0 % 10L
-        let d1 = secret1 % 10L
-        let d2 = secret2 % 10L
-        let d3 = secret3 % 10L
-        let s1 = d1 - d0
-        let s2 = d2 - d1
-        let s3 = d3 - d2
-        loop (2000 - 3) s1 s2 s3 d3 secret3
-      )
-    let total = counts[0]
-    let mutable result = 0L
-    for i = 1 to counts.Length - 1 do
-      for kvp in counts[i] do
-        let mutable exists = false
+          loop (i - 1) s2 s3 s4 d4 secret4
+      let secret0 = int64 secret
+      let secret1 = evolve secret0
+      let secret2 = evolve secret1
+      let secret3 = evolve secret2
+      let d0 = secret0 % 10L
+      let d1 = secret1 % 10L
+      let d2 = secret2 % 10L
+      let d3 = secret3 % 10L
+      let s1 = d1 - d0
+      let s2 = d2 - d1
+      let s3 = d3 - d2
+      loop (2000 - 3) s1 s2 s3 d3 secret3
+
+      for kvp in counts do
         let mutable valueRef = &CollectionsMarshal.GetValueRefOrAddDefault(total, kvp.Key, &exists)
         let value = valueRef + kvp.Value
         valueRef <- value
         result <- max result value
+
     result =! expected
+
+module Day21 =
+
+  let input = [|
+    "+---+---+---+"
+    "| 7 | 8 | 9 |"
+    "+---+---+---+"
+    "| 4 | 5 | 6 |"
+    "+---+---+---+"
+    "| 1 | 2 | 3 |"
+    "+---+---+---+"
+    "    | 0 | A |"
+    "    +---+---+"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  [<Theory>]
+  [<FileData(2024, 21, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
+    -1 =! expected
+
+  [<Theory>]
+  [<FileData(2024, 21, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    -1 =! expected
+
+module Day20 =
+
+  let input = [|
+    "###############"
+    "#...#...#.....#"
+    "#.#.#.#.#.###.#"
+    "#S#...#.#.#...#"
+    "#######.#.#.###"
+    "#######.#.#...#"
+    "#######.#.###.#"
+    "###..E#...#...#"
+    "###.#######.###"
+    "#...###...#...#"
+    "#.#####.#.###.#"
+    "#.#...#.#.#...#"
+    "#.#.#.#.#.#.###"
+    "#...#...#...###"
+    "###############"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  [<Theory>]
+  [<FileData(2024, 20, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
+    -1 =! expected
+
+  [<Theory>]
+  [<FileData(2024, 20, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    -1 =! expected
+
+module Day19 =
+
+  let input = [|
+    "r, wr, b, g, bwu, rb, gb, br"
+    ""
+    "brwrr"
+    "bggr"
+    "gbbr"
+    "rrbgbr"
+    "ubwu"
+    "bwurrg"
+    "brgr"
+    "bbrgwb"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  [<Theory>]
+  [<FileData(2024, 19, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
+    -1 =! expected
+
+  [<Theory>]
+  [<FileData(2024, 19, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    -1 =! expected
 
 module Day18 =
 
@@ -323,7 +543,6 @@ module Day18 =
 
 module Day17 =
   open System.Threading
-  open System.Net.Http.Headers
 
   let input = [|
     "Register A: 729"
@@ -571,7 +790,119 @@ module Day17 =
     )
     =! expected
 
+module Day16 =
 
+  let input1 = [|
+    "###############"
+    "#.......#....E#"
+    "#.#.###.#.###.#"
+    "#.....#.#...#.#"
+    "#.###.#####.#.#"
+    "#.#.#.......#.#"
+    "#.#.#####.###.#"
+    "#...........#.#"
+    "###.#.#####.#.#"
+    "#...#.....#.#.#"
+    "#.#.#.###.#.#.#"
+    "#.....#...#.#.#"
+    "#.###.#.#.#.#.#"
+    "#S..#.....#...#"
+    "###############"
+  |]
+
+  let input2 = [|
+    "#################"
+    "#...#...#...#..E#"
+    "#.#.#.#.#.#.#.#.#"
+    "#.#.#.#...#...#.#"
+    "#.#.#.#.###.#.#.#"
+    "#...#.#.#.....#.#"
+    "#.#.#.#.#.#####.#"
+    "#.#...#.#.#.....#"
+    "#.#.#####.#.###.#"
+    "#.#.#.......#...#"
+    "#.#.###.#####.###"
+    "#.#.#...#.....#.#"
+    "#.#.#.#####.###.#"
+    "#.#.#.........#.#"
+    "#.#.#.#########.#"
+    "#S#.............#"
+    "#################"
+  |]
+
+  let sample1 (result: int) = makeSample result input1
+  let sample2 (result: int) = makeSample result input2
+
+  let directions = [
+    +1, 0
+    -1, 0
+    0, +1
+    0, -1
+  ]
+
+  [<Theory>]
+  //[<FileData(2024, 16, 0)>]
+  [<MemberData(nameof sample1, 7036)>]
+  [<MemberData(nameof sample2, 11048)>]
+  let part1 (input: string array) expected =
+    let input = input1
+    //let input = IO.File.ReadAllLines(ensureExists 2024 16)
+
+    let p0 =
+      let x = input |> Array.findIndex(fun line -> line.Contains('S'))
+      x, input[x].IndexOf('S')
+
+    let w, h = input.Length, input[0].Length
+
+    let rec getPaths (input: string array) list acc set ((x, y) as p) : (int*int) list list =
+      if Set.contains p set || x < 0 || x >= w || y < 0 || y >= h || input[x][y] = '#' then
+        []
+      elif input[x][y] = 'E' then
+        printfn "Got path"
+        (p :: acc) :: list
+      else
+        let set = set.Add(p)
+        let acc = p :: acc
+        directions |> List.collect(fun (dx, dy) -> getPaths input list acc set (x + dx, y + dy))
+
+    let paths = getPaths input [] [] Set.empty p0
+
+    paths
+    |> List.map(fun path ->
+
+      let directions =
+        ((fst p0, 0) :: path)
+        |> List.pairwise
+        |> List.map(fun ((x1, y1), (x2, y2)) ->
+          match x2 - x1, y2 - y1 with
+          | 1, 0 -> 'v'
+          | -1, 0 -> '^'
+          | 0, 1 -> '>'
+          | 0, -1 -> '<'
+          | _ -> failwith "Invalid direction"
+        )
+
+      let turns = directions |> List.toArray |> Array.chunkWhen (=) |> Array.length
+      let steps = path.Length
+
+      //let g = input |> Array.map(fun line -> line.ToCharArray())
+      //for ((x, y), d) in List.zip path directions do
+      //  g[x][y] <- d
+      //let s = g |> Array.map String |> String.concat "\r\n"
+      //printfn "%s" s
+      //printfn ""
+      1000 * (turns - 1) + steps - 1
+    )
+    |> List.min
+    //|> List.sort
+    //|> Seq.print
+    =! expected
+
+  [<Theory>]
+  [<FileData(2024, 16, 0)>]
+  [<MemberData(nameof sample1, 0)>]
+  let part2 (input: string array) expected =
+    -1 =! expected
 
 module Day15 =
 

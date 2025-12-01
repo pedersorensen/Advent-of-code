@@ -203,6 +203,59 @@ module Array =
       result.Add(buffer.ToArray())
     result.ToArray()
 
+  let chunkWhen2 condition (array: _ array) =
+    if   array.Length = 0 then [||]
+    elif array.Length = 1 then [| array |]
+    else
+      let result = ResizeArray()
+      let buffer = ResizeArray()
+      for item in array do
+        if buffer.Count = 0 || condition buffer[buffer.Count - 1] item then
+          buffer.Add(item)
+        else
+          result.Add(buffer.ToArray())
+          buffer.Clear()
+          buffer.Add(item)
+      result.Add(buffer.ToArray())
+      result.ToArray()
+
+  let chunkWhen3 condition (array: _ array) =
+    let result = ResizeArray()
+    let buffer = ResizeArray()
+    let mutable previous = Unchecked.defaultof<_>
+    for item in array do
+      if buffer.Count = 0 || condition previous item then
+        buffer.Add(item)
+        previous <- item
+      else
+        result.Add(buffer.ToArray())
+        buffer.Clear()
+        buffer.Add(item)
+        previous <- item
+    if buffer.Count > 0 then
+      result.Add(buffer.ToArray())
+    result.ToArray()
+
+  let chunkWhen4 condition (array: _ array) =
+    if   array.Length = 0 then [| |]
+    elif array.Length = 1 then [| array |]
+    else
+      let result = ResizeArray()
+      let mutable buffer = CompilerServices.ArrayCollector()
+      let mutable first = true
+      let mutable previous = Unchecked.defaultof<_>
+      for item in array do
+        if first || condition previous item then
+          buffer.Add(item)
+          previous <- item
+          first <- false
+        else
+          result.Add(buffer.Close())
+          buffer.Add(item)
+          previous <- item
+      result.Add(buffer.Close())
+      result.ToArray()
+
   let sumBy2 f (array1: _ array) (array2: _ array) =
     if array1.Length <> array2.Length then
       invalidArg "array2" "Arrays must have the same length"
