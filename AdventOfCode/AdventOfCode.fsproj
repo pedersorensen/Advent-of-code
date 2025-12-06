@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="Utils.fs" />
     <Compile Include="TopologicalSort.fs" />
+    <Compile Include="Excercises2025.fs" />
     <Compile Include="Excercises2024.fs" />
     <Compile Include="Excercises2023.fs" />
     <Compile Include="Excercises2022.fs" />
