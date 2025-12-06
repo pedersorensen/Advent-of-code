@@ -14,6 +14,70 @@ open Xunit
 makeTemplate 2025 1 |> clip
 #endif
 
+module Day04 =
+
+  let input = [|
+    "..@@.@@@@."
+    "@@@.@.@.@@"
+    "@@@@@.@.@@"
+    "@.@@@@..@."
+    "@@.@@@@.@@"
+    ".@@@@@@@.@"
+    ".@.@.@.@@@"
+    "@.@@@.@@@@"
+    ".@@@@@@@@."
+    "@.@.@@@.@."
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  let allDirections = [| (-1, 0); (1, 0); (0, -1); (0, 1); (-1, -1); (-1, 1); (1, -1); (1, 1) |]
+
+  [<Theory>]
+  [<FileData(2025, 4, 1505)>]
+  [<MemberData(nameof sample, 13)>]
+  let part1 (input: string array) expected =
+    let mutable count = 0
+    for i in 0 .. input.Length - 1 do
+      for j in 0 .. input[i].Length - 1 do
+        if input[i][j] = '@' then
+          let mutable sum = 0
+          for (di, dj) in allDirections do
+            let x = i + di
+            let y = j + dj
+            if x >= 0 && x < input.Length && y >= 0 && y < input[i].Length then
+              if input[x][y] = '@' then
+                sum <- sum + 1
+          if sum < 4 then
+            count <- count + 1
+    count =! expected
+
+  [<Theory>]
+  [<FileData(2025, 4, 9182)>]
+  [<MemberData(nameof sample, 43)>]
+  let part2 (input: string array) expected =
+    let rolls = input |> Array.map _.ToCharArray()
+    let mutable removed = 0
+    let toRemove = ResizeArray<int * int>()
+    toRemove.Add((0,0))
+    while toRemove.Count > 0 do
+      toRemove.Clear()
+      for i in 0 .. rolls.Length - 1 do
+        for j in 0 .. rolls[i].Length - 1 do
+          if rolls[i][j] = '@' then
+            let mutable sum = 0
+            for (di, dj) in allDirections do
+              let x = i + di
+              let y = j + dj
+              if x >= 0 && x < rolls.Length && y >= 0 && y < rolls[i].Length then
+                if rolls[x][y] = '@' then
+                  sum <- sum + 1
+            if sum < 4 then toRemove.Add((i, j))
+      for (i, j) in toRemove do
+        rolls[i][j] <- '.'
+      removed <- removed + toRemove.Count
+    removed =! expected
+
 module Day03 =
 
   let input = [|
