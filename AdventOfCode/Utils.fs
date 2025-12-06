@@ -93,9 +93,7 @@ let readAllInput year (day: int) = File.ReadAllText(ensureExists year day)
 let readsInts year day = (readInput year day |> Array.exactlyOne).Split(',') |> Array.map int
 let readsInt64s year day = (readInput year day |> Array.exactlyOne).Split(',') |> Array.map int64
 
-let digits = SearchValues.Create("-0123456789")
-
-let tryParseSlice<'T when 'T :> ISpanParsable<'T>> (span: ReadOnlySpan<char> byref) (value: 'T byref) =
+let tryParseSlice<'T when 'T :> ISpanParsable<'T>> (digits: SearchValues<char>) (span: ReadOnlySpan<char> byref) (value: 'T byref) =
   let mutable i = span.IndexOfAny(digits)
   if i < 0 then false else
 
@@ -112,11 +110,22 @@ let tryParseSlice<'T when 'T :> ISpanParsable<'T>> (span: ReadOnlySpan<char> byr
 
   'T.TryParse(slice, null, &value)
 
+let digits       = SearchValues.Create("0123456789")
+let signedDigits = SearchValues.Create("-0123456789")
+
 let parseNumbers<'T when 'T :> ISpanParsable<'T>> (line: string) =
   let results = ResizeArray<'T>()
   let mutable span = line.AsSpan()
   let mutable value = Unchecked.defaultof<_>
-  while tryParseSlice &span &value do
+  while tryParseSlice digits &span &value do
+    results.Add(value)
+  results.ToArray()
+
+let parseSignedNumbers<'T when 'T :> ISpanParsable<'T>> (line: string) =
+  let results = ResizeArray<'T>()
+  let mutable span = line.AsSpan()
+  let mutable value = Unchecked.defaultof<_>
+  while tryParseSlice signedDigits &span &value do
     results.Add(value)
   results.ToArray()
 
