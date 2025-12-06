@@ -15,6 +15,68 @@ open Xunit
 makeTemplate 2025 1 |> clip
 #endif
 
+module Day06 =
+
+  let input = [|
+    "123 328  51 64 "
+    " 45 64  387 23 "
+    "  6 98  215 314"
+    "*   +   *   +"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  [<Theory>]
+  [<FileData(2025, 6, 4405895212738L)>]
+  [<MemberData(nameof sample, 4277556)>]
+  let part1 (input: string array) expected =
+    let parsed = input |> Array.map parseNumbers<int64>
+    let operations, result =
+      input[^0].ToCharArray()
+      |> Array.choose(fun ch ->
+        match ch with
+        | '+' -> Some (ch, 0L)
+        | '*' -> Some (ch, 1L)
+        | _   -> None
+      )
+      |> Array.unzip
+    parsed
+    |> Array.iter(fun row ->
+      for i = 0 to row.Length - 1 do
+        match operations[i] with
+        | '+' -> result[i] <- result[i] + row[i]
+        | '*' -> result[i] <- result[i] * row[i]
+        | _ -> ()
+    )
+    Array.sum result =! expected
+
+  [<Theory>]
+  [<FileData(2025, 6, 7450962489289L)>]
+  [<MemberData(nameof sample, 3263827)>]
+  let part2 (input: string array) expected =
+    let l = input.Length - 1
+    let parsed = input |> Array.take l |> Array.map _.ToCharArray()
+    let zero = Array.create l ' '
+    let numbers =
+      parsed
+      |> Array.transpose
+      |> Array.chunkWhen(fun _ -> (<>) zero)
+      |> Array.map(
+         Array.choose(fun chars ->
+          if chars = zero
+          then None
+          else Some (String chars |> int64)
+         )
+      )
+    let operations = input[^0].Replace(" ", "").ToCharArray()
+    (numbers, operations)
+    ||> Array.sumBy2(fun row ->
+      function
+      | '+' -> row |> Array.sum
+      | '*' -> row |> Array.fold(*) 1L
+      | _   -> 0
+    ) =! expected
+
 module Day05 =
 
   let input = [|

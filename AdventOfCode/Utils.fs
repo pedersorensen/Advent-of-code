@@ -267,11 +267,11 @@ module Array =
       result.Add(buffer.Close())
       result.ToArray()
 
-  let sumBy2 f (array1: _ array) (array2: _ array) =
+  let inline sumBy2 f (array1: _ array) (array2: _ array) =
     if array1.Length <> array2.Length then
       invalidArg "array2" "Arrays must have the same length"
 
-    let mutable sum = 0
+    let mutable sum = LanguagePrimitives.GenericZero
     for i in 0 .. array1.Length - 1 do
       sum <- sum + f array1[i] array2[i]
     sum
