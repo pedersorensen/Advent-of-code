@@ -14,6 +14,36 @@ open Xunit
 makeTemplate 2025 1 |> clip
 #endif
 
+module Day03 =
+
+  let input = [|
+    "987654321111111"
+    "811111111111119"
+    "234234234234278"
+    "818181911112111"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  [<Theory>]
+  [<FileData(2025, 3, 17074)>]
+  [<MemberData(nameof sample, 357)>]
+  let part1 (input: string array) expected =
+    let ints = input |> Array.map (fun s -> s.ToCharArray() |> Array.map(fun ch -> int ch - int '0'))
+    ints
+    |> Array.sumBy(fun i ->
+      let max1 = Span.indexOfMax(i.AsSpan(0, i.Length - 1)) + 1
+      let max2 = Span.indexOfMax(i.AsSpan(max1, i.Length - max1))
+      10 * i[max1 - 1] + i[max2 + max1]
+    )
+    =! expected
+
+  [<Theory>]
+  [<FileData(2025, 3, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    -1 =! expected
+
 module Day02 =
 
   let input = [|
