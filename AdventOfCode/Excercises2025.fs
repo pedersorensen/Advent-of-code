@@ -8,11 +8,69 @@ namespace Excercises2025
 #endif
 
 open System
+open System.Collections.Generic
 open Xunit
 
 #if INTERACTIVE
 makeTemplate 2025 1 |> clip
 #endif
+
+module Day05 =
+
+  let input = [|
+    "3-5"
+    "10-14"
+    "16-20"
+    "12-18"
+    ""
+    "1"
+    "5"
+    "8"
+    "11"
+    "17"
+    "32"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  [<Theory>]
+  [<FileData(2025, 5,681 )>]
+  [<MemberData(nameof sample, 3)>]
+  let part1 (input: string array) expected =
+    let splitAt = Array.findIndex(fun s -> s = "") input
+    let ranges, ingredients = Array.splitAt splitAt input
+    let ranges2 = ranges |> Array.map parseNumbers<int64>
+    ingredients
+    |> Array.sumBy(fun i ->
+      if i = "" then 0 else
+      let i = int64 i
+      if ranges2 |> Array.exists(fun parts -> i >= parts[0] && i <= parts[1])
+      then 1 else 0
+    )
+    =! expected
+
+  let mergeRanges (ranges: int64 array array) =
+    let sorted = ranges |> Array.sortBy(fun r -> r[0])
+    let merged = ResizeArray<int64[]>()
+    for r in sorted do
+      if merged.Count = 0 then
+        merged.Add(r)
+      else
+        let last = merged[merged.Count - 1]
+        if r[0] <= last[1] + 1L
+        then last[1] <- max last[1] r[1]
+        else merged.Add(r)
+    merged.ToArray()
+
+  [<Theory>]
+  [<FileData(2025, 5, 348820208020395L)>]
+  [<MemberData(nameof sample, 14)>]
+  let part2 (input: string array) expected =
+    Array.takeWhile(fun s -> s <> "") input
+    |> Array.map parseNumbers<int64>
+    |> mergeRanges
+    |> Array.sumBy(fun r -> r[1] - r[0] + 1L)
+    =! expected
 
 module Day04 =
 
