@@ -15,6 +15,99 @@ open Xunit
 makeTemplate 2025 1 |> clip
 #endif
 
+module Day07 =
+
+  let input = [|
+    ".......S......."
+    "..............."
+    ".......^......."
+    "..............."
+    "......^.^......"
+    "..............."
+    ".....^.^.^....."
+    "..............."
+    "....^.^...^...."
+    "..............."
+    "...^.^...^.^..."
+    "..............."
+    "..^...^.....^.."
+    "..............."
+    ".^.^.^.^.^...^."
+    "..............."
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  [<Theory>]
+  [<FileData(2025, 7, 1619)>]
+  [<MemberData(nameof sample, 21)>]
+  let part1 (input: string array) expected =
+    let map = input |> Array.map _.ToCharArray()
+    let splits = HashSet<int * int>()
+    let tryMoveDown (x, y) =
+      if x + 1 >= map.Length then
+        []
+      elif map[x + 1][y] = '.' then
+        map[x + 1][y] <- '|'
+        [x + 1, y]
+      elif map[x + 1][y] = '|' then
+        []
+      else
+        map[x + 1][y - 1] <- '|'
+        map[x + 1][y + 1] <- '|'
+        splits.Add((x + 1, y)) |> ignore
+        [
+          x + 1, y - 1
+          x + 1, y + 1
+        ]
+
+    let start = input[0].IndexOf('S')
+    let mutable p0 = [0, start]
+    while not p0.IsEmpty do
+      p0 <- p0 |> List.collect tryMoveDown
+    printfn "\r\n%s" (map |> Array.map String |> String.concat "\r\n")
+
+    splits.Count =! expected
+
+  [<Theory>]
+  [<FileData(2025, 7, 0)>]
+  [<MemberData(nameof sample, 40)>]
+  let part2 (input: string array) expected =
+    let map = input |> Array.map _.ToCharArray()
+    let splits = ResizeArray<int * int>()
+    let tryMoveDown (x, y) =
+      if x + 1 >= map.Length then
+        []
+      elif map[x + 1][y] = '.' then
+        map[x + 1][y] <- '|'
+        //printfn "\r\n%s" (map |> Array.map String |> String.concat "\r\n")
+        [x + 1, y]
+      elif map[x + 1][y] = '|' then
+        []
+      else
+        //printfn "Split at %d,%d" (x + 1) y
+        map[x + 1][y - 1] <- '|'
+        map[x + 1][y + 1] <- '|'
+        //printfn "\r\n%s" (map |> Array.map String |> String.concat "\r\n")
+        splits.Add((x + 1, y)) |> ignore
+        [
+          //x, y
+          x + 1, y - 1
+          x + 1, y + 1
+        ]
+
+    let start = input[0].IndexOf('S')
+    let mutable p0 = [0, start]
+    let mutable doMore = true
+
+    while doMore do
+      let temp = p0
+      p0 <- p0 |> List.collect tryMoveDown
+      doMore <- p0 <> temp
+
+    splits.Count
+    =! expected
+
 module Day06 =
 
   let input = [|
