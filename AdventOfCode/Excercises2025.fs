@@ -15,6 +15,109 @@ open Xunit
 makeTemplate 2025 1 |> clip
 #endif
 
+module Day09 =
+
+  let input = [|
+    "7,1"
+    "11,1"
+    "11,7"
+    "9,7"
+    "9,5"
+    "2,5"
+    "2,3"
+    "7,3"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  [<Theory>]
+  [<FileData(2025, 9, 4776487744L)>]
+  [<MemberData(nameof sample, 50)>]
+  let part1 (input: string array) expected =
+    let coords = input |> Array.map(parseNumbers<int64> >> fun arr -> arr[0], arr[1])
+    let mutable maxArea = 0L
+    for i = 0 to coords.Length - 1 do
+      let (x1, y1) = coords[i]
+      for j = i + 1 to coords.Length - 1 do
+        let (x2, y2) = coords[j]
+        let dx = x1 - x2 + 1L
+        let dy = y1 - y2 + 1L
+        let area = dx * dy
+        if area > maxArea then
+          maxArea <- area
+    maxArea =! expected
+
+  let printGrid (grid: char[][]) =
+    grid |> Array.iter(fun row -> row |> Array.iter(printf "%c") ; printfn "")
+
+  let initGrid width height (coords: (int64 * int64) array) =
+    let grid = Array.init height (fun _ -> Array.create width '.')
+    for (x, y) in coords do grid[int y][int x] <- '#'
+    grid
+
+  let sortPairs (a: int64 * int64) (b: int64 * int64) =
+    let (ax, ay) = a
+    let (bx, by) = b
+    if ax <> bx then
+      if ax < bx then a, b else b, a
+    else
+      if ay < by then a, b else b, a
+
+  let isWithinArea square (x, y) =
+    let (x1, y1), (x2, y2) = square
+    x > min x1 x2 && x < max x1 x2 &&
+    y > min y1 y2 && y < max y1 y2
+
+  [<Theory>]
+  //[<FileData(2025, 9, 0)>] // 3904033833 Too high
+  [<MemberData(nameof sample, 50)>]
+  let part2 (input: string array) expected =
+    let coords = input |> Array.map(parseNumbers<int64> >> fun arr -> arr[0], arr[1])
+
+    let maxX, maxY =
+      coords
+      |> Array.reduce(fun (ax, ay) (bx, by) -> max ax bx, max ay by)
+
+    let grid = initGrid (int maxX + 1) (int maxY + 1) coords
+    printGrid grid
+
+    let mutable maxArea = 0L
+    for i = 0 to coords.Length - 1 do
+      for j = i + 1 to coords.Length - 1 do
+        let (x1, y1), (x2, y2) = sortPairs coords[i] coords[j]
+        //let (x1, y1), (x2, y2) = sortPairs (9L,5L) (2L,3L)
+        printfn "Checking points (%d,%d) and (%d,%d)" x1 y1 x2 y2
+        let grid = initGrid (int maxX + 1) (int maxY + 1) coords
+        let topLeft     = (min x1 x2, min y1 y2)
+        let bottomRight = (max x1 x2, max y1 y2)
+        let (x1, y1), (x2, y2) = topLeft, bottomRight
+        grid[int y1][int x1] <- 'A'
+        grid[int y2][int x2] <- 'B'
+        printGrid grid
+        let allOutside =
+          coords
+          |> Array.forall(fun coord ->
+            not (isWithinArea ((x1, y1), (x2, y2)) coord)
+          )
+
+        //if not allOutside then
+        //  let coordsWithinArea =
+        //    coords
+        //    |> Array.filter(isWithinArea ((x1, y1), (x2, y2)))
+        //  for (x,y) in coordsWithinArea do grid[int y][int x] <- 'O'
+        //  printfn ""
+        //  printGrid grid
+        if allOutside then
+          let dx = abs(x1 - x2) + 1L
+          let dy = abs(y1 - y2) + 1L
+          let area = dx * dy
+          printfn "All outside: %b, area: %i" allOutside area
+          printfn ""
+          if area > maxArea then
+            maxArea <- area
+
+    maxArea =! expected
+
 module Day07 =
 
   let input = [|
