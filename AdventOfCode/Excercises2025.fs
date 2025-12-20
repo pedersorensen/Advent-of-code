@@ -118,6 +118,93 @@ module Day09 =
 
     maxArea =! expected
 
+module Day08 =
+
+  let input = [|
+    "162,817,812"
+    "57,618,57"
+    "906,360,560"
+    "592,479,940"
+    "352,342,300"
+    "466,668,158"
+    "542,29,236"
+    "431,825,988"
+    "739,650,466"
+    "52,470,668"
+    "216,146,977"
+    "819,987,18"
+    "117,168,530"
+    "805,96,715"
+    "346,949,466"
+    "970,615,88"
+    "941,993,340"
+    "862,61,35"
+    "984,92,344"
+    "425,690,689"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  let parse input =
+    input
+    |> Array.map(parseNumbers<int64> >> fun arr -> arr[0], arr[1], arr[2])
+    |> Array.ownPairs
+    |> Array.sortBy(fun ((x1, y1, z1), (x2, y2, z2)) ->
+      let dx = x2 - x1
+      let dy = y2 - y1
+      let dz = z2 - z1
+      dx * dx + dy * dy + dz * dz
+    )
+
+  let makeConnection (circuits: ResizeArray<HashSet<int64 * int64 * int64>>) (p1, p2) =
+    let set1 = circuits |> Seq.tryFind(fun set -> set.Contains(p1))
+    let set2 = circuits |> Seq.tryFind(fun set -> set.Contains(p2))
+    match set1, set2 with
+    | Some set1, Some set2 ->
+      if set1 <> set2 then
+        set1.UnionWith(set2)
+        circuits.Remove(set2) |> ignore
+        set1.Add(p1) |> ignore
+        set1.Add(p2) |> ignore
+    | Some set, None
+    | None    , Some set ->
+      set.Add(p1) |> ignore
+      set.Add(p2) |> ignore
+    | None, None -> circuits.Add(HashSet<_>([| p1 ; p2|]))
+
+  [<Theory>]
+  [<FileData(2025, 8, 140008)>]
+  [<MemberData(nameof sample, 40)>]
+  let part1 (input: string array) expected =
+    let circuits = ResizeArray<HashSet<_>>()
+    let take = if input.Length <= 20 then 10 else 1000
+    parse input
+    |> Seq.truncate take
+    |> Seq.iter(makeConnection circuits)
+    circuits
+    |> Seq.map _.Count
+    |> Seq.sortDescending
+    |> Seq.truncate 3
+    |> Seq.product
+    =! expected
+
+  [<Theory>]
+  [<FileData(2025, 8, 9253260633L)>]
+  [<MemberData(nameof sample, 25272)>]
+  let part2 (input: string array) expected =
+    let circuits = ResizeArray<HashSet<_>>()
+    parse input
+    |> Seq.map(fun points ->
+      makeConnection circuits points
+      points
+    )
+    |> Seq.pick(fun ((x1, _, _), (x2, _, _)) ->
+      if circuits.Count = 1 && circuits[0].Count = input.Length
+      then Some(x1 * x2)
+      else None
+    )
+    =! expected
+
 module Day07 =
 
   let input = [|

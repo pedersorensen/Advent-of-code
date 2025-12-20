@@ -140,6 +140,13 @@ let cons head tail = head :: tail
 
 module Seq =
 
+  /// Computes the product of all elements in the sequence.
+  let inline product (source: 'T seq) =
+    let mutable result = LanguagePrimitives.GenericOne<'T>
+    for item in source do
+      result <- result * item
+    result
+
   let countTrue predicate source =
     source |> Seq.sumBy(fun x -> if predicate x then 1 else 0)
 
@@ -163,6 +170,12 @@ module Array =
 
   let private toArray (array : ResizeArray<_>) =
     if array.Count = 0 then Array.Empty() else array.ToArray()
+
+  let ownPairs (array: _ array) = [|
+    for i = 0 to array.Length - 1 do
+      for j = i + 1 to array.Length - 1 do
+        array[i], array[j]
+  |]
 
   /// Splits the collection into two collections, containing the elements for
   /// which the given projection returns 'Choice1Of2' and 'Choice2Of2' respectively.
