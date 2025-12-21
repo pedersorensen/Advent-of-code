@@ -15,6 +15,109 @@ open Xunit
 makeTemplate 2025 1 |> clip
 #endif
 
+module Day12 =
+
+  let input = [|
+    "0:"
+    "###"
+    "##."
+    "##."
+    ""
+    "1:"
+    "###"
+    "##."
+    ".##"
+    ""
+    "2:"
+    ".##"
+    "###"
+    "##."
+    ""
+    "3:"
+    "##."
+    "###"
+    "##."
+    ""
+    "4:"
+    "###"
+    "#.."
+    "###"
+    ""
+    "5:"
+    "###"
+    ".#."
+    "###"
+    ""
+    "4x4: 0 0 0 0 2 0"
+    "12x5: 1 0 1 0 2 2"
+    "12x5: 1 0 1 0 3 2"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  [<Theory>]
+  [<FileData(2025, 12, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
+    -1 =! expected
+
+  [<Theory>]
+  [<FileData(2025, 12, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    -1 =! expected
+
+module Day11 =
+
+  let input = [|
+    "aaa: you hhh"
+    "you: bbb ccc"
+    "bbb: ddd eee"
+    "ccc: ddd eee fff"
+    "ddd: ggg"
+    "eee: out"
+    "fff: out"
+    "ggg: out"
+    "hhh: ccc fff iii"
+    "iii: out"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  [<Theory>]
+  [<FileData(2025, 11, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
+    -1 =! expected
+
+  [<Theory>]
+  [<FileData(2025, 11, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    -1 =! expected
+
+module Day10 =
+
+  let input = [|
+    "[.##.] (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}"
+    "[...#.] (0,2,3,4) (2,3) (0,4) (0,1,2) (1,2,3,4) {7,5,12,7,2}"
+    "[.###.#] (0,1,2,3,4) (0,3,4) (0,1,2,4,5) (1,2) {10,11,11,5,10,5}"
+  |]
+
+  let sample (result: int) = makeSample result input
+
+  [<Theory>]
+  [<FileData(2025, 10, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
+    -1 =! expected
+
+  [<Theory>]
+  [<FileData(2025, 10, 0)>]
+  [<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    -1 =! expected
+
 module Day09 =
 
   let input = [|
@@ -517,11 +620,11 @@ module Day02 =
     "11-22,95-115,998-1012,1188511880-1188511890,222220-222224,1698522-1698528,446443-446449,38593856-38593862,565653-565659,824824821-824824827,2121212118-2121212124"
   |]
 
-  let sample (result: int) = makeSample result input
+  let sample (result: int64) = makeSample result input
 
   [<Theory>]
   [<FileData(2025, 2, 21139440284L)>]
-  [<MemberData(nameof sample, 1227775554)>]
+  [<MemberData(nameof sample, 1227775554L)>]
   let part1 (input: string array) expected =
     let numbers = parseNumbers<int64> input[0]
     let mutable sum = 0L
