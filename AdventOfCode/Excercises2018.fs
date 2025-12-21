@@ -34,9 +34,6 @@ module Helpers =
 
 module Day01 =
 
-  let input = [| "" |]
-  let sample (result: int) = makeSample result input
-
   let repeatedValues seed (changes : int []) =
     let frequencies = new HashSet<_>()
     ignore <| frequencies.Add 0
@@ -50,32 +47,22 @@ module Day01 =
     loop seed 0
 
   [<Theory>]
-  [<InlineData("+1\n-1", 0)>]
-  [<InlineData("+3\n+3\n+4\n-2\n-4", 10)>]
-  [<InlineData("-6\n+3\n+8\n+5\n-6", 5)>]
-  [<InlineData("+7\n+7\n-2\n-7\n-4", 14)>]
-  let part1_examples (data: string) expected =
-    let changes = data.Split('\n') |> Array.map int
-    repeatedValues 0 changes =! expected
-
-  [<Theory>]
   [<FileData(2018, 1, 445)>]
-  //[<MemberData(nameof sample, 0)>]
   let part1 (input: string array) expected =
     let changes = input |> Array.map int
     changes |> Array.sum =! expected
 
+  let part2_input = [| "+1"; "-1" |]
+  let part2_sample (result: int) = makeSample result part2_input
+
   [<Theory>]
   [<FileData(2018, 1, 219)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part2_sample, 0)>]
   let part2 (input: string array) expected =
     let changes = input |> Array.map int
     repeatedValues 0 changes =! expected
 
 module Day02 =
-
-  let input = [| "" |]
-  let sample (result: int) = makeSample result input
 
   let categorize (s:string) =
     let counts = s.ToCharArray() |> Array.countBy id
@@ -91,15 +78,12 @@ module Day02 =
     |> Array.fold (++) (0,0)
     |> fun (a, b) -> a * b
 
-  [<Theory>]
-  [<InlineData("abcdef\nbababc\nabbcde\nabcccd\naabcdd\nabcdee\nababab", 12)>]
-  let part1_examples (data: string) expected =
-    let input = data.Split('\n')
-    checkSum input =! expected
+  let part1_input = [| "abcdef"; "bababc"; "abbcde"; "abcccd"; "aabcdd"; "abcdee"; "ababab" |]
+  let part1_sample (result: int) = makeSample result part1_input
 
   [<Theory>]
   [<FileData(2018, 2, 5658)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part1_sample, 12)>]
   let part1 (input: string array) expected =
     checkSum input =! expected
 
@@ -129,9 +113,6 @@ module Day02 =
     result =! expected
 
 module Day03 =
-
-  let input = [| "" |]
-  let sample (result: int) = makeSample result input
 
   type Claim =
     { Id : int
@@ -165,21 +146,6 @@ module Day03 =
         if fabric.[y, x] > 1 then i <- i + 1
     i
 
-  [<Theory>]
-  [<InlineData("#1 @ 1,3: 4x4\n#2 @ 3,1: 4x4\n#3 @ 5,5: 2x2", 4)>]
-  let part1_examples (data: string) expected =
-    let input = data.Split('\n') |> Array.map Claim.Parse
-    let counted = (Array2D.create 8 8 0, input) ||> Array.fold fillCount
-    count counted =! expected
-
-  [<Theory>]
-  [<FileData(2018, 3, 110891)>]
-  //[<MemberData(nameof sample, 0)>]
-  let part1 (input: string array) expected =
-    let claims = input |> Array.map Claim.Parse
-    let counted = (Array2D.create 1000 1000 0, claims) ||> Array.fold fillCount
-    count counted =! expected
-
   let findNonOverlapping width height (input : Claim []) =
     let set = input |> HashSet
     for y = 0 to height - 1 do
@@ -190,25 +156,31 @@ module Day03 =
             ignore <| set.Remove(c)
     set |> Seq.head
 
-  [<Theory>]
-  [<InlineData("#1 @ 1,3: 4x4\n#2 @ 3,1: 4x4\n#3 @ 5,5: 2x2", 3)>]
-  let part2_examples (data: string) expected =
-    let input = data.Split('\n') |> Array.map Claim.Parse
-    let claim = findNonOverlapping 8 8 input
-    claim.Id =! expected
+  let part1_input = [| "#1 @ 1,3: 4x4"; "#2 @ 3,1: 4x4"; "#3 @ 5,5: 2x2" |]
+  let part1_sample (result: int) = makeSample result part1_input
 
   [<Theory>]
-  //[<FileData(2018, 3, 297)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<FileData(2018, 3, 110891)>]
+  [<MemberData(nameof part1_sample, 4)>]
+  let part1 (input: string array) expected =
+    let claims = input |> Array.map Claim.Parse
+    let size = if input.Length <= 3 then 8 else 1000
+    let counted = (Array2D.create size size 0, claims) ||> Array.fold fillCount
+    count counted =! expected
+
+  let part2_input = [| "#1 @ 1,3: 4x4"; "#2 @ 3,1: 4x4"; "#3 @ 5,5: 2x2" |]
+  let part2_sample (result: int) = makeSample result part2_input
+
+  [<Theory>]
+  [<FileData(2018, 3, 297)>]
+  [<MemberData(nameof part2_sample, 3)>]
   let part2 (input: string array) expected =
     let claims = input |> Array.map Claim.Parse
-    let claim = findNonOverlapping 1000 1000 claims
+    let size = if input.Length <= 3 then 8 else 1000
+    let claim = findNonOverlapping size size claims
     claim.Id =! expected
 
 module Day04 =
-
-  let input = [| "" |]
-  let sample (result: int) = makeSample result input
 
   let parse (input : string) =
     let time = input.Substring(1, 16) |> DateTime.Parse
@@ -309,9 +281,6 @@ module Day04 =
 
 module Day05 =
 
-  let input = [| "" |]
-  let sample (result: int) = makeSample result input
-
   module Char =
     let isUpperLowerPair (a: char) (b: char) =
       let d = int a - int b
@@ -331,17 +300,6 @@ module Day05 =
         | _ -> loop (x :: acc) xs
     loop [] list
 
-  [<Theory>]
-  [<InlineData("dabAcCaCBAcCcaDA", 10)>]
-  let part1_examples (data: string) expected =
-    data |> Seq.toList |> removePairs |> List.length =! expected
-
-  [<Theory>]
-  [<FileData(2018, 5, 10638)>]
-  //[<MemberData(nameof sample, 0)>]
-  let part1 (input: string array) expected =
-    input.[0] |> Seq.toList |> removePairs |> List.length =! expected
-
   let removePairsIgnoreChar list ignoreChar =
     let rec loop acc list =
       match list with
@@ -355,19 +313,21 @@ module Day05 =
           | _ -> loop (x :: acc) xs
     loop [] list
 
+  let part1_input = [| "dabAcCaCBAcCcaDA" |]
+  let part1_sample (result: int) = makeSample result part1_input
+
   [<Theory>]
-  [<InlineData("dabAcCaCBAcCcaDA", 4)>]
-  let part2_examples (data: string) expected =
-    let inputList = Seq.toList data
-    let result =
-      seq { 'a' .. 'z' }
-      |> Seq.map(removePairsIgnoreChar inputList >> List.length)
-      |> Seq.min
-    result =! expected
+  [<FileData(2018, 5, 10638)>]
+  [<MemberData(nameof part1_sample, 10)>]
+  let part1 (input: string array) expected =
+    input.[0] |> Seq.toList |> removePairs |> List.length =! expected
+
+  let part2_input = [| "dabAcCaCBAcCcaDA" |]
+  let part2_sample (result: int) = makeSample result part2_input
 
   [<Theory>]
   [<FileData(2018, 5, 4944)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part2_sample, 4)>]
   let part2 (input: string array) expected =
     let inputList = Seq.toList input.[0]
     let result =
@@ -377,9 +337,6 @@ module Day05 =
     result =! expected
 
 module Day06 =
-
-  let input = [| "" |]
-  let sample (result: int) = makeSample result input
 
   let sep = [|','|]
   let parse(s : string) =
@@ -418,26 +375,24 @@ module Day06 =
       set.Add(fst grid.[y, width]) |> ignore
     set
 
-  [<Theory>]
-  [<InlineData("1, 1\n1, 6\n8, 3\n3, 4\n5, 5\n8, 9", 17)>]
-  let part1_examples (data: string) expected =
-    let input = data.Split('\n') |> Array.map parse
-    let width, height = input |> Array.fold Tuple.max (0,0)
-    let grid = Array2D.create (height + 1) (width + 1) ('.', -1)
-    let input' = input |> Array.zip ([| 'A' .. 'z' |] |> Array.take input.Length)
-    fillWithDistance input' grid
-    let border = borderElements grid
-    let (_, area) =
-      grid
-      |> Array2D.toSeq
-      |> Seq.countBy fst
-      |> Seq.filter(fun (ch, _) -> not <| border.Contains ch)
-      |> Seq.maxBy snd
-    area =! expected
+  let fillWithDistance2 input (grid : _[,]) minDist =
+    let mutable count = 0
+    for x = 0 to grid.GetLength(1) - 1 do
+      for y = 0 to grid.GetLength(0) - 1 do
+        let totalDist =
+          input
+          |> Array.sumBy(fun (_, (x', y')) -> abs(x-x') + abs(y-y'))
+        if totalDist < minDist then
+          grid.[y, x] <- ('#', 0)
+          count <- count + 1
+    count
+
+  let part1_input = [| "1, 1"; "1, 6"; "8, 3"; "3, 4"; "5, 5"; "8, 9" |]
+  let part1_sample (result: int) = makeSample result part1_input
 
   [<Theory>]
   [<FileData(2018, 6, 3687)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part1_sample, 17)>]
   let part1 (input: string array) expected =
     let coords = input |> Array.map parse
     let width, height = coords |> Array.fold Tuple.max (0,0)
@@ -453,28 +408,6 @@ module Day06 =
       |> Seq.maxBy snd
     area =! expected
 
-  let fillWithDistance2 input (grid : _[,]) minDist =
-    let mutable count = 0
-    for x = 0 to grid.GetLength(1) - 1 do
-      for y = 0 to grid.GetLength(0) - 1 do
-        let totalDist =
-          input
-          |> Array.sumBy(fun (_, (x', y')) -> abs(x-x') + abs(y-y'))
-        if totalDist < minDist then
-          grid.[y, x] <- ('#', 0)
-          count <- count + 1
-    count
-
-  [<Theory>]
-  [<InlineData("1, 1\n1, 6\n8, 3\n3, 4\n5, 5\n8, 9", 32, 16)>]
-  let part2_examples (data: string) minDist expected =
-    let input = data.Split('\n') |> Array.map parse
-    let width, height = input |> Array.fold Tuple.max (0,0)
-    let grid = Array2D.create (height + 1) (width + 1) ('.', -1)
-    let input' = input |> Array.zip ([| 'A' .. 'z' |] |> Array.take input.Length)
-    let result = fillWithDistance2 input' grid minDist
-    result =! expected
-
   [<Theory>]
   [<FileData(2018, 6, 40134)>]
   //[<MemberData(nameof sample, 0)>]
@@ -483,13 +416,11 @@ module Day06 =
     let width, height = coords |> Array.fold Tuple.max (0,0)
     let grid = Array2D.create (height + 1) (width + 1) ('.', -1)
     let coords' = coords |> Array.zip ([| 'A' .. 'z' |] |> Array.take coords.Length)
-    let result = fillWithDistance2 coords' grid 10000
+    let minDist = if input.Length <= 6 then 32 else 10000
+    let result = fillWithDistance2 coords' grid minDist
     result =! expected
 
 module Day07 =
-
-  let input = [| "" |]
-  let sample (result: string) = makeSample result input
 
   type Step =
     { Name : char
@@ -513,25 +444,26 @@ module Day07 =
     |> TopologicalSort.getTopologicalSortOrderWith(fun x -> x.Name) (fun x -> x.DependsOn)
     |> Array.rev
 
-  [<Theory>]
-  [<InlineData("Step C must be finished before step A can begin.\nStep C must be finished before step F can begin.\nStep A must be finished before step B can begin.\nStep A must be finished before step D can begin.\nStep B must be finished before step E can begin.\nStep D must be finished before step E can begin.\nStep F must be finished before step E can begin.", "CABDFE")>]
-  let part1_examples (data: string) expected =
-    let input = data.Split('\n') |> Array.map Step.Parse |> addFreeSteps
-    let order = getExecutionOrder input |> Array.map(fun x -> x.Name) |> String.Concat
-    order =! expected
+  let part1_input = [|
+    "Step C must be finished before step A can begin."
+    "Step C must be finished before step F can begin."
+    "Step A must be finished before step B can begin."
+    "Step A must be finished before step D can begin."
+    "Step B must be finished before step E can begin."
+    "Step D must be finished before step E can begin."
+    "Step F must be finished before step E can begin."
+  |]
+  let part1_sample (result: string) = makeSample result part1_input
 
   [<Theory>]
   [<FileData(2018, 7, "MNOUBYITKXZFHQRJDASGCPEVWL")>]
-  //[<MemberData(nameof sample, "")>]
+  [<MemberData(nameof part1_sample, "CABDFE")>]
   let part1 (input: string array) expected =
     let steps = input |> Array.map Step.Parse |> addFreeSteps
     let order = getExecutionOrder steps |> Array.map(fun x -> x.Name) |> String.Concat
     order =! expected
 
 module Day08 =
-
-  let input = [| "" |]
-  let sample (result: int) = makeSample result input
 
   type Node = Node of int * meta : int list * children : Node list
 
@@ -568,31 +500,23 @@ module Day08 =
         |> Option.map getNodeValue
         |> Option.defaultValue 0)
 
-  [<Theory>]
-  [<InlineData("2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2", 138)>]
-  let part1_examples (data: string) expected =
-    let input = data.Split(' ') |> Array.map int |> List.ofArray
-    let node = parse input
-    addMeta node =! expected
+  let part1_input = [| "2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2" |]
+  let part1_sample (result: int) = makeSample result part1_input
 
   [<Theory>]
   [<FileData(2018, 8, 47464)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part1_sample, 138)>]
   let part1 (input: string array) expected =
     let data = input.[0].Split(' ') |> Array.map int |> List.ofArray
     let node = parse data
     addMeta node =! expected
 
-  [<Theory>]
-  [<InlineData("2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2", 66)>]
-  let part2_examples (data: string) expected =
-    let input = data.Split(' ') |> Array.map int |> List.ofArray
-    let node = parse input
-    getNodeValue node =! expected
+  let part2_input = [| "2 3 0 3 10 11 12 1 1 0 1 99 2 1 1 2" |]
+  let part2_sample (result: int) = makeSample result part2_input
 
   [<Theory>]
   [<FileData(2018, 8, 23054)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part2_sample, 66)>]
   let part2 (input: string array) expected =
     let data = input.[0].Split(' ') |> Array.map int |> List.ofArray
     let node = parse data

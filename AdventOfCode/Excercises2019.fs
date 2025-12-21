@@ -104,22 +104,14 @@ module Intcode =
 
 module Day01 =
 
-  let input = [| "" |]
-  let sample (result: int) = makeSample result input
-
   let getFuel mass = max 0 (mass / 3 - 2)
 
-  [<Theory>]
-  [<InlineData(12, 2)>]
-  [<InlineData(14, 2)>]
-  [<InlineData(1969, 654)>]
-  [<InlineData(100756, 33583)>]
-  let getFuel_examples mass expected =
-    getFuel mass =! expected
+  let part1_input = [| "12" |]
+  let part1_sample (result: int) = makeSample result part1_input
 
   [<Theory>]
   [<FileData(2019, 1, 3266516)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part1_sample, 2)>]
   let part1 (input: string array) expected =
     input
     |> Array.sumBy(int >> getFuel)
@@ -131,17 +123,12 @@ module Day01 =
       fuel + getFuel' fuel
     else fuel
 
-  [<Theory>]
-  [<InlineData(12, 2)>]
-  [<InlineData(14, 2)>]
-  [<InlineData(1969, 966)>]
-  [<InlineData(100756, 50346)>]
-  let getFuel2_examples mass expected =
-    getFuel' mass =! expected
+  let part2_input = [| "14" |]
+  let part2_sample (result: int) = makeSample result part2_input
 
   [<Theory>]
   [<FileData(2019, 1, 4896902)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part2_sample, 2)>]
   let part2 (input: string array) expected =
     input
     |> Array.sumBy(int >> getFuel')
@@ -149,26 +136,15 @@ module Day01 =
 
 module Day02 =
 
-  let input = [| "" |]
-  let sample (result: int) = makeSample result input
-
   let runProgram input code =
     Intcode.run input code |> snd
 
-  [<Theory>]
-  [<InlineData("1,9,10,3,2,3,11,0,99,30,40,50", 3500)>]
-  [<InlineData("1,0,0,0,99", 2)>]
-  [<InlineData("2,3,0,3,99", 6)>]
-  [<InlineData("2,4,4,5,99,0", 9801)>]
-  [<InlineData("1,1,1,4,99,5,6,0,99", 30)>]
-  let intcode_examples (program: string) expected =
-    let code = program.Split(',') |> Array.map int
-    runProgram [] code |> Array.item 0
-    =! expected
+  let part1_input = [| "1,0,0,0,99" |]
+  let part1_sample (result: int) = makeSample result part1_input
 
   [<Theory>]
   [<FileData(2019, 2, 3562624)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part1_sample, 2)>]
   let part1 (input: string array) expected =
     let input = input.[0].Split(',') |> Array.map int
     input.[1] <- 12
@@ -176,9 +152,12 @@ module Day02 =
     runProgram [] input |> Array.item 0
     =! expected
 
+  let part2_input = [| "1,0,0,0,99" |]
+  let part2_sample (result: int) = makeSample result part2_input
+
   [<Theory>]
   [<FileData(2019, 2, 8298)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part2_sample, 2)>]
   let part2 (input: string array) expected =
     let program = input.[0].Split(',') |> Array.map int
     let mutable result = 0
@@ -193,9 +172,6 @@ module Day02 =
     result =! expected
 
 module Day03 =
-
-  let input = [| "" |]
-  let sample (result: int) = makeSample result input
 
   let buildWire (parts : string) =
     let rec inner (wire : (int*int) list) (parts : string list) =
@@ -226,17 +202,12 @@ module Day03 =
     let _ = points1.Remove(0,0)
     points1 |> Seq.minBy(fun (x, y) -> abs x + abs y)
 
-  [<Theory>]
-  [<InlineData("R8,U5,L5,D3", "U7,R6,D4,L4", 6)>]
-  [<InlineData("R75,D30,R83,U83,L12,D49,R71,U7,L72", "U62,R66,U55,R34,D71,R55,D58,R83", 159)>]
-  [<InlineData("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51", "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7", 135)>]
-  let part1_examples w1 w2 expected =
-    let (x, y) = getClosestIntersection w1 w2
-    abs x + abs y =! expected
+  let part1_input = [| "R8,U5,L5,D3"; "U7,R6,D4,L4" |]
+  let part1_sample (result: int) = makeSample result part1_input
 
   [<Theory>]
   [<FileData(2019, 3, 1983)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part1_sample, 6)>]
   let part1 (input: string array) expected =
     let (x, y) = getClosestIntersection input.[0] input.[1]
     abs x + abs y =! expected
@@ -254,24 +225,17 @@ module Day03 =
       d1 + d2)
     |> Seq.min
 
-  [<Theory>]
-  [<InlineData("R8,U5,L5,D3", "U7,R6,D4,L4", 30)>]
-  [<InlineData("R75,D30,R83,U83,L12,D49,R71,U7,L72", "U62,R66,U55,R34,D71,R55,D58,R83", 610)>]
-  [<InlineData("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51", "U98,R91,D20,R16,D67,R40,U7,R15,U6,R7", 410)>]
-  let part2_examples w1 w2 expected =
-    getShortestIntersection w1 w2 =! expected
+  let part2_input = [| "R8,U5,L5,D3"; "U7,R6,D4,L4" |]
+  let part2_sample (result: int) = makeSample result part2_input
 
   [<Theory>]
   [<FileData(2019, 3, 107754)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part2_sample, 30)>]
   let part2 (input: string array) expected =
     getShortestIntersection input.[0] input.[1]
     =! expected
 
 module Day04 =
-
-  let input = [| "" |]
-  let sample (result: int) = makeSample result input
 
   let hasPair (a:int) b c d e f =
     a = b || b = c || c = d || d = e || e = f
@@ -292,16 +256,6 @@ module Day04 =
   let isValid i =
     let (a, b, c, d, e, f) = digits i
     hasPair a b c d e f && not (isDecreasing a b c d e f)
-
-  [<Theory>]
-  [<InlineData(111111, true)>]
-  [<InlineData(111123, true)>]
-  [<InlineData(135679, false)>]
-  [<InlineData(122345, true)>]
-  [<InlineData(223450, false)>]
-  [<InlineData(123789, false)>]
-  let isValid_examples i expected =
-    isValid i =! expected
 
   [<Fact>]
   let part1() =
@@ -324,12 +278,6 @@ module Day04 =
     let (a, b, c, d, e, f) = digits i
     hasPairNoTriple a b c d e f && not (isDecreasing a b c d e f)
 
-  [<Theory>]
-  [<InlineData(688889, false)>]
-  [<InlineData(122345, true)>]
-  let isValid2_examples i expected =
-    isValid' i =! expected
-
   [<Fact>]
   let part2() =
     let from, to' = 147981, 691423
@@ -342,54 +290,30 @@ module Day04 =
 
 module Day05 =
 
-  let input = [| "" |]
-  let sample (result: int) = makeSample result input
-
   let runWithInput inp code =
     Intcode.run inp code |> fst |> Array.last
 
-  [<Theory>]
-  [<InlineData("1002,4,3,4,33", 0, 99)>]
-  [<InlineData("1101,100,-1,4,0", 0, 99)>]
-  let intcode_examples (program: string) (inp: int) (expected: int) =
-    let code = program.Split(',') |> Array.map int
-    runWithInput [inp] code =! expected
+  let part1_input = [| "1002,4,3,4,33" |]
+  let part1_sample (result: int) = makeSample result part1_input
 
   [<Theory>]
   [<FileData(2019, 5, 2845163)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part1_sample, 99)>]
   let part1 (input: string array) expected =
     let code = input.[0].Split(',') |> Array.map int
     runWithInput [1] code =! expected
 
-  [<Theory>]
-  [<InlineData("3,9,8,9,10,9,4,9,99,-1,8", 8, 1)>]
-  [<InlineData("3,9,8,9,10,9,4,9,99,-1,8", 7, 0)>]
-  [<InlineData("3,9,7,9,10,9,4,9,99,-1,8", 1, 1)>]
-  [<InlineData("3,9,7,9,10,9,4,9,99,-1,8", 8, 0)>]
-  [<InlineData("3,3,1108,-1,8,3,4,3,99", 8, 1)>]
-  [<InlineData("3,3,1108,-1,8,3,4,3,99", 7, 0)>]
-  [<InlineData("3,3,1107,-1,8,3,4,3,99", 1, 1)>]
-  [<InlineData("3,3,1107,-1,8,3,4,3,99", 8, 0)>]
-  [<InlineData("3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9", -10, 1)>]
-  [<InlineData("3,12,6,12,15,1,13,14,13,4,13,99,-1,0,1,9", 0, 0)>]
-  [<InlineData("3,3,1105,-1,9,1101,0,0,12,4,12,99,1", -10, 1)>]
-  [<InlineData("3,3,1105,-1,9,1101,0,0,12,4,12,99,1", 0, 0)>]
-  let part2_examples (program: string) (inp: int) (expected: int) =
-    let code = program.Split(',') |> Array.map int
-    runWithInput [inp] code =! expected
+  let part2_input = [| "3,9,8,9,10,9,4,9,99,-1,8" |]
+  let part2_sample (result: int) = makeSample result part2_input
 
   [<Theory>]
   [<FileData(2019, 5, 9436229)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part2_sample, 0)>]
   let part2 (input: string array) expected =
     let code = input.[0].Split(',') |> Array.map int
     runWithInput [5] code =! expected
 
 module Day06 =
-
-  let input = [| "" |]
-  let sample (result: int) = makeSample result input
 
   type Tree<'T> = Node of 'T * Tree<'T> list
 
@@ -413,16 +337,12 @@ module Day06 =
   let rec count depth (Node(_, nodes)) =
     depth + List.sumBy(count (depth + 1)) nodes
 
-  [<Theory>]
-  [<InlineData("COM)B\nB)C\nC)D\nD)E\nE)F\nB)G\nG)H\nD)I\nE)J\nJ)K\nK)L", 42)>]
-  let part1_examples (data: string) expected =
-    let input = data.Split('\n')
-    let root = buildTree input
-    count 0 root =! expected
+  let part1_input = [| "COM)B"; "B)C"; "C)D"; "D)E"; "E)F"; "B)G"; "G)H"; "D)I"; "E)J"; "J)K"; "K)L" |]
+  let part1_sample (result: int) = makeSample result part1_input
 
   [<Theory>]
   [<FileData(2019, 6, 171213)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part1_sample, 42)>]
   let part1 (input: string array) expected =
     let root = buildTree input
     count 0 root =! expected
@@ -448,19 +368,12 @@ module Day06 =
       | _ -> (l1, l2)
     helper l1 l2
 
-  [<Theory>]
-  [<InlineData("COM)B\nB)C\nC)D\nD)E\nE)F\nB)G\nG)H\nD)I\nE)J\nJ)K\nK)L\nK)YOU\nI)SAN", 4)>]
-  let part2_examples (data: string) expected =
-    let input = data.Split('\n')
-    let map2 = buildMap2 input
-    let route1 = findRoute map2 "YOU"
-    let route2 = findRoute map2 "SAN"
-    let (r1, r2) = findEarliestAncestor route1 route2
-    r1.Length + r2.Length =! expected
+  let part2_input = [| "COM)B"; "B)C"; "C)D"; "D)E"; "E)F"; "B)G"; "G)H"; "D)I"; "E)J"; "J)K"; "K)L"; "K)YOU"; "I)SAN" |]
+  let part2_sample (result: int) = makeSample result part2_input
 
   [<Theory>]
   [<FileData(2019, 6, 292)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part2_sample, 4)>]
   let part2 (input: string array) expected =
     let map2 = buildMap2 input
     let route1 = findRoute map2 "YOU"
@@ -470,35 +383,14 @@ module Day06 =
 
 module Day07 =
 
-  let input = [| "" |]
-  let sample (result: int) = makeSample result input
-
   let run input code = Intcode.run input code |> fst |> Array.exactlyOne
 
-  [<Theory>]
-  [<InlineData("3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0", 43210)>]
-  [<InlineData("3,23,3,24,1002,24,10,24,1002,23,-1,23,101,5,23,23,1,24,23,23,4,23,99,0,0", 54321)>]
-  [<InlineData("3,31,3,32,1002,32,10,32,1001,31,-2,31,1007,31,0,33,1002,33,7,33,1,33,31,31,1,32,31,31,4,31,99,0,0,0", 65210)>]
-  let part1_examples (program: string) expected =
-    let example = program.Split(',') |> Array.map int
-    let mutable output = 0
-    for a in 0 .. 4 do
-      for b in 0 .. 4 do
-        for c in 0 .. 4 do
-          for d in 0 .. 4 do
-            for e in 0 .. 4 do
-              if Set.ofList [a;b;c;d;e] |> Set.count = 5 then
-                let ampA = run [a;0] example
-                let ampB = run [b;ampA] example
-                let ampC = run [c;ampB] example
-                let ampD = run [d;ampC] example
-                let ampE = run [e;ampD] example
-                output <- max output ampE
-    output =! expected
+  let part1_input = [| "3,15,3,16,1002,16,10,16,1,16,15,15,4,15,99,0,0" |]
+  let part1_sample (result: int) = makeSample result part1_input
 
   [<Theory>]
   [<FileData(2019, 7, 255590)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part1_sample, 43210)>]
   let part1 (input: string array) expected =
     let program = input.[0].Split(',') |> Array.map int
     let mutable output = 0
@@ -518,12 +410,8 @@ module Day07 =
 
 module Day08 =
 
-  let input = [| "" |]
-  let sample (result: int) = makeSample result input
-
   [<Theory>]
   [<FileData(2019, 8, 1950)>]
-  //[<MemberData(nameof sample, 0)>]
   let part1 (input: string array) expected =
     let input, w, h = input.[0], 25, 6
     let result =
@@ -555,9 +443,6 @@ module Day09 =
 
 module Day10 =
 
-  let input = [| "" |]
-  let sample (result: int) = makeSample result input
-
   [<StructuredFormatDisplay("({X}, {Y})")>]
   type Pos = { X : int ; Y : int}
   with
@@ -583,18 +468,12 @@ module Day10 =
     )
     |> Array.maxBy snd
 
-  [<Theory>]
-  [<InlineData(".#..#\n.....\n#####\n....#\n...##", 8)>]
-  [<InlineData("......#.#.\n#..#.#....\n..#######.\n.#.#.###..\n.#..#.....\n..#....#.#\n#..#....#.\n.##.#..###\n##...#..#.\n.#....####", 33)>]
-  let part1_examples (data: string) expected =
-    let input = data.Split('\n')
-    let asteroids = getAsteroids input
-    let (_, count) = getMaxVisible asteroids
-    count =! expected
+  let part1_input = [| ".#..#"; "....."; "#####"; "....#"; "...##" |]
+  let part1_sample (result: int) = makeSample result part1_input
 
   [<Theory>]
   [<FileData(2019, 10, 214)>]
-  //[<MemberData(nameof sample, 0)>]
+  [<MemberData(nameof part1_sample, 8)>]
   let part1 (input: string array) expected =
     let asteroids = getAsteroids input
     let (_, count) = getMaxVisible asteroids
@@ -635,9 +514,6 @@ module Day11 =
   ()
 
 module Day12 =
-
-  let input = [| "" |]
-  let sample (result: int64) = makeSample result input
 
   [<StructuredFormatDisplay("<x={X},y={Y},z={Z}>")>]
   type Vec3D =
@@ -697,21 +573,12 @@ module Day12 =
       if x = x' then count else inner (count+1) (f x')
     inner 1 (f x)
 
-  [<Theory>]
-  [<InlineData("<x=-1, y=0, z=2>\n<x=2, y=-10, z=-7>\n<x=4, y=-8, z=8>\n<x=3, y=5, z=-1>", 179)>]
-  [<InlineData("<x=-8, y=-10, z=0>\n<x=5, y=5, z=10>\n<x=2, y=-7, z=3>\n<x=9, y=-8, z=-3>", 1940)>]
-  let part1_examples (data: string) expected =
-    let input = data.Split('\n')
-    let positions = parsePositions input
-    let result =
-      positions
-      |> apply 100 advance
-      |> Array.sumBy totalEnergy
-    result =! expected
+  let part1_input = [| "<x=-1, y=0, z=2>"; "<x=2, y=-10, z=-7>"; "<x=4, y=-8, z=8>"; "<x=3, y=5, z=-1>" |]
+  let part1_sample (result: int64) = makeSample result part1_input
 
   [<Theory>]
   [<FileData(2019, 12, 7179L)>]
-  //[<MemberData(nameof sample, 0L)>]
+  [<MemberData(nameof part1_sample, 179L)>]
   let part1 (input: string array) expected =
     let positions = parsePositions input
     let result =
@@ -721,25 +588,12 @@ module Day12 =
       |> int64
     result =! expected
 
-  [<Theory>]
-  [<InlineData("<x=-1, y=0, z=2>\n<x=2, y=-10, z=-7>\n<x=4, y=-8, z=8>\n<x=3, y=5, z=-1>", 2772L)>]
-  [<InlineData("<x=-8, y=-10, z=0>\n<x=5, y=5, z=10>\n<x=2, y=-7, z=3>\n<x=9, y=-8, z=-3>", 4686774924L)>]
-  let part2_examples (data: string) expected =
-    let input = data.Split('\n')
-    let positions = parsePositions input
-    let xs, ys, zs =
-      positions
-      |> Array.map(fun m -> (m.Pos.X, m.Vel.X), (m.Pos.Y, m.Vel.Y), (m.Pos.Z, m.Vel.Z))
-      |> Array.unzip3
-    let c1 = loop xs advance' |> int64
-    let c2 = loop ys advance' |> int64
-    let c3 = loop zs advance' |> int64
-    let answer = lcm64(lcm64 c1 c2) c3
-    answer =! expected
+  let part2_input = [| "<x=-1, y=0, z=2>"; "<x=2, y=-10, z=-7>"; "<x=4, y=-8, z=8>"; "<x=3, y=5, z=-1>" |]
+  let part2_sample (result: int64) = makeSample result part2_input
 
   [<Theory>]
   [<FileData(2019, 12, 428576638953552L)>]
-  //[<MemberData(nameof sample, 0L)>]
+  [<MemberData(nameof part2_sample, 2772L)>]
   let part2 (input: string array) expected =
     let positions = parsePositions input
     let xs, ys, zs =
