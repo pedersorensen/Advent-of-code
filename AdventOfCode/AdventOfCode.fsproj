@@ -13,8 +13,8 @@
     <Compile Include="Excercises2023.fs" />
     <Compile Include="Excercises2022.fs" />
     <Compile Include="Excercises2021.fs" />
+    <Compile Include="Excercises2020.fs" />
     <Compile Include="Program.fs" />
-    <None Include="Excercises2020.fsx" />
     <None Include="Excercises2019.fsx" />
     <None Include="Excercises2018.fsx" />
   </ItemGroup>

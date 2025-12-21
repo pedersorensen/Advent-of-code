@@ -1,13 +1,21 @@
-﻿#r "nuget: XUnit"
+﻿#if INTERACTIVE
+#r "nuget: XUnit"
 #r "nuget: FSharp.Data"
 #load "Utils.fs"
+#else
+namespace Excercises2020
+#endif
 
 open Utils
+open Xunit
 open System
 open System.Collections.Generic
+open System.Text.RegularExpressions
 
-module Day1 =
-  let input = readInput 2020 1 |> Array.map int |> set
+module Day01 =
+
+  let input = [| "" |]
+  let sample (result: int) = makeSample result input
 
   let tryFindMatch sum s1 =
     let s2 = s1 |> Set.map(fun i -> sum - i)
@@ -17,25 +25,36 @@ module Day1 =
     | [| a ; b |] -> Some(a, b)
     | _ -> failwith "Expected an array of two elements."
 
-  // 691771
-  let part1() =
+  [<Theory>]
+  [<FileData(2020, 1, 691771)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
+    let input = input |> Array.map int |> set
     tryFindMatch 2020 input
-    |> Option.iter(fun (a, b) ->
-      printfn "Product: %i * %i : %i" a b (a * b))
+    |> Option.map(fun (a, b) -> a * b)
+    |> Option.defaultValue 0
+    =! expected
 
-  // 232508760
-  let part2() =
+  [<Theory>]
+  [<FileData(2020, 1, 232508760)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    let input = input |> Array.map int |> set
+    let mutable result = 0
     for i in input do
       input
       |> Set.remove i
       |> tryFindMatch (2020 - i)
       |> Option.iter(fun (a, b) ->
-        printfn "Product: %i * %i * %i : %i" i a b (i * a * b))
+        result <- i * a * b)
+    result =! expected
 
-module Day2 =
-  let input = readInput 2020 2
+module Day02 =
 
-  let parsed =
+  let input = [| "" |]
+  let sample (result: int) = makeSample result input
+
+  let parsed (input: string array) =
     input
     |> Array.map(fun s ->
       match s.Split([|' ' ; ':' ; '-'|], StringSplitOptions.RemoveEmptyEntries) with
@@ -44,36 +63,35 @@ module Day2 =
       | _ -> failwith "Incorrect input"
     )
 
-  // 628
-  let part1() =
-    parsed
+  [<Theory>]
+  [<FileData(2020, 2, 628)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
+    parsed input
     |> Array.countTrue(fun (min, max, char, pw) ->
       let count = pw |> Seq.countTrue((=) char)
       min <= count && count <= max
     )
+    =! expected
 
-  // 705
-  let part2() =
-    parsed
+  [<Theory>]
+  [<FileData(2020, 2, 705)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    parsed input
     |> Array.countTrue(fun (p1, p2, char, pw) ->
       let b1 = pw.[p1 - 1] = char
       let b2 = pw.[p2 - 1] = char
       b1 <> b2
     )
+    =! expected
 
-module Day3 =
+module Day03 =
+
+  let input = [| "" |]
+  let sample (result: int64) = makeSample result input
 
   let [<Literal>] TreeMarker = '#'
-
-  let countTrees (input: string[]) slope =
-    let mutable p = (0,0)
-    let w = input.[0].Length
-    let mutable count = 0
-    while snd p < input.Length do
-      let (x, y) = p
-      if input.[y].[x % w] = TreeMarker then count <- count + 1
-      p <- Tuple.add p slope
-    int64 count
 
   let countTrees2 (input: string[]) slope =
     let w = input.[0].Length
@@ -84,33 +102,18 @@ module Day3 =
     |> Seq.countTrue(fun (x, y) -> input.[y].[x % w] = TreeMarker)
     |> int64
 
-  let input = readInput 2020 3
-
-  let sample = [|
-    "..##......."
-    "#...#...#.."
-    ".#....#..#."
-    "..#.#...#.#"
-    ".#...##..#."
-    "..#.##....."
-    ".#.#.#....#"
-    ".#........#"
-    "#.##...#..."
-    "#...##....#"
-    ".#..#...#.#"
-  |]
-
-  // 216
-  let part1() =
+  [<Theory>]
+  [<FileData(2020, 3, 216L)>]
+  //[<MemberData(nameof sample, 0L)>]
+  let part1 (input: string array) expected =
     let slope = (3, 1)
-    let s1 = countTrees sample slope
-    let s2 = countTrees2 sample slope
-    let c1 = countTrees input slope
-    let c2 = countTrees2 input slope
-    c2
+    countTrees2 input slope
+    =! expected
 
-  // 6708199680
-  let part2() =
+  [<Theory>]
+  [<FileData(2020, 3, 6708199680L)>]
+  //[<MemberData(nameof sample, 0L)>]
+  let part2 (input: string array) expected =
     let slopes = [|
       1, 1
       3, 1
@@ -118,27 +121,14 @@ module Day3 =
       7, 1
       1, 2
     |]
-    let s1 = slopes |> Array.map(countTrees2 sample) |> Array.reduce (*)
-    let p1 = slopes |> Array.map(countTrees2 input) |> Array.reduce (*)
-    let p2 = (1L, slopes) ||> Array.fold(fun p slope -> countTrees2 input slope * p)
-    let p3 = (slopes, 1L) ||> Array.foldBack(countTrees2 input >> (*))
-    p3
+    (slopes, 1L)
+    ||> Array.foldBack(countTrees2 input >> (*))
+    =! expected
 
-module Day4 =
-  open System.Text.RegularExpressions
+module Day04 =
 
-  let parse input = seq {
-    let mutable d = ResizeArray();
-    for line in input do
-      if String.IsNullOrWhiteSpace line then
-        yield Map.ofSeq d
-        d <- ResizeArray()
-      else
-        for s in line.Split(' ') do
-          let i = s.IndexOf(':')
-          d.Add(s.Substring(0, i), s.Substring(i + 1))
-    yield Map.ofSeq d
-  }
+  let input = [| "" |]
+  let sample (result: int) = makeSample result input
 
   let parse2 input =
     ((Map.empty, []), input)
@@ -169,18 +159,17 @@ module Day4 =
     "hcl", isMatch "^#[0-9a-f]{6}$"
     "ecl", isMatch "^(amb|blu|brn|gry|grn|hzl|oth)$"
     "pid", isMatch "^[0-9]{9}$"
-    //"cid", fun _ -> true
   |]
 
-  let input = readInput 2020 4 |> parse |> Seq.toList
-  let input2 = readInput 2020 4 |> parse2
-
-  // 242
-  let part1() =
-    input2
+  [<Theory>]
+  [<FileData(2020, 4, 242)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
+    parse2 input
     |> Seq.countTrue(fun d ->
       requiredFields |> Array.forall(fst >> d.ContainsKey)
     )
+    =! expected
 
   let validate passport =
     requiredFields
@@ -194,45 +183,18 @@ module Day4 =
   let countValid passports =
     passports |> Seq.countTrue validate
 
-  let invalid = parse [|
-    "eyr:1972 cid:100"
-    "hcl:#18171d ecl:amb hgt:170 pid:186cm iyr:2018 byr:1926"
-    ""
-    "iyr:2019"
-    "hcl:#602927 eyr:1967 hgt:170cm"
-    "ecl:grn pid:012533040 byr:1946"
-    ""
-    "hcl:dab227 iyr:2012"
-    "ecl:brn hgt:182cm pid:021572410 eyr:2020 byr:1992 cid:277"
-    ""
-    "hgt:59cm ecl:zzz"
-    "eyr:2038 hcl:74454a iyr:2023"
-    "pid:3556412378 byr:2007"
-  |]
+  [<Theory>]
+  [<FileData(2020, 4, 186)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    parse2 input
+    |> countValid
+    =! expected
 
-  let valid = parse [|
-    "pid:087499704 hgt:74in ecl:grn iyr:2012 eyr:2030 byr:1980"
-    "hcl:#623a2f"
-    ""
-    "eyr:2029 ecl:blu cid:129 byr:1989"
-    "iyr:2014 pid:896056539 hcl:#a97842 hgt:165cm"
-    ""
-    "hcl:#888785"
-    "hgt:164cm byr:2001 iyr:2015 cid:88"
-    "pid:545766238 ecl:hzl"
-    "eyr:2022"
-    ""
-    "iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719"
-  |]
+module Day05 =
 
-  // 186
-  let part2() =
-    let validCount = countValid valid // 4
-    let invalidCount = countValid invalid // 0
-    countValid input
-
-module Day5 =
-  let input = readInput 2020 5
+  let input = [| "" |]
+  let sample (result: int) = makeSample result input
 
   let find low high input =
     ((low, high), input)
@@ -255,42 +217,22 @@ module Day5 =
 
   let getSeatId (row, column) = 8 * row + column
 
-  // Splitting the seat string in two is not necessary due to the constuction
-  // of the seat id, row * 8 + column
-  let getSeatId2 seat = find 0 1023 seat
-
-  // Even simpler, interpret the seat specification as a binary number
   let getSeatId3 seat =
     seat
     |> Seq.mapi(fun i ch -> if ch = 'F' || ch = 'L' then 0 else 512 >>> i )
     |> Seq.sum
 
-  let seats = input |> Array.map getSeat
-
-  // 838
-  let part1() =
-    seats |> Array.map getSeatId |> Array.max
-
-  let part1'() =
+  [<Theory>]
+  [<FileData(2020, 5, 838)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
     input |> Array.map getSeatId3 |> Array.max
+    =! expected
 
-  // 714
-  let part2() =
-    let minRow = seats |> Array.minBy fst |> fst
-    let maxRow = seats |> Array.maxBy fst |> fst
-    let (row, seats) =
-      seats
-      |> Array.groupBy fst
-      |> Array.filter(fun (row, group) ->
-        group.Length <> 8 && row <> minRow && row <> maxRow)
-      |> Array.exactlyOne
-    let taken = seats |> Array.map snd |> set
-    let column = set [| 0 .. 7 |] - taken |> Seq.exactlyOne
-    getSeatId(row, column)
-
-  let part2'() =
-    // Since all the seats are taken, all seat ids will be present except the
-    // missing seat (hours), find the first non-contiguous entry
+  [<Theory>]
+  [<FileData(2020, 5, 714)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
     input
     |> Array.map getSeatId3
     |> Array.sort
@@ -298,50 +240,33 @@ module Day5 =
     |> Array.find(fun (a, b) -> a + 1 <> b)
     |> fst
     |> (+) 1
+    =! expected
 
-module Day6 =
-  let input = (readAllInput 2020 6).Split([|"\n\n"|], StringSplitOptions.RemoveEmptyEntries)
+module Day06 =
 
-  let input' = readInput 2020 6
+  let input = [| "" |]
+  let sample (result: int) = makeSample result input
 
-  // 6549
-  let part1() =
-    input |> Array.sumBy(set >> Set.remove '\n' >> Set.count)
+  [<Theory>]
+  [<FileData(2020, 6, 6549)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
+    ((Set.empty, 0), input)
+    ||> Seq.batchOnNewline (Set >> (+)) (Set.count >> (+))
+    =! expected
 
-  let part1'() =
-    ((Set.empty, 0), input')
-    ||> Array.fold(fun (set, count) line ->
-      if String.IsNullOrWhiteSpace line
-      then Set.empty, set.Count + count
-      else set + Set line, count)
-    |> fun (set, count) -> set.Count + count
+  [<Theory>]
+  [<FileData(2020, 6, 3466)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    (([], 0), input)
+    ||> Seq.batchOnNewline (Set >> cons) (Set.intersectMany >> Set.count >> (+))
+    =! expected
 
-  let part1''() =
-    ((Set.empty, 0), input') ||> Seq.batchOnNewline (Set >> (+)) (Set.count >> (+))
+module Day07 =
 
-  // 3466
-  let part2() =
-    input
-    |> Array.sumBy(fun s ->
-      s.Split([|'\n'|], StringSplitOptions.RemoveEmptyEntries)
-      |> Array.map set
-      |> Set.intersectMany
-      |> Set.count
-    )
-
-  let part2'() =
-    (([], 0), input')
-    ||> Array.fold(fun (sets, count) line ->
-      if String.IsNullOrWhiteSpace line
-      then [], (Set.intersectMany sets).Count + count
-      else Set line :: sets, count)
-    |> fun (sets, count) -> (Set.intersectMany sets).Count + count
-
-  let part2''() =
-    (([], 0), input') ||> Seq.batchOnNewline (Set >> cons) (Set.intersectMany >> Set.count >> (+))
-
-module Day7 =
-  let input = readInput 2020 7
+  let input = [| "" |]
+  let sample (result: int) = makeSample result input
 
   let parse input =
     input
@@ -355,28 +280,6 @@ module Day7 =
         .Replace(",no other", "")
         .Split(',')
     )
-
-  let sample = [|
-    "light red bags contain 1 bright white bag, 2 muted yellow bags."
-    "dark orange bags contain 3 bright white bags, 4 muted yellow bags."
-    "bright white bags contain 1 shiny gold bag."
-    "muted yellow bags contain 2 shiny gold bags, 9 faded blue bags."
-    "shiny gold bags contain 1 dark olive bag, 2 vibrant plum bags."
-    "dark olive bags contain 3 faded blue bags, 4 dotted black bags."
-    "vibrant plum bags contain 5 faded blue bags, 6 dotted black bags."
-    "faded blue bags contain no other bags."
-    "dotted black bags contain no other bags."
-  |]
-
-  let sample2 = [|
-    "shiny gold bags contain 2 dark red bags."
-    "dark red bags contain 2 dark orange bags."
-    "dark orange bags contain 2 dark yellow bags."
-    "dark yellow bags contain 2 dark green bags."
-    "dark green bags contain 2 dark blue bags."
-    "dark blue bags contain 2 dark violet bags."
-    "dark violet bags contain no other bags."
-  |]
 
   let findAll bag rules =
     let filter = new HashSet<_>()
@@ -399,15 +302,20 @@ module Day7 =
       Array.head rule, rule |> Array.tail |> Array.map(fun (s: string) -> s.Substring(2), int <| s.Substring(0, 1)) |> Map.ofArray
     )
 
-  // 224
-  let part1() =
+  [<Theory>]
+  [<FileData(2020, 7, 224)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
     parse input
     |> makeRules
     |> findAll "shiny gold"
     |> Seq.length
+    =! expected
 
-  // 1488
-  let part2() =
+  [<Theory>]
+  [<FileData(2020, 7, 1488)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
     let bagMap =
       parse input
       |> makeRules
@@ -417,21 +325,12 @@ module Day7 =
       let innerBags = bagMap.[bag] |> Seq.sumBy(fun (KeyValue(bag, count)) -> loop bag * count)
       innerBags + 1
     loop "shiny gold" - 1
+    =! expected
 
-module Day8 =
-  let input = readInput 2020 8
+module Day08 =
 
-  let sample = [|
-    "nop +0"
-    "acc +1"
-    "jmp +4"
-    "acc +3"
-    "jmp -3"
-    "acc -99"
-    "acc +1"
-    "jmp -4"
-    "acc +6"
-  |]
+  let input = [| "" |]
+  let sample (result: int) = makeSample result input
 
   let parse instructions =
     instructions
@@ -457,10 +356,12 @@ module Day8 =
       if i = instructions.Length then stop <- Some true
     stop.Value, acc
 
-  // 1420
-  let part1() =
-    let s = parse sample |> run // 5
-    parse input |> run
+  [<Theory>]
+  [<FileData(2020, 8, 1420)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
+    parse input |> run |> snd
+    =! expected
 
   let fix (instructions: _[]) =
     instructions
@@ -479,36 +380,17 @@ module Day8 =
     )
     |> Seq.pick id
 
-  // 1245
-  let part2() =
-    let s = parse sample |> fix // 8
+  [<Theory>]
+  [<FileData(2020, 8, 1245)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
     parse input |> fix
+    =! expected
 
-module Day9 =
-  let input = readInput 2020 9 |> Array.map int64
+module Day09 =
 
-  let sample = [|
-    35L
-    20L
-    15L
-    25L
-    47L
-    40L
-    62L
-    55L
-    65L
-    95L
-    102L
-    117L
-    150L
-    182L
-    127L
-    219L
-    299L
-    277L
-    309L
-    576L
-  |]
+  let input = [| "" |]
+  let sample (result: int64) = makeSample result input
 
   let findError preample (values: _[]) =
     values
@@ -523,10 +405,13 @@ module Day9 =
       |> Seq.isEmpty
     )
 
-  // 57195069
-  let part1() =
-    let s = findError 5 sample // 127
-    findError 25 input
+  [<Theory>]
+  [<FileData(2020, 9, 57195069L)>]
+  //[<MemberData(nameof sample, 0L)>]
+  let part1 (input: string array) expected =
+    let values = input |> Array.map int64
+    findError 25 values |> snd
+    =! expected
 
   let findWeakness (values: _[]) error =
     let arr =
@@ -547,61 +432,19 @@ module Day9 =
       |> Seq.find(fun a -> a.Length > 1)
     Seq.min arr + Seq.max arr
 
-  // 7409241
-  let part2() =
-    let s = findWeakness sample 127L // 62
-    part1() |> snd |> findWeakness input
+  [<Theory>]
+  [<FileData(2020, 9, 7409241L)>]
+  //[<MemberData(nameof sample, 0L)>]
+  let part2 (input: string array) expected =
+    let values = input |> Array.map int64
+    let _, error = findError 25 values
+    findWeakness values error
+    =! expected
 
 module Day10 =
-  let input = readInput 2020 10 |> Array.map int |> Array.sort
 
-  let sample1 = [|
-    1
-    4
-    5
-    6
-    7
-    10
-    11
-    12
-    15
-    16
-    19
-  |]
-
-  let sample2 = [|
-    1
-    2
-    3
-    4
-    7
-    8
-    09
-    10
-    11
-    14
-    17
-    18
-    19
-    20
-    23
-    24
-    25
-    28
-    31
-    32
-    33
-    34
-    35
-    38
-    39
-    42
-    45
-    46
-    47
-    48
-    49
-  |]
+  let input = [| "" |]
+  let sample (result: int) = makeSample result input
 
   let countJoltDifferences adapters =
     let (_, counts) =
@@ -613,11 +456,13 @@ module Day10 =
       )
     counts.[1] * (counts.[3] + 1)
 
-  // 2574
-  let part1() =
-    let s1 = countJoltDifferences sample1 // 35
-    let s2 = countJoltDifferences sample2 // 220
-    countJoltDifferences input
+  [<Theory>]
+  [<FileData(2020, 10, 2574)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
+    input |> Array.map int |> Array.sort
+    |> countJoltDifferences
+    =! expected
 
   let countArrangements input =
     ([0, 1L], input)
@@ -628,27 +473,18 @@ module Day10 =
     |> List.head
     |> snd
 
-  // 2644613988352
-  let part2() =
-    let s1 = countArrangements sample1 // 8
-    let s2 = countArrangements sample2 // 19208
-    countArrangements input
+  [<Theory>]
+  [<FileData(2020, 10, 2644613988352L)>]
+  //[<MemberData(nameof sample, 0L)>]
+  let part2 (input: string array) expected =
+    input |> Array.map int |> Array.sort
+    |> countArrangements
+    =! expected
 
 module Day11 =
-  let input = readInput 2020 11
 
-  let sample = [|
-    "L.LL.LL.LL"
-    "LLLLLLL.LL"
-    "L.L.L..L.."
-    "LLLL.LL.LL"
-    "L.LL.LL.LL"
-    "L.LLLLL.LL"
-    "..L.L....."
-    "LLLLLLLLLL"
-    "L.LLLLLL.L"
-    "L.LLLLL.LL"
-  |]
+  let input = [| "" |]
+  let sample (result: int) = makeSample result input
 
   let directions = [|
     -1, -1
@@ -710,10 +546,12 @@ module Day11 =
     |> iterateTillUnchanged
     |> countOccupied
 
-  // 2310
-  let part1() =
-    let s = stableOccupation sample // 37
+  [<Theory>]
+  [<FileData(2020, 11, 2310)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
     stableOccupation input
+    =! expected
 
   let isDirectionOccupied i j dx dy array =
     (i, j)
@@ -758,21 +596,17 @@ module Day11 =
     |> iterate2TillUnchanged
     |> countOccupied
 
-  // 2074
-  let part2() =
-    let s = stableOccupation2 sample // 26
+  [<Theory>]
+  [<FileData(2020, 11, 2074)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
     stableOccupation2 input
+    =! expected
 
 module Day12 =
-  let input = readInput 2020 12
 
-  let sample = [|
-    "F10"
-    "N3"
-    "F7"
-    "R90"
-    "F11"
-  |]
+  let input = [| "" |]
+  let sample (result: int) = makeSample result input
 
   [<StructuredFormatDisplay("({X}, {Y})")>]
   type Vector =
@@ -815,10 +649,12 @@ module Day12 =
       | c -> failwithf "Invalid instruction: %c" c
     )
 
-  // 882
-  let part1() =
-    let s = (getEndPosition Origin East sample |> fst).Manhattan // 25
+  [<Theory>]
+  [<FileData(2020, 12, 882)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
     (getEndPosition Origin East input |> fst).Manhattan
+    =! expected
 
   let getEndPosition2 ship waypoint instructions =
     ((ship, waypoint), instructions)
@@ -835,20 +671,18 @@ module Day12 =
       | c -> failwithf "Invalid instruction: %c" c
     )
 
-  // 28885
-  let part2() =
+  [<Theory>]
+  [<FileData(2020, 12, 28885)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
     let wp = Vector.Create(10, 1)
-    let s = (getEndPosition2 Origin wp sample |> fst).Manhattan // 286
     (getEndPosition2 Origin wp input |> fst).Manhattan
+    =! expected
 
 module Day13 =
 
-  let input = readInput 2020 13
-
-  let sample = [|
-    "939"
-    "7,13,x,x,59,x,31,19"
-  |]
+  let input = [| "" |]
+  let sample (result: int) = makeSample result input
 
   let get (input: string[]) =
     let earliest = int input.[0]
@@ -861,32 +695,13 @@ module Day13 =
     let time = busId * (earliest / busId + 1)
     busId * (time - earliest)
 
-  // 2165
-  let part1() =
-    let s = get sample // 295
+  [<Theory>]
+  [<FileData(2020, 13, 2165)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
     get input
+    =! expected
 
-  // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm
-  /// Computes Bézout coefficients (x, y) such that
-  /// a * x + b * y = gcd(a, b)
-  let extendedGcd a b =
-    let rec loop (r0, s0, t0) (r, s, t) =
-      if r = 0 then
-        let gcd = t0
-        let bezout = s0, t0
-        gcd, bezout//, (t, s)
-      else
-        let q = r0 / r
-        let r' = r0 - q * r
-        let s' = s0 - q * s
-        let t' = t0 - q * t
-        loop (r, s, t) (r', s', t')
-    loop (a, 1, 0) (b, 0, 1)
-
-  // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Computing_multiplicative_inverses_in_modular_structures
-  // https://en.wikipedia.org/wiki/Modular_multiplicative_inverse
-  /// Computes the modular multiplicative inverse t of a mod n such that
-  /// a * t = 1 % n
   let inverse a n =
     let rec loop (r0, t0) (r, t) =
       if r = 0L then
@@ -899,7 +714,6 @@ module Day13 =
         loop (r, t) (r', t')
     loop (n, 0L) (a, 1L)
 
-  // https://brilliant.org/wiki/chinese-remainder-theorem/
   let getEarliestTime (input: string) =
     let (n, a') =
       input.Split(',')
@@ -918,26 +732,17 @@ module Day13 =
     |> Array.sum
     |> fun x -> x % N
 
-  // 534035653563227
-  let part2() =
-    let s1 = getEarliestTime "7,13,x,x,59,x,31,19" // 1068781
-    let s2 = getEarliestTime "17,x,13,19" // 3417
-    let s3 = getEarliestTime "67,7,59,61" // 754018
-    let s4 = getEarliestTime "67,x,7,59,61" // 779210
-    let s5 = getEarliestTime "67,7,x,59,61" // 1261476
-    let s6 = getEarliestTime "1789,37,47,1889" // 1202161486
+  [<Theory>]
+  [<FileData(2020, 13, 534035653563227L)>]
+  //[<MemberData(nameof sample, 0L)>]
+  let part2 (input: string array) expected =
     getEarliestTime input.[1]
+    =! expected
 
 module Day14 =
 
-  let input = readInput 2020 14
-
-  let sample = [|
-    "mask = XXXXXXXXXXXXXXXXXXXXXXXXXXXXX1XXXX0X"
-    "mem[8] = 11"
-    "mem[7] = 101"
-    "mem[8] = 0"
-  |]
+  let input = [| "" |]
+  let sample (result: int64) = makeSample result input
 
   let memAddr (line: string) =
     let i = line.IndexOf('[') + 1
@@ -969,17 +774,12 @@ module Day14 =
     |> fst
     |> Seq.sumBy(fun kvp -> kvp.Value)
 
-  // 14839536808842
-  let part1() =
-    let s = loadAndSum sample // 165
+  [<Theory>]
+  [<FileData(2020, 14, 14839536808842L)>]
+  //[<MemberData(nameof sample, 0L)>]
+  let part1 (input: string array) expected =
     loadAndSum input
-
-  let sample2 = [|
-    "mask = 000000000000000000000000000000X1001X"
-    "mem[42] = 100"
-    "mask = 00000000000000000000000000000000X0XX"
-    "mem[26] = 1"
-  |]
+    =! expected
 
   let applyMask2 (mask: string) (memAddr: int64) =
     let bits = Convert.ToString(memAddr, 2)
@@ -1025,75 +825,19 @@ module Day14 =
     |> fst
     |> Seq.sumBy(fun kvp -> kvp.Value)
 
-  // 4215284199669
-  let part2() =
-    let s = loadAndSum2 sample2 // 208
+  [<Theory>]
+  [<FileData(2020, 14, 4215284199669L)>]
+  //[<MemberData(nameof sample, 0L)>]
+  let part2 (input: string array) expected =
     loadAndSum2 input
-
-  let bitsCache = new Dictionary<_, _>()
-
-  let toBits (i: int) =
-    match bitsCache.TryGetValue(i) with
-    | true, bits -> bits
-    | _ ->
-      let bits = Convert.ToString(i, 2)
-      bitsCache.[i] <- bits
-      bits
-
-  let loadAndSum3 (values: string[]) =
-    let map = Dictionary<_, _>()
-    ("", values)
-    ||> Array.fold(fun mask line ->
-      let idx = line.IndexOf('=')
-      let value = line.Substring(idx + 2)
-      if line.StartsWith("mask") then
-        value
-      else
-        let memAddr = memAddr line |> int64
-        let (addr, xs) = applyMask2 mask memAddr
-        let value = int64 value
-        for i = 0 to (1 <<< xs.Length) do
-          let s = toBits i
-          let length = min xs.Length s.Length
-          for j = 0 to length - 1 do
-            addr.[xs.[j]] <- s.[^j]
-          for j = length to xs.Length - 1 do
-            addr.[xs.[j]] <- '0'
-          let memAddr = String(addr)
-          map.[memAddr] <- value
-        mask
-    )
-    |> ignore
-    map |> Seq.sumBy(fun kvp -> kvp.Value)
-
-  // 4215284199669
-  let part2'() =
-    let s = loadAndSum3 sample2 // 208
-    loadAndSum3 input
+    =! expected
 
 module Day15 =
 
-  let input = (readInput 2020 15).[0].Split(',') |> Array.map int
-
-  let sample = [| 0 ; 3 ; 6 |]
+  let input = [| "" |]
+  let sample (result: int) = makeSample result input
 
   type [<Measure>] turn
-
-  let play rounds (input: int[]) =
-    let rec loop turn lastSpokenAt (map: Map<_, _>) =
-      let turn' = turn + 1<turn>
-      let value =
-        match lastSpokenAt with
-        | None -> 0
-        | Some last -> turn - last |> int
-      if turn' >= rounds then value else
-      let lastTurn = map.TryFind(value)
-      map.Add(value, turn')
-      |> loop turn' lastTurn
-    input
-    |> Array.mapi(fun i v -> v, (i + 1) * 1<turn>)
-    |> Map.ofArray
-    |> loop (input.Length * 1<turn>) None
 
   let play2 rounds (input: int[]) =
     let map = Dictionary()
@@ -1111,59 +855,29 @@ module Day15 =
       map.[input.[i]] <- (i + 1) * 1<turn>
     loop (input.Length * 1<turn>) None
 
-  // 706
-  let part1() =
-    let s = play 10<turn> sample // 0
-    let t = 2020<turn>
-    let s = play t [|1;3;2|] // 1
-    let s = play t [|2;1;3|] // 10
-    let s = play t [|1;2;3|] // 27
-    let s = play t [|2;3;1|] // 78
-    let s = play t [|3;2;1|] // 438
-    let s = play t [|3;1;2|] // 1836
-    play t input
+  [<Theory>]
+  [<FileData(2020, 15, 706)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
+    let input = input.[0].Split(',') |> Array.map int
+    play2 2020<turn> input
+    =! expected
 
-  // 19331
-  let part2() =
-    let t = 30000000<turn>
-    play2 t input
+  [<Theory>]
+  [<FileData(2020, 15, 19331)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
+    let input = input.[0].Split(',') |> Array.map int
+    play2 30000000<turn> input
+    =! expected
 
 module Day16 =
-  open System.Text.RegularExpressions
 
-  let input = readInput 2020 16
-
-  let sample = [|
-    "class: 1-3 or 5-7"
-    "row: 6-11 or 33-44"
-    "seat: 13-40 or 45-50"
-    ""
-    "your ticket:"
-    "7,1,14"
-    ""
-    "nearby tickets:"
-    "7,3,47"
-    "40,4,50"
-    "55,2,20"
-    "38,6,12"
-  |]
-
-  let sample2 = [|
-    "class: 0-1 or 4-19"
-    "row: 0-5 or 8-19"
-    "seat: 0-13 or 16-19"
-    ""
-    "your ticket:"
-    "11,12,13"
-    ""
-    "nearby tickets:"
-    "3,9,18"
-    "15,1,5"
-    "5,14,9"
-  |]
+  let input = [| "" |]
+  let sample (result: int) = makeSample result input
 
   let parseRule rule =
-    let m = Regex.Match(rule, "([a-z\s]+): (\d+)-(\d+) or (\d+)-(\d+)$")
+    let m = Regex.Match(rule, "([a-z\\s]+): (\\d+)-(\\d+) or (\\d+)-(\\d+)$")
     if not m.Success then failwith "Not a match."
     let grp = m.Groups
     let name = grp.[1].Value
@@ -1209,13 +923,13 @@ module Day16 =
       )
     )
 
-  // 23954
-  let part1() =
-    let s =
-      let (rules, _, tickets) = parse sample
-      errorRate rules tickets // 71
+  [<Theory>]
+  [<FileData(2020, 16, 23954)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
     let (rules, _, tickets) = parse input
     errorRate rules tickets
+    =! expected
 
   let rec reduce acc (map: Map<string, Set<int>>) =
     let o =
@@ -1228,8 +942,10 @@ module Day16 =
       |> reduce ((rule, value)::acc)
     | None -> acc
 
-  // 453459307723
-  let part2() =
+  [<Theory>]
+  [<FileData(2020, 16, 453459307723L)>]
+  //[<MemberData(nameof sample, 0L)>]
+  let part2 (input: string array) expected =
     let (rules, my, tickets) = parse input
     let valid = validTickets rules tickets
 
@@ -1252,12 +968,12 @@ module Day16 =
     |> List.filter(fun (r, _) -> r.StartsWith("departure"))
     |> List.map(fun (_, i) -> int64 my.[i])
     |> List.reduce (*)
-
-//module Day17 =
-//  let input = readInput 2020 17
+    =! expected
 
 module Day18 =
-  let input = readInput 2020 18
+
+  let input = [| "" |]
+  let sample (result: int64) = makeSample result input
 
   let cint64 (ch: char) =
     if Char.IsNumber ch |> not then
@@ -1291,15 +1007,12 @@ module Day18 =
     let tokens = List.ofSeq exp
     loop None tokens 0L |> fst
 
-  // 12918250417632
-  let part1() =
-    let s1 = eval "1 + 2 * 3 + 4 * 5 + 6" // 71
-    let s2 = eval "1 + (2 * 3) + (4 * (5 + 6))" // 51
-    let s3 = eval "2 * 3 + (4 * 5)" // 26
-    let s4 = eval "5 + (8 * 3 + 9 + 3 * 4 * 3)" // 437
-    let s5 = eval "5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))" // 12240
-    let s6 = eval "((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2" // 13632
+  [<Theory>]
+  [<FileData(2020, 18, 12918250417632L)>]
+  //[<MemberData(nameof sample, 0L)>]
+  let part1 (input: string array) expected =
     input |> Array.sumBy eval
+    =! expected
 
   let eval2 (exp: string) =
     let rec loop op tokens acc =
@@ -1322,151 +1035,17 @@ module Day18 =
     let tokens = List.ofSeq exp
     loop None tokens 0L |> fst
 
-  let eval3 (tokens: string) =
-    let rec loop op i acc =
-      if i = tokens.Length then acc, i else
-      let i' = i + 1
-      match tokens.[i] with
-      | '+' -> loop sadd i' acc
-      | '*' ->
-        let v, i'' = loop None i' 0L
-        acc * v, i''
-      | v when Char.IsNumber v ->
-        cint64 v |> evalOp op acc |> loop None i'
-      | '(' ->
-        let v, i'' = loop None i' 0L
-        evalOp op acc v |> loop None i''
-      | ')' -> acc, i'
-      | ' ' -> loop op i' acc
-      | c -> failwithf "Unexpected token: %c" c
-    loop None 0 0L |> fst
-
-  // 171259538712010
-  let part2() =
-    let s1 = eval2 "1 + 2 * 3 + 4 * 5 + 6" // 231
-    let s2 = eval2 "1 + (2 * 3) + (4 * (5 + 6))" // 51
-    let s3 = eval2 "2 * 3 + (4 * 5)" // 46
-    let s4 = eval2 "5 + (8 * 3 + 9 + 3 * 4 * 3)" // 1445
-    let s5 = eval2 "5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))" // 669060
-    let s6 = eval2 "((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2" // 23340
-    let s = input |> Array.sumBy eval2
-    input |> Array.sumBy eval3
-
-//module Day19 =
-//  let input = readInput 2020 19
+  [<Theory>]
+  [<FileData(2020, 18, 171259538712010L)>]
+  //[<MemberData(nameof sample, 0L)>]
+  let part2 (input: string array) expected =
+    input |> Array.sumBy eval2
+    =! expected
 
 module Day20 =
-  let input = readInput 2020 20
 
-  let sample = [|
-    "Tile 2311:"
-    "..##.#..#."
-    "##..#....."
-    "#...##..#."
-    "####.#...#"
-    "##.##.###."
-    "##...#.###"
-    ".#.#.#..##"
-    "..#....#.."
-    "###...#.#."
-    "..###..###"
-    ""
-    "Tile 1951:"
-    "#.##...##."
-    "#.####...#"
-    ".....#..##"
-    "#...######"
-    ".##.#....#"
-    ".###.#####"
-    "###.##.##."
-    ".###....#."
-    "..#.#..#.#"
-    "#...##.#.."
-    ""
-    "Tile 1171:"
-    "####...##."
-    "#..##.#..#"
-    "##.#..#.#."
-    ".###.####."
-    "..###.####"
-    ".##....##."
-    ".#...####."
-    "#.##.####."
-    "####..#..."
-    ".....##..."
-    ""
-    "Tile 1427:"
-    "###.##.#.."
-    ".#..#.##.."
-    ".#.##.#..#"
-    "#.#.#.##.#"
-    "....#...##"
-    "...##..##."
-    "...#.#####"
-    ".#.####.#."
-    "..#..###.#"
-    "..##.#..#."
-    ""
-    "Tile 1489:"
-    "##.#.#...."
-    "..##...#.."
-    ".##..##..."
-    "..#...#..."
-    "#####...#."
-    "#..#.#.#.#"
-    "...#.#.#.."
-    "##.#...##."
-    "..##.##.##"
-    "###.##.#.."
-    ""
-    "Tile 2473:"
-    "#....####."
-    "#..#.##..."
-    "#.##..#..."
-    "######.#.#"
-    ".#...#.#.#"
-    ".#########"
-    ".###.#..#."
-    "########.#"
-    "##...##.#."
-    "..###.#.#."
-    ""
-    "Tile 2971:"
-    "..#.#....#"
-    "#...###..."
-    "#.#.###..."
-    "##.##..#.."
-    ".#####..##"
-    ".#..####.#"
-    "#..#.#..#."
-    "..####.###"
-    "..#.#.###."
-    "...#.#.#.#"
-    ""
-    "Tile 2729:"
-    "...#.#.#.#"
-    "####.#...."
-    "..#.#....."
-    "....#..#.#"
-    ".##..##.#."
-    ".#.####..."
-    "####.#.#.."
-    "##.####..."
-    "##..#.##.."
-    "#.##...##."
-    ""
-    "Tile 3079:"
-    "#.#.#####."
-    ".#..######"
-    "..#......."
-    "######...."
-    "####.#..#."
-    ".#...#.##."
-    "#.#####.##"
-    "..#.###..."
-    "..#......."
-    "..#.###..."
-  |]
+  let input = [| "" |]
+  let sample (result: int64) = makeSample result input
 
   module ResizeArray =
     let add item (array: ResizeArray<_>) =
@@ -1512,17 +1091,14 @@ module Day20 =
     |]
 
   let getCorners tiles =
-    // A mapping from a tile id to all permutations of its borders
     let tileToBorder =
       tiles |> Map.map(fun _ tile -> getBorders tile)
-    // A mapping of all border permutations to any matching tile
     let borderToTile =
       tileToBorder
       |> Seq.collect(fun kvp -> kvp.Value |> Array.map(fun border -> border, kvp.Key))
       |> Seq.groupBy fst
       |> Seq.map(fun (border, v) -> border, Seq.map snd v |> Seq.toArray)
       |> Map.ofSeq
-    // Find any tile that has exactly two borders that are not found on any other tile.
     tileToBorder
     |> Map.filter(fun _ borders ->
       borders
@@ -1532,32 +1108,17 @@ module Day20 =
     )
     |> Seq.map(fun kvp -> int64 kvp.Key)
 
-  // 30425930368573
-  let part1() =
-    let s = parse sample |> getCorners |> Seq.reduce (*) // 20899048083289
+  [<Theory>]
+  [<FileData(2020, 20, 30425930368573L)>]
+  //[<MemberData(nameof sample, 0L)>]
+  let part1 (input: string array) expected =
     parse input |> getCorners |> Seq.reduce (*)
-
-//module Day21 =
-//  let input = readInput 2020 21
+    =! expected
 
 module Day22 =
-  let input = readInput 2020 22
 
-  let sample = [|
-    "Player 1:"
-    "9"
-    "2"
-    "6"
-    "3"
-    "1"
-    ""
-    "Player 2:"
-    "5"
-    "8"
-    "4"
-    "7"
-    "10"
-  |]
+  let input = [| "" |]
+  let sample (result: int) = makeSample result input
 
   let parse input =
     let map =
@@ -1601,10 +1162,12 @@ module Day22 =
     |> Seq.mapi(fun i v -> v , (cards - i))
     |> Seq.sumBy(fun (a, b) -> a * b)
 
-  // 32598
-  let part1() =
-    let s = parse sample |> play |> score // 306
+  [<Theory>]
+  [<FileData(2020, 22, 32598)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
     parse input |> play |> score
+    =! expected
 
   module LinkedList =
 
@@ -1647,27 +1210,17 @@ module Day22 =
         loop()
     loop()
 
-  let sampleInf = [|
-    "Player 1:"
-    "43"
-    "19"
-    ""
-    "Player 2:"
-    "2"
-    "29"
-    "14"
-  |]
-
-  // 35836
-  let part2() =
-    let s = parse sample |> play2 |> score // 291
-    let t = parse sampleInf |> play2 |> score // 105
+  [<Theory>]
+  [<FileData(2020, 22, 35836)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
     parse input |> play2 |> score
+    =! expected
 
 module Day23 =
-  let input = readInput 2020 23 |> Array.exactlyOne
 
-  let sample = "389125467"
+  let input = [| "" |]
+  let sample (result: int) = makeSample result input
 
   let parse (input: string) =
     input
@@ -1734,11 +1287,15 @@ module Day23 =
         Some(n.Value, n.NextOrWrap))
     |> Seq.fold(fun s t -> 10 * s + t) 0
 
-  // 38756249
-  let part1() =
+  [<Theory>]
+  [<FileData(2020, 23, 38756249)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
     let rounds = 100
-    let s = parse sample |> play rounds |> getValue // 67384529
-    parse input |> play rounds |> getValue
+    parse (Array.exactlyOne input)
+    |> play rounds
+    |> getValue
+    =! expected
 
   let extendList total (list: LinkedList<_>) =
     let c = list.Count
@@ -1756,38 +1313,20 @@ module Day23 =
     let n2 = n1.NextOrWrap
     int64 n1.Value * int64 n2.Value
 
-  // 21986479838
-  let part2() =
+  [<Theory>]
+  [<FileData(2020, 23, 21986479838L)>]
+  //[<MemberData(nameof sample, 0L)>]
+  let part2 (input: string array) expected =
     let rounds = 10_000_000
     let maxCups = 1_000_000
-    let s = parse sample |> play2 maxCups rounds // 149245887792
-    parse input |> play2 maxCups rounds
+    parse (Array.exactlyOne input)
+    |> play2 maxCups rounds
+    =! expected
 
 module Day24 =
-  let input = readInput 2020 24
 
-  let sample = [|
-    "sesenwnenenewseeswwswswwnenewsewsw"
-    "neeenesenwnwwswnenewnwwsewnenwseswesw"
-    "seswneswswsenwwnwse"
-    "nwnwneseeswswnenewneswwnewseswneseene"
-    "swweswneswnenwsewnwneneseenw"
-    "eesenwseswswnenwswnwnwsewwnwsene"
-    "sewnenenenesenwsewnenwwwse"
-    "wenwwweseeeweswwwnwwe"
-    "wsweesenenewnwwnwsenewsenwwsesesenwne"
-    "neeswseenwwswnwswswnw"
-    "nenwswwsewswnenenewsenwsenwnesesenew"
-    "enewnwewneswsewnwswenweswnenwsenwsw"
-    "sweneswneswneneenwnewenewwneswswnese"
-    "swwesenesewenwneswnwwneseswwne"
-    "enesenwswwswneneswsenwnewswseenwsese"
-    "wnwnesenesenenwwnenwsewesewsesesew"
-    "nenewswnwewswnenesenwnesewesw"
-    "eneswnwswnwsenenwnwnwwseeswneewsenese"
-    "neswnwewnwnwseenwseesewsenwsweewe"
-    "wseweeenwnesenwwwswnew"
-  |]
+  let input = [| "" |]
+  let sample (result: int) = makeSample result input
 
   let parse (line: string) =
     ((None, []), line)
@@ -1836,10 +1375,12 @@ module Day24 =
     |> Array.countBy id
     |> Array.choose(fun (p, c) -> if c % 2 = 0 then None else Some p)
 
-  // 254
-  let part1() =
-    let s = blackTiles sample |> Array.length // 10
+  [<Theory>]
+  [<FileData(2020, 24, 254)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part1 (input: string array) expected =
     blackTiles input |> Array.length
+    =! expected
 
   let advance black =
     let blackS = set black
@@ -1863,10 +1404,9 @@ module Day24 =
     ||> Seq.fold(fun d () -> advance d)
     |> Array.length
 
-  // 3697
-  let part2() =
-    let s = run 100 sample // 2208
+  [<Theory>]
+  [<FileData(2020, 24, 3697)>]
+  //[<MemberData(nameof sample, 0)>]
+  let part2 (input: string array) expected =
     run 100 input
-
-//module Day25 =
-//  let input = readInput 2020 25
+    =! expected
