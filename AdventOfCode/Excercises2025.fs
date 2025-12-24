@@ -9,6 +9,7 @@ namespace Excercises2025
 
 open System
 open System.Collections.Generic
+open System.Text.RegularExpressions
 open Xunit
 
 #if INTERACTIVE
@@ -720,20 +721,31 @@ module Day02 =
     sum =! expected
 
   [<Theory>]
-  [<FileData(2025, 2, -1)>]
-  [<MemberData(nameof sample, 4174379265L)>]
-  let part2 (input: string array) expected =
+  [<FileData(2025, 2, 21139440284L)>]
+  [<MemberData(nameof sample, 1227775554L)>]
+  let part1Alternate (input: string array) expected =
     let numbers = parseNumbers<int64> input[0]
+    let regex = Regex(@"^(\d+?)\1$")
     let mutable sum = 0L
     for i in 0 .. numbers.Length / 2 - 1 do
       for i in numbers[2 * i] .. numbers[2 * i + 1] do
         let s = i.ToString()
-        if s.Length % 2 = 0 then
-          let half = s.Length / 2
-          let left = s.AsSpan(0, half)
-          let right = s.AsSpan(half, half)
-          if left.SequenceEqual(right) then
-            sum <- sum + i
+        let m = regex.Match(s)
+        if m.Success then
+          sum <- sum + i
+    sum =! expected
+
+  [<Theory>]
+  [<FileData(2025, 2, 38731915928L)>]
+  [<MemberData(nameof sample, 4174379265L)>]
+  let part2 (input: string array) expected =
+    let numbers = parseNumbers<int64> input[0]
+    let regex = Regex(@"^(\d+?)\1+$")
+    let mutable sum = 0L
+    for i in 0 .. numbers.Length / 2 - 1 do
+      for i in numbers[2 * i] .. numbers[2 * i + 1] do
+        if regex.IsMatch(i.ToString()) then
+          sum <- sum + i
     sum =! expected
 
 module Day01 =
