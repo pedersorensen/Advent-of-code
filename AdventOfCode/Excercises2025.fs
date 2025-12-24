@@ -121,48 +121,69 @@ module Day11 =
     loop initialNode 0
 
   type PathResult = {
-    HasFft    : bool
-    HasDac    : bool
     Count     : int64
     DacCount  : int64
     FftCount  : int64
     BothCount : int64
   }
+  with
+    static member Zero =
+      {
+        Count     = 0
+        DacCount  = 0
+        FftCount  = 0
+        BothCount = 0
+      }
+    static member One =
+      {
+        Count     = 1
+        DacCount  = 0
+        FftCount  = 0
+        BothCount = 0
+      }
+    static member (+) (res1: PathResult, res2: PathResult) =
+      {
+        Count     = res1.Count + res2.Count
+        DacCount  = res1.DacCount + res2.DacCount
+        FftCount  = res1.FftCount + res2.FftCount
+        BothCount = res1.BothCount + res2.BothCount
+      }
+
+  let merge node sum =
+    let isDac = node = "dac"
+    let isFft = node = "fft"
+    {
+      Count     = sum.Count
+      DacCount  = if   isDac then sum.Count else sum.DacCount
+      FftCount  = if   isFft then sum.Count else sum.FftCount
+      BothCount = if   isDac then sum.FftCount
+                  elif isFft then sum.DacCount
+                  else sum.BothCount
+    }
 
   let navigate2 initialNode (map: Map<string, string array>) =
     let cache = Dictionary<string, PathResult>()
+    cache["out"] <- PathResult.One
     let rec loop node =
       match cache.TryGetValue(node) with
       | true, paths -> paths
       | false, _ ->
-        let isDac, isFft = node = "dac", node = "fft"
-        let mutable hasDac, hasFft = isDac, isFft
-        let mutable count, dacCount, fftCount, bothCount = 0L, 0L, 0L, 0L
-        for child in map[node] do
-          if child = "out"
-          then count <- count + 1L
-          else
-            let res = loop child
-            count     <- count     + res.Count
-            hasFft    <- hasFft  ||  res.HasFft
-            hasDac    <- hasDac  ||  res.HasDac
-            dacCount  <- dacCount  + res.DacCount
-            fftCount  <- fftCount  + res.FftCount
-            bothCount <- bothCount + res.BothCount
-        let result = {
-          Count         = count
-          HasDac        = hasDac
-          HasFft        = hasFft
-          DacCount  = if isDac then count else dacCount
-          FftCount  = if isFft then count else fftCount
-          BothCount = if   isDac && isFft then count
-                      elif isDac then fftCount
-                      elif isFft then dacCount
-                      else bothCount
-        }
+        let result = map[node] |> Array.sumBy loop |> merge node
         cache[node] <- result
         result
     loop initialNode
+
+  let navigate3 initialNode (map: Map<string, string array>) =
+    let rec loop node (acc: PathResult, cache) =
+      match cache |> Map.tryFind node with
+      | Some nodeResult -> nodeResult + acc, cache
+      | None ->
+        let childResult, cache = Array.foldBack loop map[node] (PathResult.Zero, cache)
+        let nodeResult = merge node childResult
+        nodeResult + acc, cache.Add(node, nodeResult)
+    (PathResult.Zero, Map.empty.Add("out", PathResult.One))
+    |> loop initialNode
+    |> fst
 
   [<Theory>]
   [<FileData(2025, 11, 497)>]
@@ -170,12 +191,14 @@ module Day11 =
   let part1 (input: string array) expected =
     parse input |> navigate  "you" =! expected
     parse input |> navigate2 "you" |> _.Count =! expected
+    parse input |> navigate3 "you" |> _.Count =! expected
 
   [<Theory>]
   [<FileData(2025, 11, 358564784931864L)>]
   [<MemberData(nameof sample2, 2)>]
   let part2 (input: string array) expected =
     parse input |> navigate2 "svr" |> _.BothCount =! expected
+    parse input |> navigate3 "svr" |> _.BothCount =! expected
 
 module Day10 =
 
@@ -693,6 +716,9 @@ module Day03 =
   [<FileData(2025, 3, 0)>]
   [<MemberData(nameof sample, 0)>]
   let part2 (input: string array) expected =
+
+    let ints = input |> Array.map (fun s -> s.ToCharArray() |> Array.map(fun ch -> int ch - int '0'))
+
     -1 =! expected
 
 module Day02 =
