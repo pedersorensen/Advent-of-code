@@ -98,7 +98,7 @@ module Day11 =
     "hhh: out"
   |]
 
-  let sample (result: int) = makeSample result input
+  let sample  (result: int) = makeSample result input
   let sample2 (result: int) = makeSample result input2
 
   let parse input =
@@ -109,7 +109,7 @@ module Day11 =
     )
     |> Map.ofArray
 
-  let navigate map =
+  let navigate initialNode map =
     let rec loop node acc =
       Map.find node map
       |> Array.sumBy(fun child ->
@@ -117,13 +117,7 @@ module Day11 =
         then 1
         else loop child acc
       )
-    loop "you" 0
-
-  [<Theory>]
-  [<FileData(2025, 11, 497)>]
-  [<MemberData(nameof sample, 5)>]
-  let part1 (input: string array) expected =
-    parse input |> navigate =! expected
+    loop initialNode 0
 
   type PathResult = {
     HasFft    : bool
@@ -134,7 +128,7 @@ module Day11 =
     BothCount : int64
   }
 
-  let navigate2 (map: Map<string, string array>) =
+  let navigate2 initialNode (map: Map<string, string array>) =
     let cache = Dictionary<string, PathResult>()
     let rec loop node =
       match cache.TryGetValue(node) with
@@ -167,13 +161,20 @@ module Day11 =
         }
         cache[node] <- result
         result
-    loop "svr" |> _.BothCount
+    loop initialNode
+
+  [<Theory>]
+  [<FileData(2025, 11, 497)>]
+  [<MemberData(nameof sample, 5)>]
+  let part1 (input: string array) expected =
+    parse input |> navigate  "you" =! expected
+    parse input |> navigate2 "you" |> _.Count =! expected
 
   [<Theory>]
   [<FileData(2025, 11, 358564784931864L)>]
   [<MemberData(nameof sample2, 2)>]
   let part2 (input: string array) expected =
-    parse input |> navigate2 =! expected
+    parse input |> navigate2 "svr" |> _.BothCount =! expected
 
 module Day10 =
 
