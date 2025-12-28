@@ -435,10 +435,7 @@ module Day07 =
 
   let sample (result: int) = makeSample result input
 
-  [<Theory>]
-  [<FileData(2025, 7, 1619)>]
-  [<MemberData(nameof sample, 21)>]
-  let part1 (input: string array) expected =
+  let fillSplits (input: string array) =
     let map = input |> Array.map _.ToCharArray()
     let splits = HashSet<int * int>()
     let tryMoveDown (x, y) =
@@ -457,53 +454,45 @@ module Day07 =
           x + 1, y - 1
           x + 1, y + 1
         ]
-
     let start = input[0].IndexOf('S')
     let mutable p0 = [0, start]
     while not p0.IsEmpty do
       p0 <- p0 |> List.collect tryMoveDown
-    printfn "\r\n%s" (map |> Array.map String |> String.concat "\r\n")
+    map, splits
 
+  [<Theory>]
+  [<FileData(2025, 7, 1619)>]
+  [<MemberData(nameof sample, 21)>]
+  let part1 (input: string array) expected =
+    let _, splits = fillSplits input
     splits.Count =! expected
 
   [<Theory>]
-  [<FileData(2025, 7, 0)>]
+  [<FileData(2025, 7, 23607984027985L)>]
   [<MemberData(nameof sample, 40)>]
   let part2 (input: string array) expected =
-    let map = input |> Array.map _.ToCharArray()
-    let splits = ResizeArray<int * int>()
-    let tryMoveDown (x, y) =
-      if x + 1 >= map.Length then
-        []
-      elif map[x + 1][y] = '.' then
-        map[x + 1][y] <- '|'
-        //printfn "\r\n%s" (map |> Array.map String |> String.concat "\r\n")
-        [x + 1, y]
-      elif map[x + 1][y] = '|' then
-        []
-      else
-        //printfn "Split at %d,%d" (x + 1) y
-        map[x + 1][y - 1] <- '|'
-        map[x + 1][y + 1] <- '|'
-        //printfn "\r\n%s" (map |> Array.map String |> String.concat "\r\n")
-        splits.Add((x + 1, y)) |> ignore
-        [
-          //x, y
-          x + 1, y - 1
-          x + 1, y + 1
-        ]
-
-    let start = input[0].IndexOf('S')
-    let mutable p0 = [0, start]
-    let mutable doMore = true
-
-    while doMore do
-      let temp = p0
-      p0 <- p0 |> List.collect tryMoveDown
-      doMore <- p0 <> temp
-
-    splits.Count
-    =! expected
+    let map =
+      fillSplits input |> fst
+      |> Array.map(
+        Array.map(
+          function
+          | '.' ->  0L
+          | '|' ->  1L
+          | '^' -> -1L
+          | 'S' -> -2L
+          |  ch  -> failwithf "Unexpected char %c" ch
+        )
+      )
+    for i = map.Length - 2 downto 0 do
+      let row, next = map[i], map[i + 1]
+      for j = 0 to map[i].Length - 1 do
+        let mutable value = &row[j]
+        value <-
+          if   value =  1L && next[j] <> 0L then next[j]
+          elif value = -1L                  then next[j - 1] + next[j + 1]
+          else value
+    let start = Array.IndexOf(map[0], -2L)
+    map[1][start] =! expected
 
 module Day06 =
 
