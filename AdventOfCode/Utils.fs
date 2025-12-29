@@ -300,6 +300,16 @@ module Span =
         maxIndex <- i
     maxIndex
 
+module ReadOnlySpan =
+  let indexOfMax (arr: ReadOnlySpan<_>) =
+    let mutable maxIndex = 0
+    let mutable maxValue = arr[0]
+    for i in 1 .. arr.Length - 1 do
+      if arr[i] > maxValue then
+        maxValue <- arr[i]
+        maxIndex <- i
+    maxIndex
+
 module Tuple =
 
   let inline add (x1, y1) (x2, y2) = x1 + x2, y1 + y2

@@ -686,29 +686,39 @@ module Day03 =
     "818181911112111"
   |]
 
-  let sample (result: int) = makeSample result input
+  let sample (result: int64) = makeSample result input
+
+  let charToDigit (ch: char) = int64 (ch - '0')
 
   [<Theory>]
   [<FileData(2025, 3, 17074)>]
-  [<MemberData(nameof sample, 357)>]
+  [<MemberData(nameof sample, 357L)>]
   let part1 (input: string array) expected =
-    let ints = input |> Array.map (fun s -> s.ToCharArray() |> Array.map(fun ch -> int ch - int '0'))
-    ints
-    |> Array.sumBy(fun i ->
-      let max1 = Span.indexOfMax(i.AsSpan(0, i.Length - 1)) + 1
-      let max2 = Span.indexOfMax(i.AsSpan(max1, i.Length - max1))
-      10 * i[max1 - 1] + i[max2 + max1]
+    input
+    |> Array.sumBy(fun digits ->
+      let max1 = ReadOnlySpan.indexOfMax(digits.AsSpan(0, digits.Length - 1)) + 1
+      let max2 = ReadOnlySpan.indexOfMax(digits.AsSpan(max1, digits.Length - max1))
+      10L * charToDigit digits[max1 - 1] + charToDigit digits[max2 + max1]
     )
     =! expected
 
   [<Theory>]
-  [<FileData(2025, 3, 0)>]
-  [<MemberData(nameof sample, 0)>]
+  [<FileData(2025, 3, 169512729575727L)>]
+  [<MemberData(nameof sample, 3121910778619L)>]
   let part2 (input: string array) expected =
-
-    let ints = input |> Array.map (fun s -> s.ToCharArray() |> Array.map(fun ch -> int ch - int '0'))
-
-    -1 =! expected
+    input
+    |> Array.sumBy(fun digits ->
+      let mutable sum = 0L
+      let mutable lastIom = 0
+      for i = 0 to 11 do
+        let rem = 11 - i
+        let sp = digits.AsSpan(lastIom, digits.Length - lastIom - rem)
+        let iom = lastIom + ReadOnlySpan.indexOfMax(sp)
+        sum <- 10L * sum + charToDigit digits[iom]
+        lastIom <- iom + 1
+      sum
+    )
+    =! expected
 
 module Day02 =
 
